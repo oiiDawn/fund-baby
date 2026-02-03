@@ -945,6 +945,12 @@ body {
   color: var(--primary);
 }
 
+.add-group-row-btn:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: rgba(255,255,255,0.05) !important;
+}
+
 .tabs-nav-btn {
   width: 28px;
   height: 28px;

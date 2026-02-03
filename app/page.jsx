@@ -352,7 +352,15 @@ function GroupManageModal({ groups, onClose, onSave }) {
   };
 
   const handleDeleteClick = (id, name) => {
-    setDeleteConfirm({ id, name });
+    const itemToDelete = items.find(it => it.id === id);
+    const isNew = !groups.find(g => g.id === id);
+    const isEmpty = itemToDelete && (!itemToDelete.codes || itemToDelete.codes.length === 0);
+
+    if (isNew || isEmpty) {
+      setItems(prev => prev.filter(item => item.id !== id));
+    } else {
+      setDeleteConfirm({ id, name });
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -362,10 +370,23 @@ function GroupManageModal({ groups, onClose, onSave }) {
     }
   };
 
+  const handleAddRow = () => {
+    const newGroup = {
+      id: `group_${Date.now()}`,
+      name: '',
+      codes: []
+    };
+    setItems(prev => [...prev, newGroup]);
+  };
+
   const handleConfirm = () => {
+    const hasEmpty = items.some(it => !it.name.trim());
+    if (hasEmpty) return;
     onSave(items);
     onClose();
   };
+
+  const isAllValid = items.every(it => it.name.trim() !== '');
 
   return (
     <motion.div
@@ -410,11 +431,17 @@ function GroupManageModal({ groups, onClose, onSave }) {
                     <DragIcon width="18" height="18" className="muted" />
                   </div>
                   <input
-                    className="input group-rename-input"
+                    className={`input group-rename-input ${!item.name.trim() ? 'error' : ''}`}
                     value={item.name}
                     onChange={(e) => handleRename(item.id, e.target.value)}
-                    placeholder="分组名称"
-                    style={{ flex: 1, height: '36px', fontSize: '14px', background: 'rgba(0,0,0,0.2)' }}
+                    placeholder="请输入分组名称..."
+                    style={{ 
+                      flex: 1, 
+                      height: '36px', 
+                      fontSize: '14px', 
+                      background: 'rgba(0,0,0,0.2)',
+                      border: !item.name.trim() ? '1px solid var(--danger)' : 'none'
+                    }}
                   />
                   <button 
                     className="icon-button danger" 
@@ -428,10 +455,43 @@ function GroupManageModal({ groups, onClose, onSave }) {
               ))}
             </Reorder.Group>
           )}
+          <button
+            className="add-group-row-btn"
+            onClick={handleAddRow}
+            style={{
+              width: '100%',
+              marginTop: 12,
+              padding: '10px',
+              borderRadius: '12px',
+              border: '1px dashed var(--border)',
+              background: 'rgba(255,255,255,0.02)',
+              color: 'var(--muted)',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <PlusIcon width="16" height="16" />
+            <span>新增分组行</span>
+          </button>
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <button className="button" onClick={handleConfirm} style={{ width: '100%' }}>
+          {!isAllValid && (
+            <div className="error-text" style={{ marginBottom: 12, textAlign: 'center' }}>
+              所有分组名称均不能为空
+            </div>
+          )}
+          <button 
+            className="button" 
+            onClick={handleConfirm} 
+            disabled={!isAllValid}
+            style={{ width: '100%', opacity: isAllValid ? 1 : 0.6 }}
+          >
             完成
           </button>
         </div>
@@ -640,7 +700,6 @@ export default function HomePage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [addResultOpen, setAddResultOpen] = useState(false);
   const [addFailures, setAddFailures] = useState([]);
-  const [groupSelectorFund, setGroupSelectorFund] = useState(null); // { code, rect }
   const tabsRef = useRef(null);
 
   // 过滤和排序后的基金列表
@@ -1280,6 +1339,7 @@ export default function HomePage() {
         version: 1,
         funds: JSON.parse(localStorage.getItem('funds') || '[]'),
         favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
+        groups: JSON.parse(localStorage.getItem('groups') || '[]'),
         collapsedCodes: JSON.parse(localStorage.getItem('collapsedCodes') || '[]'),
         refreshMs: parseInt(localStorage.getItem('refreshMs') || '30000', 10),
         viewMode: localStorage.getItem('viewMode') || 'card',
@@ -1333,6 +1393,7 @@ export default function HomePage() {
         // 从 localStorage 读取最新数据进行合并，防止状态滞后导致的数据丢失
         const currentFunds = JSON.parse(localStorage.getItem('funds') || '[]');
         const currentFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        const currentGroups = JSON.parse(localStorage.getItem('groups') || '[]');
         const currentCollapsed = JSON.parse(localStorage.getItem('collapsedCodes') || '[]');
 
         let mergedFunds = currentFunds;
@@ -1352,6 +1413,24 @@ export default function HomePage() {
           const mergedFav = Array.from(new Set([...currentFavorites, ...data.favorites]));
           setFavorites(new Set(mergedFav));
           localStorage.setItem('favorites', JSON.stringify(mergedFav));
+        }
+
+        if (Array.isArray(data.groups)) {
+          // 合并分组：如果 ID 相同则合并 codes，否则添加新分组
+          const mergedGroups = [...currentGroups];
+          data.groups.forEach(incomingGroup => {
+            const existingIdx = mergedGroups.findIndex(g => g.id === incomingGroup.id);
+            if (existingIdx > -1) {
+              mergedGroups[existingIdx] = {
+                ...mergedGroups[existingIdx],
+                codes: Array.from(new Set([...mergedGroups[existingIdx].codes, ...(incomingGroup.codes || [])]))
+              };
+            } else {
+              mergedGroups.push(incomingGroup);
+            }
+          });
+          setGroups(mergedGroups);
+          localStorage.setItem('groups', JSON.stringify(mergedGroups));
         }
 
         if (Array.isArray(data.collapsedCodes)) {
@@ -1573,15 +1652,6 @@ export default function HomePage() {
                   <SortIcon width="16" height="16" />
                 </button>
               )}
-              {currentTab !== 'all' && currentTab !== 'fav' && (
-                <button 
-                  className="icon-button" 
-                  onClick={() => setAddFundToGroupOpen(true)}
-                  title="添加基金到此分组"
-                >
-                  <FolderPlusIcon width="16" height="16" />
-                </button>
-              )}
               <button 
                 className="icon-button add-group-btn" 
                 onClick={() => setGroupModalOpen(true)}
@@ -1650,7 +1720,20 @@ export default function HomePage() {
               )}
             </div>
           ) : (
-            <AnimatePresence mode="wait">
+            <>
+              {currentTab !== 'all' && currentTab !== 'fav' && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                  <button 
+                    className="button" 
+                    onClick={() => setAddFundToGroupOpen(true)}
+                    style={{ height: '32px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <PlusIcon width="16" height="16" />
+                    <span>添加基金</span>
+                  </button>
+                </div>
+              )}
+              <AnimatePresence mode="wait">
               <motion.div
                 key={viewMode}
                 initial={{ opacity: 0, y: 10 }}
@@ -1716,17 +1799,6 @@ export default function HomePage() {
                             </div>
                             <div className="table-cell text-center action-cell" style={{ gap: 4 }}>
                               <button
-                                className={`icon-button ${groups.some(g => g.codes.includes(f.code)) ? 'active' : ''}`}
-                                onClick={(e) => {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  setGroupSelectorFund({ code: f.code, rect });
-                                }}
-                                title="管理分组"
-                                style={{ width: '28px', height: '28px' }}
-                              >
-                                <FolderPlusIcon width="14" height="14" />
-                              </button>
-                              <button
                                 className="icon-button danger"
                                 onClick={() => removeFund(f.code)}
                                 title="删除"
@@ -1762,17 +1834,6 @@ export default function HomePage() {
                                 <strong>{f.gztime || f.time || '-'}</strong>
                               </div>
                               <div className="row" style={{ gap: 4 }}>
-                                <button
-                                  className={`icon-button ${groups.some(g => g.codes.includes(f.code)) ? 'active' : ''}`}
-                                  onClick={(e) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    setGroupSelectorFund({ code: f.code, rect });
-                                  }}
-                                  title="管理分组"
-                                  style={{ width: '28px', height: '28px' }}
-                                >
-                                  <FolderPlusIcon width="14" height="14" />
-                                </button>
                                 <button
                                   className="icon-button danger"
                                   onClick={() => removeFund(f.code)}
@@ -1860,6 +1921,7 @@ export default function HomePage() {
                 </div>
               </motion.div>
             </AnimatePresence>
+          </>
           )}
         </div>
       </div>
@@ -1929,76 +1991,6 @@ export default function HomePage() {
             onClose={() => setGroupModalOpen(false)}
             onConfirm={handleAddGroup}
           />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {groupSelectorFund && (
-          <div 
-            className="modal-overlay" 
-            style={{ background: 'transparent' }}
-            onClick={() => setGroupSelectorFund(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -10 }}
-              className="glass card group-selector-popup"
-              style={{
-                position: 'fixed',
-                left: groupSelectorFund.rect.left - 160,
-                top: groupSelectorFund.rect.top + 35,
-                width: '200px',
-                zIndex: 10001,
-                padding: '8px',
-                maxHeight: '240px',
-                overflowY: 'auto'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="muted" style={{ fontSize: '12px', padding: '4px 8px', marginBottom: 4 }}>选择分组</div>
-              {groups.length === 0 ? (
-                <div className="muted" style={{ padding: '8px', fontSize: '13px' }}>暂无自定义分组</div>
-              ) : (
-                <div className="group-list">
-                  {groups.map(g => (
-                    <div 
-                      key={g.id} 
-                      className={`group-item ${g.codes.includes(groupSelectorFund.code) ? 'selected' : ''}`}
-                      onClick={() => toggleFundInGroup(groupSelectorFund.code, g.id)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'background 0.2s ease'
-                      }}
-                    >
-                      <span>{g.name}</span>
-                      {g.codes.includes(groupSelectorFund.code) && (
-                        <div className="checked-mark" style={{ width: '8px', height: '4px' }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ borderTop: '1px solid var(--border)', marginTop: 4, paddingTop: 4 }}>
-                <button 
-                  className="tab" 
-                  style={{ width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px' }}
-                  onClick={() => {
-                    setGroupSelectorFund(null);
-                    setGroupModalOpen(true);
-                  }}
-                >
-                  + 新增分组
-                </button>
-              </div>
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
 
