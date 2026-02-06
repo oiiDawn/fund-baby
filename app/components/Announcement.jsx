@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ANNOUNCEMENT_KEY = 'hasClosedAnnouncement_v4';
+const ANNOUNCEMENT_KEY = 'hasClosedAnnouncement_v5';
 
 export default function Announcement() {
   const [isVisible, setIsVisible] = useState(false);
@@ -65,8 +65,10 @@ export default function Announcement() {
             
             <div style={{ color: 'var(--text)', lineHeight: '1.6', fontSize: '15px' }}>
               感谢大家反馈的需求，现已增加如下功能：
-              <p>1. 持仓金额。</p>
-              <p>2. 更新当日最新净值，方便和估值数据作对比。</p>
+              <p>1. 持仓金额录入支持按金额。</p>
+              <p>2. 排序支持升序、降序。</p>
+              <p>3. PC 端表格模式优化。</p>
+              <p>4. 移动端表格模式删除按钮改为向左滑动。</p>
               以下功能会在下一个版本上线：
               <p>1. 加、减仓。</p>
               <p>2. 获取不到估值数据的基金能正常添加，仅展示最新净值数据。</p>

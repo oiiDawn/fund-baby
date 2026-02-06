@@ -5,6 +5,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import Announcement from "./components/Announcement";
 import zhifubaoImg from "./assets/zhifubao.jpg";
 import weixinImg from "./assets/weixin.jpg";
+import githubImg from "./assets/github.svg";
 
 function PlusIcon(props) {
   return (
@@ -2609,7 +2610,7 @@ export default function HomePage() {
 
   const saveSettings = (e) => {
     e?.preventDefault?.();
-    const ms = Math.max(5, Number(tempSeconds)) * 1000;
+    const ms = Math.max(10, Number(tempSeconds)) * 1000;
     setRefreshMs(ms);
     localStorage.setItem('refreshMs', String(ms));
     setSettingsOpen(false);
@@ -2829,6 +2830,7 @@ export default function HomePage() {
           <span>基估宝</span>
         </div>
         <div className="actions">
+            <img  alt="项目Github地址" src={githubImg.src} style={{width:'30px',height: '30px', cursor: 'pointer'}} onClick={()=> window.open("https://github.com/hzm0321/real-time-fund")}/>
           <div className="badge" title="当前刷新频率">
             <span>刷新</span>
             <strong>{Math.round(refreshMs / 1000)}秒</strong>
@@ -3845,12 +3847,17 @@ export default function HomePage() {
               <input
                 className="input"
                 type="number"
-                min="5"
+                min="10"
                 step="5"
                 value={tempSeconds}
                 onChange={(e) => setTempSeconds(Number(e.target.value))}
                 placeholder="自定义秒数"
               />
+              {tempSeconds < 10 && (
+                <div className="error-text" style={{ marginTop: 8 }}>
+                  最小 10 秒
+                </div>
+              )}
             </div>
 
             <div className="form-group" style={{ marginBottom: 16 }}>
@@ -3877,7 +3884,7 @@ export default function HomePage() {
             </div>
 
             <div className="row" style={{ justifyContent: 'flex-end', marginTop: 24 }}>
-              <button className="button" onClick={saveSettings}>保存并关闭</button>
+              <button className="button" onClick={saveSettings} disabled={tempSeconds < 10}>保存并关闭</button>
             </div>
           </div>
         </div>
