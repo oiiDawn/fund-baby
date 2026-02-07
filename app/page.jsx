@@ -472,7 +472,7 @@ function Stat({ label, value, delta }) {
   );
 }
 
-function FeedbackModal({ onClose }) {
+function FeedbackModal({ onClose, user }) {
   const [submitting, setSubmitting] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const [error, setError] = useState("");
@@ -563,7 +563,7 @@ function FeedbackModal({ onClose }) {
                 style={{ width: '100%' }}
               />
             </div>
-
+            <input type="hidden" name="email" value={user?.email || ''} />
             <div className="form-group" style={{ marginBottom: 20 }}>
               <label htmlFor="message" className="muted" style={{ display: 'block', marginBottom: 8, fontSize: '14px' }}>
                 反馈内容
@@ -1857,6 +1857,11 @@ export default function HomePage() {
   const [hasUpdate, setHasUpdate] = useState(false);
   const [latestVersion, setLatestVersion] = useState('');
   const [updateContent, setUpdateContent] = useState('');
+
+  // FIXME 强制登出
+  useLayoutEffect(() => {
+    handleLogout();
+  }, []);
 
   useEffect(() => {
     const checkUpdate = async () => {
@@ -3225,7 +3230,6 @@ export default function HomePage() {
         }))
         : [];
       return {
-        version: 1,
         funds,
         favorites: cleanedFavorites,
         groups: cleanedGroups,
@@ -3236,7 +3240,6 @@ export default function HomePage() {
       };
     } catch {
       return {
-        version: 1,
         funds: [],
         favorites: [],
         groups: [],
@@ -3367,13 +3370,11 @@ export default function HomePage() {
   const exportLocalData = async () => {
     try {
       const payload = {
-        version: 1,
         funds: JSON.parse(localStorage.getItem('funds') || '[]'),
         favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
         groups: JSON.parse(localStorage.getItem('groups') || '[]'),
         collapsedCodes: JSON.parse(localStorage.getItem('collapsedCodes') || '[]'),
         refreshMs: parseInt(localStorage.getItem('refreshMs') || '30000', 10),
-        viewMode,
         holdings: JSON.parse(localStorage.getItem('holdings') || '{}'),
         exportedAt: new Date().toISOString()
       };
@@ -3605,8 +3606,16 @@ export default function HomePage() {
           >
             <RefreshIcon className={refreshing ? 'spin' : ''} width="18" height="18" />
           </button>
+          <button
+            className="icon-button"
+            aria-label="打开设置"
+            onClick={() => setSettingsOpen(true)}
+            title="设置"
+          >
+            <SettingsIcon width="18" height="18" />
+          </button>
           {/* 用户菜单 */}
-          <div className="user-menu-container" ref={userMenuRef}>
+          <div className="user-menu-container" ref={userMenuRef} hidden>
             <button
               className={`icon-button user-menu-trigger ${user ? 'logged-in' : ''}`}
               aria-label={user ? '用户菜单' : '登录'}
@@ -4600,6 +4609,7 @@ export default function HomePage() {
           <FeedbackModal
             key={feedbackNonce}
             onClose={() => setFeedbackOpen(false)}
+            user={user}
           />
         )}
       </AnimatePresence>
