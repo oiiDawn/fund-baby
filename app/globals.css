@@ -637,53 +637,131 @@ input[type="number"] {
 
 @media (max-width: 768px) {
   .table-header-row {
-    display: none;
+    display: none; /* 隐藏表头 */
+  }
+
+  /* 移动端卡片式列表 */
+  .table-container {
+    background: transparent !important; /* 移除容器背景 */
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important; /* 允许卡片阴影显示 */
+  }
+
+  .table-row-wrapper {
+    margin-bottom: 12px; /* 卡片间距 */
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 卡片阴影 */
   }
 
   .table-row {
-    grid-template-columns: 1fr 80px 100px;
+    /* 移动端布局：多行卡片结构 
+       Row 1: Name (占2列) | Change (占1列)
+       Row 2: Profit | Holding | Amount (各占1列)
+    */
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas:
-      "name value change"
-      "name time profit";
-    gap: 4px 12px;
+      "name name change"
+      "profit holding amount";
+    gap: 8px 4px; /* 行间距8px, 列间距4px */
     padding: 12px !important;
+    align-items: center;
+    height: auto;
+    background: var(--card) !important;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  
+  .table-row:last-child {
+    border-bottom: 1px solid var(--border);
   }
 
+  /* --- Row 1: 核心信息 --- */
+
+  /* 名称区域 */
   .name-cell {
     grid-area: name;
+    overflow: hidden;
+    padding-right: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.03); /* 微弱分割线 */
+    padding-bottom: 8px;
+    margin-bottom: 4px;
   }
 
-  .value-cell {
-    grid-area: value;
-  }
-
+  /* 涨跌幅区域 */
   .change-cell {
     grid-area: change;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
   }
 
+  /* --- Row 2: 次要数据 (带标签) --- */
+
+  /* 通用样式：垂直排列，带标签 */
+  .profit-cell, 
+  .holding-cell, 
+  .holding-amount-cell {
+    display: flex !important; /* 强制显示 */
+    flex-direction: column;
+    align-items: flex-start; /* 默认左对齐 */
+    justify-content: center !important;
+    font-size: 13px;
+    line-height: 1.3;
+    padding-top: 2px;
+  }
+
+  /* 为数据添加 Label 伪元素 */
+  .profit-cell::before { content: "当日盈亏"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
+  .holding-cell::before { content: "持有收益"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
+  .holding-amount-cell::before { content: "持仓金额"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
+
+  /* 具体位置分配 */
   .profit-cell {
     grid-area: profit;
-  }
-
-  .time-cell {
-    grid-area: time;
-    justify-content: flex-end;
-  }
-
-  .action-cell {
-    display: none;
+    align-items: flex-start; /* 左对齐 */
   }
 
   .holding-cell {
-    display: none;
+    grid-area: holding;
+    align-items: center; /* 居中对齐 */
   }
-
+  
   .holding-amount-cell {
-    display: none;
+    grid-area: amount;
+    align-items: flex-end; /* 右对齐 */
   }
 
-  .table-cell.time-cell span {
-    font-size: 10px !important;
+  /* 覆盖 page.jsx 中的 text-right 类在 flex-direction: column 下的影响 */
+  .table-row .text-right {
+    text-align: inherit; /* 重置 text-align */
+  }
+  
+  /* 隐藏操作列 (仍然通过侧滑或点击行来操作) */
+  .action-cell {
+    display: none; 
+  }
+  
+  /* 调整字体大小 */
+  .name-text {
+    font-size: 15px; /* 恢复稍大字体 */
+    font-weight: 600;
+  }
+  .code-text {
+    font-size: 10px; /* 稍微缩小辅助信息 */
+    color: var(--muted);
+  }
+  
+  /* 针对数值列内部的 strong/span 标签也做调整 */
+  .table-cell strong, 
+  .table-cell span {
+     /* 允许继承父级字体设置，或单独微调 */
   }
 }
 

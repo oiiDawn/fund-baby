@@ -4393,7 +4393,7 @@ export default function HomePage() {
                                     </div>
                                   );
                                 })()}
-                                {!isMobile && (() => {
+                                {(() => {
                                   const holding = holdings[f.code];
                                   const profit = getHoldingProfit(f, holding);
                                   const total = profit ? profit.profitTotal : null;
@@ -4422,7 +4422,7 @@ export default function HomePage() {
                                     </div>
                                   );
                                 })()}
-                                {!isMobile && (() => {
+                                {(() => {
                                   const holding = holdings[f.code];
                                   const profit = getHoldingProfit(f, holding);
                                   const amount = profit ? profit.amount : null;
