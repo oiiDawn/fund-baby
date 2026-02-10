@@ -1912,7 +1912,7 @@ export default function HomePage() {
   const [sortOrder, setSortOrder] = useState('desc'); // asc | desc
 
   // 视图模式
-  const [viewMode, setViewMode] = useState('card'); // card, list
+  const [viewMode, setViewMode] = useState('list'); // card, list
 
   // 用户认证状态
   const [user, setUser] = useState(null);
@@ -4070,20 +4070,20 @@ export default function HomePage() {
             <div className="sort-group" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div className="view-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '2px' }}>
                 <button
-                  className={`icon-button ${viewMode === 'card' ? 'active' : ''}`}
-                  onClick={() => { applyViewMode('card'); }}
-                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'card' ? 'var(--primary)' : 'transparent', color: viewMode === 'card' ? '#05263b' : 'var(--muted)' }}
-                  title="卡片视图"
-                >
-                  <GridIcon width="16" height="16" />
-                </button>
-                <button
                   className={`icon-button ${viewMode === 'list' ? 'active' : ''}`}
                   onClick={() => { applyViewMode('list'); }}
                   style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? '#05263b' : 'var(--muted)' }}
                   title="表格视图"
                 >
                   <ListIcon width="16" height="16" />
+                </button>
+                <button
+                  className={`icon-button ${viewMode === 'card' ? 'active' : ''}`}
+                  onClick={() => { applyViewMode('card'); }}
+                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'card' ? 'var(--primary)' : 'transparent', color: viewMode === 'card' ? '#05263b' : 'var(--muted)' }}
+                  title="卡片视图"
+                >
+                  <GridIcon width="16" height="16" />
                 </button>
               </div>
 
@@ -4099,7 +4099,6 @@ export default function HomePage() {
                     { id: 'default', label: '默认' },
                     { id: 'yield', label: '涨跌幅' },
                     { id: 'holding', label: '持有收益' },
-                    { id: 'name', label: '名称' },
                   ].map((s) => (
                     <button
                       key={s.id}
@@ -4207,13 +4206,11 @@ export default function HomePage() {
                   <div className={viewMode === 'card' ? 'grid col-12' : ''} style={viewMode === 'card' ? { gridColumn: 'span 12', gap: 16 } : {}}>
                     {viewMode === 'list' && (
                       <div className="table-header-row">
-                        <div className="table-header-cell">基金名称</div>
-                        <div className="table-header-cell text-right">净值/估值</div>
-                        <div className="table-header-cell text-right">涨跌幅</div>
-                        <div className="table-header-cell text-right">估值时间</div>
-                        <div className="table-header-cell text-right">持仓金额</div>
+                        <div className="table-header-cell text-left">基金名称</div>
+                        <div className="table-header-cell text-right">涨跌幅 · 净值</div>
                         <div className="table-header-cell text-right">当日盈亏</div>
                         <div className="table-header-cell text-right">持有收益</div>
+                        <div className="table-header-cell text-right">持仓金额</div>
                         <div className="table-header-cell text-center">操作</div>
                       </div>
                     )}
@@ -4292,7 +4289,7 @@ export default function HomePage() {
                           >
                             {viewMode === 'list' ? (
                               <>
-                                <div className="table-cell name-cell">
+                                <div className="table-cell text-left name-cell">
                                   {currentTab !== 'all' && currentTab !== 'fav' ? (
                                     <button
                                       className="icon-button fav-button"
@@ -4317,13 +4314,15 @@ export default function HomePage() {
                                     </button>
                                   )}
                                   <div className="title-text">
-                                    <span
-                                      className={`name-text ${f.jzrq === todayStr ? 'updated' : ''}`}
-                                      title={f.jzrq === todayStr ? "今日净值已更新" : ""}
-                                    >
-                                      {f.name}
-                                    </span>
-                                    <span className="muted code-text">#{f.code}</span>
+                                    <div className="name-row">
+                                      <span className="name-text" title={f.name}>
+                                        {f.name}
+                                      </span>
+                                      {f.jzrq === todayStr && (
+                                        <span className="update-badge" title="今日净值已更新">✓</span>
+                                      )}
+                                    </div>
+                                    <span className="muted code-text">#{f.code} · {(f.noValuation ? (f.jzrq || '-') : (f.gztime || f.time || '-')).replace(/^\d{4}-/, '')}</span>
                                   </div>
                                 </div>
                                 {(() => {
@@ -4333,87 +4332,47 @@ export default function HomePage() {
                                   const shouldHideChange = isTradingDay && isAfter9 && !hasTodayData;
 
                                   if (!shouldHideChange) {
-                                    // 如果涨跌幅列显示（即非交易时段或今日净值已更新），则显示单位净值和真实涨跌幅
+                                    // 显示真实数据
                                     return (
-                                      <>
-                                        <div className="table-cell text-right value-cell">
-                                          <span style={{ fontWeight: 700 }}>{f.dwjz ?? '—'}</span>
-                                        </div>
-                                        <div className="table-cell text-right change-cell">
+                                      <div className="table-cell text-right change-cell">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
                                           <span className={f.zzl > 0 ? 'up' : f.zzl < 0 ? 'down' : ''} style={{ fontWeight: 700 }}>
                                             {f.zzl !== undefined ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : ''}
                                           </span>
+                                          <span className="muted" style={{ fontSize: '11px', fontWeight: 600 }}>{f.dwjz ?? '—'}</span>
                                         </div>
-                                      </>
+                                      </div>
                                     );
                                   } else {
-                                    // 否则显示估值净值和估值涨跌幅
-                                    // 如果是无估值数据的基金，直接显示净值数据
+                                    // 显示估值数据
                                     if (f.noValuation) {
                                       return (
-                                        <>
-                                          <div className="table-cell text-right value-cell">
-                                            <span style={{ fontWeight: 700 }}>{f.dwjz ?? '—'}</span>
-                                          </div>
-                                          <div className="table-cell text-right change-cell">
+                                        <div className="table-cell text-right change-cell">
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
                                             <span className={f.zzl > 0 ? 'up' : f.zzl < 0 ? 'down' : ''} style={{ fontWeight: 700 }}>
                                               {f.zzl !== undefined && f.zzl !== null ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : '—'}
                                             </span>
+                                            <span className="muted" style={{ fontSize: '11px', fontWeight: 600 }}>{f.dwjz ?? '—'}</span>
                                           </div>
-                                        </>
+                                        </div>
                                       );
                                     }
+                                    // 估值
+                                    const estValue = f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—');
+                                    const estChange = f.estPricedCoverage > 0.05 ? f.estGszzl : (Number(f.gszzl) || 0);
+                                    const estChangeText = f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—');
+                                    
                                     return (
-                                      <>
-                                        <div className="table-cell text-right value-cell">
-                                          <span style={{ fontWeight: 700 }}>{f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—')}</span>
-                                        </div>
-                                        <div className="table-cell text-right change-cell">
-                                          <span className={f.estPricedCoverage > 0.05 ? (f.estGszzl > 0 ? 'up' : f.estGszzl < 0 ? 'down' : '') : (Number(f.gszzl) > 0 ? 'up' : Number(f.gszzl) < 0 ? 'down' : '')} style={{ fontWeight: 700 }}>
-                                            {f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—')}
+                                      <div className="table-cell text-right change-cell">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                                          <span className={estChange > 0 ? 'up' : estChange < 0 ? 'down' : ''} style={{ fontWeight: 700 }}>
+                                            {estChangeText}
                                           </span>
+                                          <span className="muted" style={{ fontSize: '11px', fontWeight: 600 }}>{estValue}</span>
                                         </div>
-                                      </>
-                                    );
-                                  }
-                                })()}
-                                <div className="table-cell text-right time-cell">
-                                  <span className="muted" style={{ fontSize: '12px' }}>{f.noValuation ? (f.jzrq || '-') : (f.gztime || f.time || '-')}</span>
-                                </div>
-                                {!isMobile && (() => {
-                                  const holding = holdings[f.code];
-                                  const profit = getHoldingProfit(f, holding);
-                                  const amount = profit ? profit.amount : null;
-                                  if (amount === null) {
-                                    return (
-                                      <div
-                                        className="table-cell text-right holding-amount-cell"
-                                        title="设置持仓"
-                                        onClick={(e) => { e.stopPropagation(); setHoldingModal({ open: true, fund: f }); }}
-                                      >
-                                        <span className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '12px', cursor: 'pointer' }}>
-                                          未设置 <SettingsIcon width="12" height="12" />
-                                        </span>
                                       </div>
                                     );
                                   }
-                                  return (
-                                    <div
-                                      className="table-cell text-right holding-amount-cell"
-                                      title="点击设置持仓"
-                                      onClick={(e) => { e.stopPropagation(); setActionModal({ open: true, fund: f }); }}
-                                    >
-                                      <span style={{ fontWeight: 700, marginRight: 6 }}>¥{amount.toFixed(2)}</span>
-                                      <button
-                                        className="icon-button"
-                                        onClick={(e) => { e.stopPropagation(); setActionModal({ open: true, fund: f }); }}
-                                        title="编辑持仓"
-                                        style={{ border: 'none', width: '28px', height: '28px', marginLeft: -6 }}
-                                      >
-                                        <SettingsIcon width="14" height="14" />
-                                      </button>
-                                    </div>
-                                  );
                                 })()}
                                 {(() => {
                                   const holding = holdings[f.code];
@@ -4463,7 +4422,49 @@ export default function HomePage() {
                                     </div>
                                   );
                                 })()}
+                                {!isMobile && (() => {
+                                  const holding = holdings[f.code];
+                                  const profit = getHoldingProfit(f, holding);
+                                  const amount = profit ? profit.amount : null;
+                                  return (
+                                    <div
+                                      className="table-cell text-right holding-amount-cell"
+                                      title={amount !== null ? "点击编辑持仓" : "点击设置持仓"}
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        if (amount !== null) {
+                                          setActionModal({ open: true, fund: f }); 
+                                        } else {
+                                          setHoldingModal({ open: true, fund: f });
+                                        }
+                                      }}
+                                      style={{ cursor: 'pointer' }}
+                                    >
+                                      <span style={{ fontWeight: 700, color: amount !== null ? 'var(--text)' : 'var(--muted)' }}>
+                                        {amount !== null ? `¥${amount.toFixed(2)}` : '--'}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                                 <div className="table-cell text-center action-cell" style={{ gap: 4 }}>
+                                  <button
+                                    className="icon-button"
+                                    onClick={(e) => { 
+                                      e.stopPropagation();
+                                      const holding = holdings[f.code];
+                                      const profit = getHoldingProfit(f, holding);
+                                      const amount = profit ? profit.amount : null;
+                                      if (amount !== null) {
+                                        setActionModal({ open: true, fund: f }); 
+                                      } else {
+                                        setHoldingModal({ open: true, fund: f });
+                                      }
+                                    }}
+                                    title="设置持仓"
+                                    style={{ width: '28px', height: '28px', color: 'var(--primary)', borderColor: 'rgba(34, 211, 238, 0.3)', background: 'rgba(34, 211, 238, 0.1)' }}
+                                  >
+                                    <SettingsIcon width="14" height="14" />
+                                  </button>
                                   <button
                                     className="icon-button danger"
                                     onClick={() => !refreshing && requestRemoveFund(f)}
@@ -4503,12 +4504,14 @@ export default function HomePage() {
                                       </button>
                                     )}
                                     <div className="title-text">
-                                      <span
-                                        className={`name-text ${f.jzrq === todayStr ? 'updated' : ''}`}
-                                        title={f.jzrq === todayStr ? "今日净值已更新" : ""}
-                                      >
-                                        {f.name}
-                                      </span>
+                                      <div className="name-row">
+                                        <span className="name-text" title={f.name}>
+                                          {f.name}
+                                        </span>
+                                        {f.jzrq === todayStr && (
+                                          <span className="update-badge" title="今日净值已更新">✓</span>
+                                        )}
+                                      </div>
                                       <span className="muted">#{f.code}</span>
                                     </div>
                                   </div>
@@ -4516,7 +4519,7 @@ export default function HomePage() {
                                   <div className="actions">
                                     <div className="badge-v">
                                       <span>{f.noValuation ? '净值日期' : '估值时间'}</span>
-                                      <strong>{f.noValuation ? (f.jzrq || '-') : (f.gztime || f.time || '-')}</strong>
+                                      <strong>{(f.noValuation ? (f.jzrq || '-') : (f.gztime || f.time || '-')).replace(/^\d{4}-/, '')}</strong>
                                     </div>
                                     <div className="row" style={{ gap: 4 }}>
                                       <button

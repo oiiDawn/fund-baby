@@ -494,20 +494,49 @@ input[type="number"] {
 
 .table-container {
   padding: 0;
-  overflow: hidden;
+  overflow-x: auto;
   grid-column: span 12;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .table-row-wrapper {
   width: 100%;
 }
 
-.table-row {
+/* 定义统一的 Grid 模板变量或混合宏 */
+.table-row,
+.table-header-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1.2fr 1.2fr 60px;
+  /* 
+    列定义:
+    1. 基金名称: 2fr (稍微减小，避免过宽)
+    2. 涨跌幅·净值: 1.4fr
+    3. 当日盈亏: 1.2fr
+    4. 持有收益: 1.2fr
+    5. 持仓金额: 1.2fr
+    6. 操作: 100px (固定)
+  */
+  grid-template-columns: minmax(180px, 2fr) minmax(130px, 1.4fr) minmax(110px, 1.2fr) minmax(110px, 1.2fr) minmax(110px, 1.2fr) 100px;
   align-items: center;
-  gap: 12px;
-  padding: 12px 24px !important;
+  gap: 16px; /* 增加间距 */
+  padding: 0 24px; /* 上下 padding 移到各自类中，这里只定左右 */
+}
+
+.table-header-row {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.table-row {
+  padding-top: 14px;
+  padding-bottom: 14px; /* 稍微增加行高 */
   border-bottom: 1px solid var(--border);
   transition: background-color 0.2s ease;
 }
@@ -520,57 +549,61 @@ input[type="number"] {
   border-bottom: none;
 }
 
-.table-header-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1.2fr 1.2fr 60px;
-  gap: 12px;
-  padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid var(--border);
-}
-
-.table-header-cell {
-  font-size: 13px;
-  color: var(--text);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
+/* 单元格通用样式 */
+.table-header-cell,
 .table-cell {
   display: flex;
   align-items: center;
+  min-width: 0; /* 防止 flex item 溢出 */
+  overflow: hidden; /* 防止内容溢出 Grid 单元格 */
+}
+
+/* 对齐辅助类 - 严格应用 */
+.text-left {
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .text-right {
-  text-align: right;
   justify-content: flex-end;
+  text-align: right;
 }
 
 .text-center {
-  text-align: center;
   justify-content: center;
+  text-align: center;
+}
+
+/* 特殊列处理 */
+.action-cell {
+  justify-content: center; /* 操作列始终居中 */
 }
 
 .name-cell {
   gap: 8px;
+  min-width: 0; /* 关键：强制 Grid Item 不被内容撑开，从而对齐表头 */
 }
 
 .title-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  overflow: hidden; /* 关键：确保内部省略号生效 */
+  min-width: 0;     /* 关键：允许 flex/grid item 收缩 */
+  flex: 1;          /* 关键：占据剩余空间 */
 }
 
 .name-text {
   font-size: 14px;
   font-weight: 600;
-  white-space: normal;
-  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.4;
 }
 
-.name-text.updated::after {
-  content: "✓";
+/* 移除伪元素，改用 .update-badge 类 */
+.update-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -581,8 +614,21 @@ input[type="number"] {
   color: #22c55e;
   font-size: 10px;
   margin-left: 6px;
-  vertical-align: middle;
-  transform: translateY(-1px);
+  flex-shrink: 0; /* 关键：防止被挤压 */
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 恢复左对齐 */
+  width: 100%;
+  min-width: 0;
+}
+
+/* 确保第一列（基金名称）表头左对齐 */
+.table-header-cell:first-child {
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .code-text {
