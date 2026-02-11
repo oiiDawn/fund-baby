@@ -3,7 +3,8 @@
 **在线预览地址：[https://ningzhengsheng.cn/fund-baby/](https://ningzhengsheng.cn/fund-baby/)**
 > 由于某些平台不能在实时看见基金的估值，所以做了一个基金估值的网站。
 
-> 一个基于 Next.js 开发的纯前端基金估值与重仓股实时追踪工具。采用玻璃拟态设计（Glassmorphism），支持移动端适配，且无需后端服务器即可运行。
+![alt text](app/assets/fund-baby-img1.png)
+![alt text](app/assets/fund-baby-img2.png)
 
 
 ## 📖 使用说明
@@ -26,6 +27,8 @@
 
 
 ## 🛠 技术栈
+
+> 一个基于 Next.js 开发的纯前端基金估值与重仓股实时追踪工具。采用玻璃拟态设计（Glassmorphism），支持移动端适配，且无需后端服务器即可运行。
 
 - **框架**：[Next.js官网](https://nextjs.org/) , [Next.js入门指南：从零构建现代Web应用](https://ningzhengsheng.cn/2026/02/10/Nextjs%E7%BD%91%E9%A1%B5%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/)
 - **样式**：原生 CSS (Global CSS) + 玻璃拟态设计
