@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import Announcement from "./components/Announcement";
+import FundTrendChart from "./components/FundTrendChart";
 import { DatePicker, DonateTabs, NumericInput, Stat } from "./components/Common";
 import { ChevronIcon, CloseIcon, CloudIcon, DragIcon, EditIcon, ExitIcon, EyeIcon, EyeOffIcon, GridIcon, ListIcon, LoginIcon, LogoutIcon, MailIcon, MoonIcon, PinIcon, PinOffIcon, PlusIcon, RefreshIcon, SettingsIcon, SortIcon, StarIcon, SunIcon, SwitchIcon, TrashIcon, UpdateIcon, UserIcon } from "./components/Icons";
 import githubImg from "./assets/github.svg";
@@ -4706,6 +4707,13 @@ export default function HomePage() {
                                     );
                                   })()}
                                 </div>
+
+                                {/* 历史净值走势图 */}
+                                {Array.isArray(f.historyTrend) && f.historyTrend.length > 0 && (
+                                  <div style={{ marginBottom: 12, height: 180 }}>
+                                    <FundTrendChart data={f.historyTrend} />
+                                  </div>
+                                )}
 
                                 {f.estPricedCoverage > 0.05 && (
                                   <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: -8, marginBottom: 10, textAlign: 'right' }}>

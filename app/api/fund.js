@@ -306,7 +306,41 @@ export const fetchFundData = async (c) => {
           resolveH(holdings);
         }).catch(() => resolveH([]));
       });
-      Promise.all([tencentPromise, holdingsPromise]).then(([tData, holdings]) => {
+
+      const trendPromise = new Promise(async (resolveTr) => {
+        try {
+          const pingUrl = `https://fund.eastmoney.com/pingzhongdata/${c}.js?v=${Date.now()}`;
+          await loadScript(pingUrl);
+
+          // Data_netWorthTrend 为 [{ x, y, equityReturn, unitMoney }, ...]
+          const trend = Array.isArray(window.Data_netWorthTrend)
+            ? window.Data_netWorthTrend
+            : [];
+          
+          let historyTrend = [];
+          let yesterdayChange = null;
+
+          if (trend.length > 0) {
+            // 仅保留最近 90 个点
+            const sliced = trend.slice(-90);
+            historyTrend = sliced.map((item) => ({
+              x: item.x,
+              y: item.y,
+              equityReturn: item.equityReturn,
+            }));
+
+            const last = sliced[sliced.length - 2];
+            if (last && typeof last.equityReturn === 'number') {
+              yesterdayChange = last.equityReturn;
+            }
+          }
+          resolveTr({ historyTrend, yesterdayChange });
+        } catch (e) {
+          resolveTr({ historyTrend: [], yesterdayChange: null });
+        }
+      });
+
+      Promise.all([tencentPromise, holdingsPromise, trendPromise]).then(([tData, holdings, trendData]) => {
         if (tData) {
           if (tData.jzrq && (!gzData.jzrq || tData.jzrq >= gzData.jzrq)) {
             gzData.dwjz = tData.dwjz;
@@ -314,7 +348,8 @@ export const fetchFundData = async (c) => {
             gzData.zzl = tData.zzl;
           }
         }
-        resolve({ ...gzData, holdings });
+        const { historyTrend, yesterdayChange } = trendData || {};
+        resolve({ ...gzData, holdings, historyTrend, yesterdayChange });
       });
     };
     scriptGz.onerror = () => {
