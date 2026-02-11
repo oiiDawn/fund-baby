@@ -1988,7 +1988,7 @@ export default function HomePage() {
   const [sortOrder, setSortOrder] = useState('desc'); // asc | desc
 
   // 视图模式
-  const [viewMode, setViewMode] = useState('list'); // card, list
+  const [viewMode, setViewMode] = useState('card'); // card, list
 
   // 用户认证状态
   const [user, setUser] = useState(null);
@@ -2699,14 +2699,29 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('funds') || '[]');
-      if (Array.isArray(saved) && saved.length) {
-        const deduped = dedupeByCode(saved);
-        setFunds(deduped);
-        storageHelper.setItem('funds', JSON.stringify(deduped));
-        const codes = Array.from(new Set(deduped.map((f) => f.code)));
-        if (codes.length) refreshAll(codes);
+      const rawFunds = localStorage.getItem('funds');
+      
+      if (rawFunds === null) {
+        // 首次访问，添加默认基金 004253 (信达澳银新能源产业股票)
+        const defaultCode = '004253';
+        fetchFundData(defaultCode).then(data => {
+          setFunds([data]);
+          storageHelper.setItem('funds', JSON.stringify([data]));
+          fetchIntradayData(defaultCode).then(intra => {
+            if (intra) setIntradayMap(prev => ({ ...prev, [defaultCode]: intra }));
+          });
+        }).catch(e => console.error('Default fund load failed', e));
+      } else {
+        const saved = JSON.parse(rawFunds || '[]');
+        if (Array.isArray(saved) && saved.length) {
+          const deduped = dedupeByCode(saved);
+          setFunds(deduped);
+          storageHelper.setItem('funds', JSON.stringify(deduped));
+          const codes = Array.from(new Set(deduped.map((f) => f.code)));
+          if (codes.length) refreshAll(codes);
+        }
       }
+
       const savedMs = parseInt(localStorage.getItem('refreshMs') || '30000', 10);
       if (Number.isFinite(savedMs) && savedMs >= 5000) {
         setRefreshMs(savedMs);
@@ -2738,8 +2753,11 @@ export default function HomePage() {
         setHoldings(savedHoldings);
       }
       const savedViewMode = localStorage.getItem('viewMode');
-      if (savedViewMode === 'card' || savedViewMode === 'list') {
-        setViewMode(savedViewMode);
+      // 默认为 card
+      if (savedViewMode === 'list') {
+        setViewMode('list');
+      } else {
+        setViewMode('card');
       }
     } catch { }
   }, []);
@@ -4157,20 +4175,20 @@ export default function HomePage() {
             <div className="sort-group" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div className="view-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '2px' }}>
                 <button
-                  className={`icon-button ${viewMode === 'list' ? 'active' : ''}`}
-                  onClick={() => { applyViewMode('list'); }}
-                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? '#05263b' : 'var(--muted)' }}
-                  title="表格视图"
-                >
-                  <ListIcon width="16" height="16" />
-                </button>
-                <button
                   className={`icon-button ${viewMode === 'card' ? 'active' : ''}`}
                   onClick={() => { applyViewMode('card'); }}
                   style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'card' ? 'var(--primary)' : 'transparent', color: viewMode === 'card' ? '#05263b' : 'var(--muted)' }}
                   title="卡片视图"
                 >
                   <GridIcon width="16" height="16" />
+                </button>
+                <button
+                  className={`icon-button ${viewMode === 'list' ? 'active' : ''}`}
+                  onClick={() => { applyViewMode('list'); }}
+                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? '#05263b' : 'var(--muted)' }}
+                  title="表格视图"
+                >
+                  <ListIcon width="16" height="16" />
                 </button>
               </div>
 
