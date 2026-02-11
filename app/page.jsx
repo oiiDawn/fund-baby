@@ -4625,46 +4625,33 @@ export default function HomePage() {
                                 </div>
 
                                 <div className="row" style={{ marginBottom: 12 }}>
-                                  {f.noValuation ? (
-                                    // 无估值数据的基金，直接显示净值涨跌幅
-                                    <Stat
-                                      label="涨跌幅"
-                                      value={f.zzl !== undefined && f.zzl !== null ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : '—'}
-                                      delta={f.zzl}
-                                    />
-                                  ) : (
-                                    (() => {
-                                      const now = nowInTz();
-                                      const isAfter9 = now.hour() >= 9;
-                                      const hasTodayData = f.jzrq === todayStr;
-                                      const shouldHideChange = isTradingDay && isAfter9 && !hasTodayData;
-
-                                      if (shouldHideChange) return null;
-
-                                      return (
-                                        <Stat
-                                          label="涨跌幅"
-                                          value={f.zzl !== undefined ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : ''}
-                                          delta={f.zzl}
-                                        />
-                                      );
-                                    })()
-                                  )}
-                                </div>
-
-                                <div className="row" style={{ marginBottom: 12 }}>
                                   {(() => {
                                     const holding = holdings[f.code];
                                     const profit = getHoldingProfit(f, holding);
+                                    const hasTodayData = f.jzrq === todayStr;
+                                    // 优先显示实际：如果已更新(hasTodayData) 或 无估值(noValuation)
+                                    const showActual = hasTodayData || f.noValuation;
 
-                                    const valuationStat = !f.noValuation ? (
+                                    const valuationStat = (
                                       <Stat
-                                        label="估值涨跌幅"
-                                        value={f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—')}
-                                        delta={f.estPricedCoverage > 0.05 ? f.estGszzl : (Number(f.gszzl) || 0)}
-                                        subValue={f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—')}
+                                        label={showActual ? "实际涨跌幅" : "估值涨跌幅"}
+                                        value={
+                                          showActual
+                                            ? (f.zzl !== undefined ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : '—')
+                                            : (f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—'))
+                                        }
+                                        delta={
+                                          showActual
+                                            ? f.zzl
+                                            : (f.estPricedCoverage > 0.05 ? f.estGszzl : (Number(f.gszzl) || 0))
+                                        }
+                                        subValue={
+                                          showActual
+                                            ? f.dwjz
+                                            : (f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—'))
+                                        }
                                       />
-                                    ) : null;
+                                    );
 
                                     if (!profit) {
                                       return (
@@ -4755,22 +4742,15 @@ export default function HomePage() {
                                   </div>
                                 )}
                                 <div
-                                  style={{ marginBottom: 8, cursor: 'pointer', userSelect: 'none' }}
-                                  className="title"
+                                  style={{ fontSize: '12px', color: '#666', marginBottom: 8, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
                                   onClick={(e) => {
                                       e.stopPropagation();
                                       setTopStocksModal({ open: true, fund: f });
                                   }}
                                 >
-                                  <div className="row" style={{ width: '100%', flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 500 }}>前10重仓股票</span>
-                                      <div style={{ transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center' }}>
-                                         <ChevronIcon width="16" height="16" className="muted" />
-                                      </div>
-                                    </div>
-                                    <span className="muted" style={{ fontSize: '12px' }}>点击查看详情</span>
-                                  </div>
+                                  <ChevronIcon width="12" height="12" className="arrow" style={{ transform: 'rotate(-90deg)', transition: 'transform 0.2s' }} />
+                                  <span>前10重仓股票</span>
+                                  <span className="muted" style={{ fontSize: '10px', marginLeft: 'auto' }}>点击查看详情</span>
                                 </div>
                               </>
                             )}
