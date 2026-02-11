@@ -449,6 +449,9 @@ export const submitFeedback = async (formData) => {
 };
 
 export const fetchIntradayData = async (code) => {
+    // 纯静态导出模式下无法使用 API Route 代理，暂时禁用分时数据
+    return null;
+    /*
     try {
         const response = await fetch(`/api/intraday?code=${code}`);
         if (!response.ok) return null;
@@ -461,4 +464,5 @@ export const fetchIntradayData = async (code) => {
         console.error('获取分时数据失败', code, e);
         return null;
     }
+    */
 };
