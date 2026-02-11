@@ -43,7 +43,7 @@ function FeedbackModal({ onClose, user, onOpenWeChat }) {
 
     // Web3Forms Access Key
     formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || '');
-    formData.append("subject", "基估宝 - 用户反馈");
+    formData.append("subject", "养鸡小宝 - 用户反馈");
 
     try {
       const data = await submitFeedback(formData);
@@ -3729,7 +3729,7 @@ export default function HomePage() {
             <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="2" />
             <path d="M5 14c2-4 7-6 14-5" stroke="var(--primary)" strokeWidth="2" />
           </svg>
-          <span>基估宝</span>
+          <span>养鸡小宝</span>
           <AnimatePresence>
             {isSyncing && (
               <motion.div
