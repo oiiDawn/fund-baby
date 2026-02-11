@@ -275,12 +275,15 @@ export function NumericInput({ value, onChange, step = 1, min = 0, placeholder }
   );
 }
 
-export function Stat({ label, value, delta }) {
+export function Stat({ label, value, delta, subValue }) {
   const dir = delta > 0 ? 'up' : delta < 0 ? 'down' : '';
   return (
-    <div className="stat" style={{ flexDirection: 'column', gap: 4, minWidth: 0 }}>
-      <span className="label" style={{ fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-      <span className={`value ${dir}`} style={{ fontSize: '15px', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{value}</span>
+    <div className="stat" style={{ flexDirection: 'column', gap: 4, minWidth: 0, alignItems: 'center' }}>
+      <span className="label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span className={`value ${dir}`} style={{ lineHeight: 1.2, whiteSpace: 'nowrap' }}>{value}</span>
+        {subValue && <span className="muted" style={{ fontSize: '11px', marginTop: 2, fontWeight: 500 }}>{subValue}</span>}
+      </div>
     </div>
   );
 }

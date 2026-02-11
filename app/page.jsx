@@ -4548,39 +4548,30 @@ export default function HomePage() {
                                 </div>
 
                                 <div className="row" style={{ marginBottom: 12 }}>
-                                  <Stat label="单位净值" value={f.dwjz ?? '—'} />
                                   {f.noValuation ? (
-                                    // 无估值数据的基金，直接显示净值涨跌幅，不显示估值相关字段
+                                    // 无估值数据的基金，直接显示净值涨跌幅
                                     <Stat
                                       label="涨跌幅"
                                       value={f.zzl !== undefined && f.zzl !== null ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : '—'}
                                       delta={f.zzl}
                                     />
                                   ) : (
-                                    <>
-                                      {(() => {
-                                        const now = nowInTz();
-                                        const isAfter9 = now.hour() >= 9;
-                                        const hasTodayData = f.jzrq === todayStr;
-                                        const shouldHideChange = isTradingDay && isAfter9 && !hasTodayData;
+                                    (() => {
+                                      const now = nowInTz();
+                                      const isAfter9 = now.hour() >= 9;
+                                      const hasTodayData = f.jzrq === todayStr;
+                                      const shouldHideChange = isTradingDay && isAfter9 && !hasTodayData;
 
-                                        if (shouldHideChange) return null;
+                                      if (shouldHideChange) return null;
 
-                                        return (
-                                          <Stat
-                                            label="涨跌幅"
-                                            value={f.zzl !== undefined ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : ''}
-                                            delta={f.zzl}
-                                          />
-                                        );
-                                      })()}
-                                      <Stat label="估值净值" value={f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—')} />
-                                      <Stat
-                                        label="估值涨跌幅"
-                                        value={f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—')}
-                                        delta={f.estPricedCoverage > 0.05 ? f.estGszzl : (Number(f.gszzl) || 0)}
-                                      />
-                                    </>
+                                      return (
+                                        <Stat
+                                          label="涨跌幅"
+                                          value={f.zzl !== undefined ? `${f.zzl > 0 ? '+' : ''}${Number(f.zzl).toFixed(2)}%` : ''}
+                                          delta={f.zzl}
+                                        />
+                                      );
+                                    })()
                                   )}
                                 </div>
 
@@ -4589,18 +4580,30 @@ export default function HomePage() {
                                     const holding = holdings[f.code];
                                     const profit = getHoldingProfit(f, holding);
 
+                                    const valuationStat = !f.noValuation ? (
+                                      <Stat
+                                        label="估值涨跌幅"
+                                        value={f.estPricedCoverage > 0.05 ? `${f.estGszzl > 0 ? '+' : ''}${f.estGszzl.toFixed(2)}%` : (typeof f.gszzl === 'number' ? `${f.gszzl > 0 ? '+' : ''}${f.gszzl.toFixed(2)}%` : f.gszzl ?? '—')}
+                                        delta={f.estPricedCoverage > 0.05 ? f.estGszzl : (Number(f.gszzl) || 0)}
+                                        subValue={f.estPricedCoverage > 0.05 ? f.estGsz.toFixed(4) : (f.gsz ?? '—')}
+                                      />
+                                    ) : null;
+
                                     if (!profit) {
                                       return (
-                                        <div className="stat" style={{ flexDirection: 'column', gap: 4 }}>
-                                          <span className="label">持仓金额</span>
-                                          <div
-                                            className="value muted"
-                                            style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
-                                            onClick={() => setHoldingModal({ open: true, fund: f })}
-                                          >
-                                            未设置 <SettingsIcon width="12" height="12" />
+                                        <>
+                                          <div className="stat" style={{ flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+                                            <span className="label">持仓金额</span>
+                                            <div
+                                              className="value muted"
+                                              style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                                              onClick={() => setHoldingModal({ open: true, fund: f })}
+                                            >
+                                              未设置 <SettingsIcon width="12" height="12" />
+                                            </div>
                                           </div>
-                                        </div>
+                                          {valuationStat}
+                                        </>
                                       );
                                     }
 
@@ -4608,7 +4611,7 @@ export default function HomePage() {
                                       <>
                                         <div
                                           className="stat"
-                                          style={{ cursor: 'pointer', flexDirection: 'column', gap: 4 }}
+                                          style={{ cursor: 'pointer', flexDirection: 'column', gap: 4, alignItems: 'center' }}
                                           onClick={() => setActionModal({ open: true, fund: f })}
                                         >
                                           <span className="label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -4616,31 +4619,22 @@ export default function HomePage() {
                                           </span>
                                           <span className="value">¥{profit.amount.toFixed(2)}</span>
                                         </div>
-                                        <div className="stat" style={{ flexDirection: 'column', gap: 4 }}>
+
+                                        {valuationStat}
+
+                                        <div className="stat" style={{ flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                                           <span className="label">当日盈亏</span>
                                           <span className={`value ${profit.profitToday > 0 ? 'up' : profit.profitToday < 0 ? 'down' : ''}`}>
                                             {profit.profitToday > 0 ? '+' : profit.profitToday < 0 ? '-' : ''}¥{Math.abs(profit.profitToday).toFixed(2)}
                                           </span>
                                         </div>
                                         {profit.profitTotal !== null && (
-                                          <div
-                                            className="stat"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setPercentModes(prev => ({ ...prev, [f.code]: !prev[f.code] }));
-                                            }}
-                                            style={{ cursor: 'pointer', flexDirection: 'column', gap: 4 }}
-                                            title="点击切换金额/百分比"
-                                          >
-                                            <span className="label">持有收益{percentModes[f.code] ? '(%)' : ''}</span>
-                                            <span className={`value ${profit.profitTotal > 0 ? 'up' : profit.profitTotal < 0 ? 'down' : ''}`}>
-                                              {profit.profitTotal > 0 ? '+' : profit.profitTotal < 0 ? '-' : ''}
-                                              {percentModes[f.code]
-                                                ? `${Math.abs((holding.cost * holding.share) ? (profit.profitTotal / (holding.cost * holding.share)) * 100 : 0).toFixed(2)}%`
-                                                : `¥${Math.abs(profit.profitTotal).toFixed(2)}`
-                                              }
-                                            </span>
-                                          </div>
+                                          <Stat
+                                            label="持有收益"
+                                            value={`${profit.profitTotal > 0 ? '+' : profit.profitTotal < 0 ? '-' : ''}¥${Math.abs(profit.profitTotal).toFixed(2)}`}
+                                            delta={profit.profitTotal}
+                                            subValue={`${((holding.cost * holding.share) ? (profit.profitTotal / (holding.cost * holding.share)) * 100 : 0) > 0 ? '+' : ''}${((holding.cost * holding.share) ? (profit.profitTotal / (holding.cost * holding.share)) * 100 : 0).toFixed(2)}%`}
+                                          />
                                         )}
                                       </>
                                     );
@@ -4670,7 +4664,7 @@ export default function HomePage() {
                                         }}
                                       />
                                     </div>
-                                    <span className="muted">涨跌幅 / 占比</span>
+                                    <span className="muted" style={{ fontSize: '12px' }}>涨跌幅 / 占比</span>
                                   </div>
                                 </div>
                                 <AnimatePresence>
@@ -4754,7 +4748,7 @@ export default function HomePage() {
           提示：不登陆个人数据保存在个人浏览器中，登陆后数据将保存在线上数据库
         </div>
         <div style={{ marginTop: 12, opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-          <p style={{ margin: 0 }}>
+          <div style={{ margin: 0 }}>
             遇到任何问题或需求建议可
             <button
               className="link-button"
@@ -4766,7 +4760,7 @@ export default function HomePage() {
             >
               点此提交反馈
             </button>
-          </p>
+          </div>
           <button
             onClick={() => setDonateOpen(true)}
             style={{

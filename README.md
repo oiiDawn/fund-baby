@@ -1,6 +1,6 @@
-# 实时基金估值 (Real-time Fund Valuation)
+# 养基小宝-实时基金估值 (bund-baby)
 
-**在线预览地址：[https://ningzhengsheng/fund-baby/](https://ningzhengsheng.cn/fund-baby/)**
+**在线预览地址：[https://ningzhengsheng.cn/fund-baby/](https://ningzhengsheng.cn/fund-baby/)**
 > 由于某些平台不能在实时看见基金的估值，所以做了一个基金估值的网站。
 
 > 一个基于 Next.js 开发的纯前端基金估值与重仓股实时追踪工具。采用玻璃拟态设计（Glassmorphism），支持移动端适配，且无需后端服务器即可运行。

@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
   const GA_ID = 'G-PD2JWJHVEM'; // 请在此处替换您的 Google Analytics ID
 
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script
