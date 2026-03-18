@@ -20,16 +20,23 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: `养基小宝 V${packageJson.version}`,
-  description: '输入基金编号添加基金，实时显示估值与前10重仓'
+  description: '输入基金编号添加基金，实时显示估值与前10重仓',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const GA_ID = 'G-PD2JWJHVEM';
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

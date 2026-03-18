@@ -30,7 +30,7 @@ export default function FundIntradayChart({ data }: FundIntradayChartProps) {
     const chart = echarts.init(el);
     instanceRef.current = chart;
 
-    const values = data.map(d => d.value);
+    const values = data.map((d) => d.value);
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
 
@@ -43,11 +43,11 @@ export default function FundIntradayChart({ data }: FundIntradayChartProps) {
       tooltip: {
         trigger: 'axis',
         formatter(params: any) {
-            const p = params[0];
-            if (!p) return '';
-            const item = data[p.dataIndex];
-            return `时间: ${item.time}<br/>估值: ${item.value}<br/>涨幅: ${item.growth}%`;
-        }
+          const p = params[0];
+          if (!p) return '';
+          const item = data[p.dataIndex];
+          return `时间: ${item.time}<br/>估值: ${item.value}<br/>涨幅: ${item.growth}%`;
+        },
       },
       grid: {
         left: 5,
@@ -58,14 +58,14 @@ export default function FundIntradayChart({ data }: FundIntradayChartProps) {
       },
       xAxis: {
         type: 'category',
-        data: data.map(d => d.time),
+        data: data.map((d) => d.time),
         boundaryGap: false,
         axisLine: { show: true, lineStyle: { color: '#e5e5e5' } },
         axisTick: { show: false },
         axisLabel: {
-            interval: 'auto',
-            color: '#999',
-            fontSize: 10
+          interval: 'auto',
+          color: '#999',
+          fontSize: 10,
         },
         splitLine: { show: false },
       },
@@ -77,14 +77,14 @@ export default function FundIntradayChart({ data }: FundIntradayChartProps) {
         axisLine: { show: true, lineStyle: { color: '#e5e5e5' } },
         axisTick: { show: false },
         axisLabel: {
-            show: true,
-            color: '#999',
-            fontSize: 10,
-            formatter: (val: number) => val.toFixed(3)
+          show: true,
+          color: '#999',
+          fontSize: 10,
+          formatter: (val: number) => val.toFixed(3),
         },
         splitLine: {
-            show: true,
-            lineStyle: { color: 'rgba(0,0,0,0.05)', type: 'dashed' }
+          show: true,
+          lineStyle: { color: 'rgba(0,0,0,0.05)', type: 'dashed' },
         },
       },
       series: [
@@ -100,8 +100,8 @@ export default function FundIntradayChart({ data }: FundIntradayChartProps) {
             opacity: 0.1,
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: color },
-              { offset: 1, color: 'rgba(255, 255, 255, 0)' }
-            ])
+              { offset: 1, color: 'rgba(255, 255, 255, 0)' },
+            ]),
           },
           data: values,
         },

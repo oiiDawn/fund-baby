@@ -2,19 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
 import { CalendarIcon, MinusIcon, PlusIcon } from './Icons';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.tz.setDefault('Asia/Shanghai');
-
-const TZ = 'Asia/Shanghai';
-const nowInTz = () => dayjs().tz(TZ);
-const toTz = (input?: string) => (input ? dayjs.tz(input, TZ) : nowInTz());
-const formatDate = (input?: string) => toTz(input).format('YYYY-MM-DD');
+import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 
 interface DatePickerProps {
   value: string;
@@ -23,7 +12,9 @@ interface DatePickerProps {
 
 export function DatePicker({ value, onChange }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(() => value ? toTz(value) : nowInTz());
+  const [currentMonth, setCurrentMonth] = useState(() =>
+    value ? toTz(value) : nowInTz(),
+  );
 
   useEffect(() => {
     const close = () => setIsOpen(false);
@@ -46,7 +37,9 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
 
   const handleSelect = (e: React.MouseEvent, day: number) => {
     e.stopPropagation();
-    const dateStr = formatDate(`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    const dateStr = formatDate(
+      `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    );
 
     const today = nowInTz().startOf('day');
     const selectedDate = toTz(dateStr).startOf('day');
@@ -65,7 +58,11 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="date-picker" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="date-picker"
+      style={{ position: 'relative' }}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div
         className="input-trigger"
         onClick={() => setIsOpen(!isOpen)}
@@ -79,7 +76,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
           borderRadius: '8px',
           cursor: 'pointer',
           border: '1px solid var(--border)',
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
         }}
       >
         <span>{value || '选择日期'}</span>
@@ -102,12 +99,29 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
               padding: 12,
               zIndex: 10,
               background: 'var(--surface-floating)',
-              border: '1px solid var(--border)'
+              border: '1px solid var(--border)',
             }}
           >
-            <div className="calendar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <button type="button" onClick={handlePrevMonth} className="icon-button" style={{ width: 24, height: 24 }}>&lt;</button>
-              <span style={{ fontWeight: 600 }}>{year}年 {month + 1}月</span>
+            <div
+              className="calendar-header"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="icon-button"
+                style={{ width: 24, height: 24 }}
+              >
+                &lt;
+              </button>
+              <span style={{ fontWeight: 600 }}>
+                {year}年 {month + 1}月
+              </span>
               <button
                 type="button"
                 onClick={handleNextMonth}
@@ -118,13 +132,29 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
               </button>
             </div>
 
-            <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center' }}>
-              {['日', '一', '二', '三', '四', '五', '六'].map(d => (
-                <div key={d} className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>{d}</div>
+            <div
+              className="calendar-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: 4,
+                textAlign: 'center',
+              }}
+            >
+              {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
+                <div
+                  key={d}
+                  className="muted"
+                  style={{ fontSize: '12px', marginBottom: 4 }}
+                >
+                  {d}
+                </div>
               ))}
               {days.map((d, i) => {
                 if (!d) return <div key={i} />;
-                const dateStr = formatDate(`${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+                const dateStr = formatDate(
+                  `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+                );
                 const isSelected = value === dateStr;
                 const today = nowInTz().startOf('day');
                 const current = toTz(dateStr).startOf('day');
@@ -143,16 +173,29 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
                       fontSize: '13px',
                       borderRadius: '6px',
                       cursor: isFuture ? 'not-allowed' : 'pointer',
-                      background: isSelected ? 'var(--primary)' : isToday ? 'var(--surface-strong)' : 'transparent',
-                      color: isFuture ? 'var(--muted)' : isSelected ? 'var(--interactive-contrast)' : 'var(--text)',
+                      background: isSelected
+                        ? 'var(--primary)'
+                        : isToday
+                          ? 'var(--surface-strong)'
+                          : 'transparent',
+                      color: isFuture
+                        ? 'var(--muted)'
+                        : isSelected
+                          ? 'var(--interactive-contrast)'
+                          : 'var(--text)',
                       fontWeight: isSelected || isToday ? 600 : 400,
-                      opacity: isFuture ? 0.3 : 1
+                      opacity: isFuture ? 0.3 : 1,
                     }}
                     onMouseEnter={(e) => {
-                      if (!isSelected && !isFuture) e.currentTarget.style.background = 'var(--surface-strong)';
+                      if (!isSelected && !isFuture)
+                        e.currentTarget.style.background =
+                          'var(--surface-strong)';
                     }}
                     onMouseLeave={(e) => {
-                      if (!isSelected && !isFuture) e.currentTarget.style.background = isToday ? 'var(--surface-strong)' : 'transparent';
+                      if (!isSelected && !isFuture)
+                        e.currentTarget.style.background = isToday
+                          ? 'var(--surface-strong)'
+                          : 'transparent';
                     }}
                   >
                     {d}
@@ -175,8 +218,16 @@ interface NumericInputProps {
   placeholder?: string;
 }
 
-export function NumericInput({ value, onChange, step = 1, min = 0, placeholder }: NumericInputProps) {
-  const decimals = String(step).includes('.') ? String(step).split('.')[1].length : 0;
+export function NumericInput({
+  value,
+  onChange,
+  step = 1,
+  min = 0,
+  placeholder,
+}: NumericInputProps) {
+  const decimals = String(step).includes('.')
+    ? String(step).split('.')[1].length
+    : 0;
   const fmt = (n: number) => Number(n).toFixed(decimals);
   const inc = () => {
     const v = parseFloat(value);
@@ -201,11 +252,30 @@ export function NumericInput({ value, onChange, step = 1, min = 0, placeholder }
         placeholder={placeholder}
         style={{ width: '100%', paddingRight: 56 }}
       />
-      <div style={{ position: 'absolute', right: 6, top: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <button className="icon-button" type="button" onClick={inc} style={{ width: 44, height: 16, padding: 0 }}>
+      <div
+        style={{
+          position: 'absolute',
+          right: 6,
+          top: 6,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
+        <button
+          className="icon-button"
+          type="button"
+          onClick={inc}
+          style={{ width: 44, height: 16, padding: 0 }}
+        >
           <PlusIcon width="14" height="14" />
         </button>
-        <button className="icon-button" type="button" onClick={dec} style={{ width: 44, height: 16, padding: 0 }}>
+        <button
+          className="icon-button"
+          type="button"
+          onClick={dec}
+          style={{ width: 44, height: 16, padding: 0 }}
+        >
           <MinusIcon width="14" height="14" />
         </button>
       </div>
@@ -223,13 +293,47 @@ interface StatProps {
 export function Stat({ label, value, delta, subValue }: StatProps) {
   const dir = delta != null ? (delta > 0 ? 'up' : delta < 0 ? 'down' : '') : '';
   return (
-    <div className="stat" style={{ flexDirection: 'column', gap: 4, minWidth: 0, alignItems: 'center' }}>
-      <span className="label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <span className={`value ${dir}`} style={{ lineHeight: 1.2, whiteSpace: 'nowrap' }}>{value}</span>
-        {subValue && <span className="muted" style={{ fontSize: '11px', marginTop: 2, fontWeight: 500 }}>{subValue}</span>}
+    <div
+      className="stat"
+      style={{
+        flexDirection: 'column',
+        gap: 4,
+        minWidth: 0,
+        alignItems: 'center',
+      }}
+    >
+      <span
+        className="label"
+        style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {label}
+      </span>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <span
+          className={`value ${dir}`}
+          style={{ lineHeight: 1.2, whiteSpace: 'nowrap' }}
+        >
+          {value}
+        </span>
+        {subValue && (
+          <span
+            className="muted"
+            style={{ fontSize: '11px', marginTop: 2, fontWeight: 500 }}
+          >
+            {subValue}
+          </span>
+        )}
       </div>
     </div>
   );
 }
-

@@ -32,9 +32,7 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
     const chart = echarts.init(el);
     instanceRef.current = chart;
 
-    const ys = data
-      .map((d) => Number(d.y))
-      .filter((v) => Number.isFinite(v));
+    const ys = data.map((d) => Number(d.y)).filter((v) => Number.isFinite(v));
     if (ys.length < 2) return;
 
     const minY = Math.min(...ys);
@@ -62,7 +60,7 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
             Number.isFinite(date.getTime()) &&
             `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
               2,
-              '0'
+              '0',
             )}-${String(date.getDate()).padStart(2, '0')}`;
           return `${d || ''}<br/>净值：${p.value[1]}`;
         },
@@ -101,11 +99,11 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
           show: true,
           color: '#999',
           fontSize: 10,
-          formatter: (val: number) => val.toFixed(3)
+          formatter: (val: number) => val.toFixed(3),
         },
         splitLine: {
           show: true,
-          lineStyle: { color: 'rgba(0,0,0,0.05)', type: 'dashed' }
+          lineStyle: { color: 'rgba(0,0,0,0.05)', type: 'dashed' },
         },
       },
       series: [
@@ -121,8 +119,8 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
             opacity: 0.1,
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: lineColor },
-              { offset: 1, color: 'rgba(255, 255, 255, 0)' }
-            ])
+              { offset: 1, color: 'rgba(255, 255, 255, 0)' },
+            ]),
           },
           data: data.map((d) => [d.x, Number(d.y)]),
         },
@@ -132,7 +130,7 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
     chart.setOption(option);
 
     const handleResize = () => {
-        chart.resize();
+      chart.resize();
     };
     window.addEventListener('resize', handleResize);
 

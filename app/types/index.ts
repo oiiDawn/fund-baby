@@ -59,7 +59,7 @@ export interface PendingTrade {
   share: number | null;
   amount?: number | null;
   feeRate?: number;
-  feeMode?: string;
+  feeMode?: FeeMode;
   feeValue?: string | number;
   date: string;
   isAfter3pm: boolean;
@@ -143,4 +143,3 @@ declare global {
     [key: string]: unknown;
   }
 }
-

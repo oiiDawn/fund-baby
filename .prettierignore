@@ -1,0 +1,9 @@
+.claude
+.codex
+.next
+coverage
+node_modules
+openspec
+out
+playwright-report
+test-results

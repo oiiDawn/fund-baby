@@ -81,10 +81,15 @@ fabric.properties
 /.next/
 .vscode/
 .npm-cache/
+.pnpm-store/
 .sisyphus/
 .vercel/
 *.tsbuildinfo
 .impeccable.md
+coverage/
+playwright-report/
+test-results/
+.eslintcache
 
 .env.local
 .DS_Store

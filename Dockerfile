@@ -1,27 +1,30 @@
 # ===== 构建阶段 =====
 FROM node:22-bullseye AS builder
 WORKDIR /app
+RUN corepack enable
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=$NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npx next build
+RUN pnpm build
 # ===== 运行阶段 =====
 FROM node:22-bullseye AS runner
 WORKDIR /app
+RUN corepack enable
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=$NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget -qO- http://localhost:3000 || exit 1
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]

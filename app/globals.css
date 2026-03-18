@@ -29,7 +29,13 @@
   --shadow-sm: 0 10px 20px rgba(0, 0, 0, 0.22);
   --shadow-lg: 0 22px 48px rgba(0, 0, 0, 0.3);
   --focus-ring: rgba(41, 98, 255, 0.24);
-  --app-bg: radial-gradient(880px 420px at 50% -10%, rgba(41, 98, 255, 0.14), transparent 58%), linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
+  --app-bg:
+    radial-gradient(
+      880px 420px at 50% -10%,
+      rgba(41, 98, 255, 0.14),
+      transparent 58%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
   --navbar-offset: 76px;
   --summary-offset: 175px;
 }
@@ -65,7 +71,13 @@
   --shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 18px 36px rgba(15, 23, 42, 0.12);
   --focus-ring: rgba(41, 98, 255, 0.18);
-  --app-bg: radial-gradient(880px 420px at 50% -12%, rgba(41, 98, 255, 0.08), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 28%);
+  --app-bg:
+    radial-gradient(
+      880px 420px at 50% -12%,
+      rgba(41, 98, 255, 0.08),
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 28%);
 }
 
 * {
@@ -79,7 +91,7 @@ body {
 
 body {
   margin: 0;
-  font-family: var(--font-body), "Segoe UI", sans-serif;
+  font-family: var(--font-body), 'Segoe UI', sans-serif;
   background: var(--app-bg), var(--bg);
   color: var(--text);
   font-kerning: normal;
@@ -153,7 +165,6 @@ select {
 }
 
 @media (max-width: 1024px) {
-
   .col-4,
   .col-3 {
     grid-column: span 12;
@@ -272,7 +283,9 @@ select {
   color: var(--text);
   outline: none;
   font-size: 0.95rem;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .input:focus {
@@ -281,13 +294,13 @@ select {
 }
 
 /* 美化并隐藏原生数字输入的上下按钮，使用自定义按钮 */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 
@@ -300,7 +313,10 @@ input[type="number"] {
   color: var(--interactive-contrast);
   font-weight: 600;
   cursor: pointer;
-  transition: transform 150ms ease, background-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    transform 150ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .button:hover {
@@ -417,13 +433,13 @@ input[type="number"] {
     line-height: 1.2;
     white-space: nowrap;
   }
-  
+
   /* 针对卡片视图的特定调整，使其更像表格行的布局 */
   .card .row {
     margin-bottom: 8px !important; /* 减小行间距 */
     gap: 8px; /* 减小列间距 */
   }
-  
+
   .card .title {
     margin-bottom: 8px !important; /* 减小标题与内容的间距 */
   }
@@ -544,7 +560,11 @@ input[type="number"] {
   background: var(--surface-soft);
   color: var(--muted);
   cursor: pointer;
-  transition: box-shadow 200ms ease, border-color 200ms ease, transform 150ms ease, color 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    transform 150ms ease,
+    color 200ms ease;
 }
 
 .icon-button:hover {
@@ -614,7 +634,14 @@ input[type="number"] {
   row-gap: 4px;
   font-size: 24px;
   font-weight: 700;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace
+  );
 }
 
 .group-summary-currency {
@@ -734,7 +761,9 @@ input[type="number"] {
     5. 持仓金额: 1.2fr
     6. 操作: 100px (固定)
   */
-  grid-template-columns: minmax(180px, 2fr) minmax(130px, 1.4fr) minmax(110px, 1.2fr) minmax(110px, 1.2fr) minmax(110px, 1.2fr) 100px;
+  grid-template-columns:
+    minmax(180px, 2fr) minmax(130px, 1.4fr) minmax(110px, 1.2fr)
+    minmax(110px, 1.2fr) minmax(110px, 1.2fr) 100px;
   align-items: center;
   gap: 16px; /* 增加间距 */
   padding: 0 24px; /* 上下 padding 移到各自类中，这里只定左右 */
@@ -806,8 +835,8 @@ input[type="number"] {
   flex-direction: column;
   gap: 2px;
   overflow: hidden; /* 关键：确保内部省略号生效 */
-  min-width: 0;     /* 关键：允许 flex/grid item 收缩 */
-  flex: 1;          /* 关键：占据剩余空间 */
+  min-width: 0; /* 关键：允许 flex/grid item 收缩 */
+  flex: 1; /* 关键：占据剩余空间 */
 }
 
 .name-text {
@@ -895,8 +924,8 @@ input[type="number"] {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas:
-      "name name amount"
-      "change profit holding";
+      'name name amount'
+      'change profit holding';
     gap: 8px 4px; /* 行间距8px, 列间距4px */
     padding: 12px !important;
     align-items: center;
@@ -905,7 +934,7 @@ input[type="number"] {
     border: 1px solid var(--border);
     border-radius: 12px;
   }
-  
+
   .table-row:last-child {
     border-bottom: 1px solid var(--border);
   }
@@ -917,7 +946,7 @@ input[type="number"] {
     grid-area: name;
     overflow: hidden;
     padding-right: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.03); /* 微弱分割线 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03); /* 微弱分割线 */
     padding-bottom: 8px;
     margin-bottom: 4px;
   }
@@ -931,7 +960,7 @@ input[type="number"] {
     text-align: right !important;
     font-size: 14px;
     font-weight: 600;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     padding-bottom: 8px;
     margin-bottom: 4px;
     display: flex !important;
@@ -941,8 +970,8 @@ input[type="number"] {
   /* --- Row 2: 次要数据 (带标签) --- */
 
   /* 通用样式：垂直排列，带标签 */
-  .profit-cell, 
-  .holding-cell, 
+  .profit-cell,
+  .holding-cell,
   .change-cell {
     display: flex !important; /* 强制显示 */
     flex-direction: column;
@@ -954,10 +983,31 @@ input[type="number"] {
   }
 
   /* 为数据添加 Label 伪元素 */
-  .profit-cell::before { content: "当日盈亏"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
-  .holding-cell::before { content: "持有收益"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
-  .change-cell::before { content: "当日涨幅"; color: var(--muted); font-size: 10px; margin-bottom: 2px; }
-  .holding-amount-cell::before { content: "持有金额"; color: var(--muted); font-size: 10px; margin-bottom: 2px; font-weight: normal; }
+  .profit-cell::before {
+    content: '当日盈亏';
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .holding-cell::before {
+    content: '持有收益';
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .change-cell::before {
+    content: '当日涨幅';
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .holding-amount-cell::before {
+    content: '持有金额';
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 2px;
+    font-weight: normal;
+  }
 
   /* 具体位置分配 - 样式跟随位置调整 */
   .profit-cell {
@@ -969,7 +1019,7 @@ input[type="number"] {
     grid-area: holding;
     align-items: flex-end; /* 现居右 */
   }
-  
+
   .change-cell {
     grid-area: change;
     align-items: flex-start; /* 现居左 */
@@ -984,12 +1034,12 @@ input[type="number"] {
   .table-row .text-right {
     text-align: inherit; /* 重置 text-align */
   }
-  
+
   /* 隐藏操作列 (仍然通过侧滑或点击行来操作) */
   .action-cell {
-    display: none; 
+    display: none;
   }
-  
+
   /* 调整字体大小 */
   .name-text {
     font-size: 15px; /* 恢复稍大字体 */
@@ -999,11 +1049,11 @@ input[type="number"] {
     font-size: 10px; /* 稍微缩小辅助信息 */
     color: var(--muted);
   }
-  
+
   /* 针对数值列内部的 strong/span 标签也做调整 */
-  .table-cell strong, 
+  .table-cell strong,
   .table-cell span {
-     /* 允许继承父级字体设置，或单独微调 */
+    /* 允许继承父级字体设置，或单独微调 */
   }
 }
 
@@ -1035,7 +1085,7 @@ input[type="number"] {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: inset 10px 0 20px -10px rgba(0,0,0,0.2); /* 增加一点内阴影，增加层次感 */
+  box-shadow: inset 10px 0 20px -10px rgba(0, 0, 0, 0.2); /* 增加一点内阴影，增加层次感 */
 }
 
 .stat-compact .down {
@@ -1294,19 +1344,32 @@ input[type="number"] {
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: border-color 200ms ease, transform 150ms ease;
+  transition:
+    border-color 200ms ease,
+    transform 150ms ease;
 }
-.chip:hover { transform: translateY(-1px); border-color: var(--accent); }
-.chip.active { background: var(--primary); color: var(--interactive-contrast); border-color: transparent; }
+.chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+.chip.active {
+  background: var(--primary);
+  color: var(--interactive-contrast);
+  border-color: transparent;
+}
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .spin {
   animation: spin 0.8s linear infinite;
 }
-.icon-button[aria-busy="true"] {
+.icon-button[aria-busy='true'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);
   cursor: default;
@@ -1330,8 +1393,12 @@ input[type="number"] {
 }
 
 @keyframes loading {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* 搜索相关样式 */
@@ -1498,7 +1565,10 @@ input[type="number"] {
   gap: 8px;
   margin-bottom: 16px;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
   font-size: 14px;
   font-weight: 500;
 }
@@ -1576,19 +1646,41 @@ input[type="number"] {
   -webkit-mask-image: none;
 }
 
-.tabs-scroll-area[data-mask-left="true"][data-mask-right="true"] {
-  mask-image: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent);
+.tabs-scroll-area[data-mask-left='true'][data-mask-right='true'] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 40px,
+    black calc(100% - 40px),
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 40px,
+    black calc(100% - 40px),
+    transparent
+  );
 }
 
-.tabs-scroll-area[data-mask-left="true"][data-mask-right="false"] {
+.tabs-scroll-area[data-mask-left='true'][data-mask-right='false'] {
   mask-image: linear-gradient(to right, transparent, black 40px, black);
   -webkit-mask-image: linear-gradient(to right, transparent, black 40px, black);
 }
 
-.tabs-scroll-area[data-mask-left="false"][data-mask-right="true"] {
-  mask-image: linear-gradient(to right, black, black calc(100% - 40px), transparent);
-  -webkit-mask-image: linear-gradient(to right, black, black calc(100% - 40px), transparent);
+.tabs-scroll-area[data-mask-left='false'][data-mask-right='true'] {
+  mask-image: linear-gradient(
+    to right,
+    black,
+    black calc(100% - 40px),
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black,
+    black calc(100% - 40px),
+    transparent
+  );
 }
 
 .tabs {
@@ -1604,7 +1696,7 @@ input[type="number"] {
 }
 
 .tabs::after {
-  content: "";
+  content: '';
   flex: 0 0 16px; /* 末尾留一点空隙，避免贴边 */
 }
 
@@ -1899,7 +1991,6 @@ input[type="number"] {
 
 /* ========== 移动端响应式 ========== */
 @media (max-width: 640px) {
-
   .user-menu-header {
     padding: 16px 8px;
   }
@@ -1980,15 +2071,15 @@ input[type="number"] {
     padding: 2px 6px !important;
     border-radius: 6px;
   }
-  
+
   .badge-v span {
     font-size: 10px !important;
   }
-  
+
   .badge-v strong {
     font-size: 10px !important; /* 估值时间也改小 */
   }
-  
+
   /* 调整卡片视图的标题字体，与表格视图一致 */
   .card .name-text {
     font-size: 15px !important;

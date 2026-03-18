@@ -20,7 +20,10 @@ export default function AnalyticsGate({ GA_ID }: AnalyticsGateProps) {
 
   return (
     <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        strategy="afterInteractive"
+      />
       <Script id="google-analytics" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
