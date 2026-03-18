@@ -7,17 +7,13 @@ import { glass } from '@dicebear/collection';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import Announcement from "./components/Announcement";
 import FundTrendChart from "./components/FundTrendChart";
 import FundIntradayChart from "./components/FundIntradayChart";
-import { DatePicker, DonateTabs, NumericInput, Stat } from "./components/Common";
-import { ChevronIcon, CloseIcon, CloudIcon, DragIcon, EditIcon, ExitIcon, EyeIcon, EyeOffIcon, GridIcon, ListIcon, LoginIcon, LogoutIcon, MailIcon, MoonIcon, PinIcon, PinOffIcon, PlusIcon, RefreshIcon, SettingsIcon, SortIcon, StarIcon, SunIcon, SwitchIcon, TrashIcon, UpdateIcon, UserIcon } from "./components/Icons";
+import { DatePicker, NumericInput, Stat } from "./components/Common";
+import { ChevronIcon, CloseIcon, DragIcon, EditIcon, ExitIcon, EyeIcon, EyeOffIcon, GridIcon, ListIcon, MoonIcon, PinIcon, PinOffIcon, PlusIcon, RefreshIcon, SettingsIcon, SortIcon, StarIcon, SunIcon, SwitchIcon, TrashIcon } from "./components/Icons";
 import githubImg from "./assets/github.svg";
-import wxChatImg from "./assets/wxChat.jpeg";
-import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { fetchFundData, fetchIntradayData, fetchLatestRelease, fetchShanghaiIndexDate, fetchSmartFundNetValue, searchFunds, submitFeedback } from './api/fund';
-import packageJson from '../package.json';
-import type { FundData, FundGroup, FundSearchResult, Holding, HoldingsMap, HoldingProfit, IntradayPoint, PendingTrade, CloudSyncPayload, ViewMode, SortBy, SortOrder, TradeType, FeeMode, ToastType } from './types';
+import { fetchFundData, fetchIntradayData, fetchShanghaiIndexDate, fetchSmartFundNetValue, searchFunds } from './api/fund';
+import type { FundData, FundGroup, FundSearchResult, Holding, HoldingsMap, HoldingProfit, IntradayPoint, PendingTrade, ViewMode, SortBy, SortOrder, TradeType, FeeMode, ToastType } from './types';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,198 +23,6 @@ const TZ = 'Asia/Shanghai';
 const nowInTz = () => dayjs().tz(TZ);
 const toTz = (input?: string) => (input ? dayjs.tz(input, TZ) : nowInTz());
 const formatDate = (input?: string) => toTz(input).format('YYYY-MM-DD');
-
-interface FeedbackModalProps {
-  onClose: () => void;
-  user: any;
-  onOpenWeChat: () => void;
-}
-
-function FeedbackModal({ onClose, user, onOpenWeChat }: FeedbackModalProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [succeeded, setSucceeded] = useState(false);
-  const [error, setError] = useState("");
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-
-    const formData = new FormData(e.target as HTMLFormElement);
-    const nickname = (formData.get("nickname") as string)?.trim();
-    if (!nickname) {
-      formData.set("nickname", "匿名");
-    }
-
-    // Web3Forms Access Key
-    formData.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || '');
-    formData.append("subject", "养基小宝 - 用户反馈");
-
-    try {
-      const data = await submitFeedback(formData);
-      if (data.success) {
-        setSucceeded(true);
-      } else {
-        setError(data.message || "提交失败，请稍后再试");
-      }
-    } catch (err) {
-      setError("网络错误，请检查您的连接");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <motion.div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="意见反馈"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass card modal feedback-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="title" style={{ marginBottom: 20, justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <SettingsIcon width="20" height="20" />
-            <span>意见反馈</span>
-          </div>
-          <button className="icon-button" onClick={onClose} style={{ border: 'none', background: 'transparent' }}>
-            <CloseIcon width="20" height="20" />
-          </button>
-        </div>
-
-        {succeeded ? (
-          <div className="success-message" style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: '48px', marginBottom: 16 }}>🎉</div>
-            <h3 style={{ marginBottom: 8 }}>感谢您的反馈！</h3>
-            <p className="muted">我们已收到您的建议，会尽快查看。</p>
-            <button className="button" onClick={onClose} style={{ marginTop: 24, width: '100%' }}>
-              关闭
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="feedback-form">
-            <div className="form-group" style={{ marginBottom: 16 }}>
-              <label htmlFor="nickname" className="muted" style={{ display: 'block', marginBottom: 8, fontSize: '14px' }}>
-                您的昵称（可选）
-              </label>
-              <input
-                id="nickname"
-                type="text"
-                name="nickname"
-                className="input"
-                placeholder="匿名"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <input type="hidden" name="email" value={user?.email || ''} />
-            <div className="form-group" style={{ marginBottom: 20 }}>
-              <label htmlFor="message" className="muted" style={{ display: 'block', marginBottom: 8, fontSize: '14px' }}>
-                反馈内容
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                className="input"
-                required
-                placeholder="请描述您遇到的问题或建议..."
-                style={{ width: '100%', minHeight: '120px', padding: '12px', resize: 'vertical' }}
-              />
-            </div>
-            {error && (
-              <div className="error-text" style={{ marginBottom: 16, textAlign: 'center' }}>
-                {error}
-              </div>
-            )}
-
-            <button className="button" type="submit" disabled={submitting} style={{ width: '100%' }}>
-              {submitting ? '发送中...' : '提交反馈'}
-            </button>
-
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-              <p className="muted" style={{ fontSize: '12px', lineHeight: '1.6' }}>
-                如果您有 Github 账号，也可以在本项目
-                <a
-                  href="https://github.com/zhengshengning/fund-baby/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-button"
-                  style={{ color: 'var(--primary)', textDecoration: 'underline', padding: '0 4px', fontWeight: 600 }}
-                >
-                  Issues
-                </a>
-                区留言互动
-              </p>
-              <p className="muted" style={{ fontSize: '12px', lineHeight: '1.6' }}>
-                或加入我们的
-                <a
-                  className="link-button"
-                  style={{ color: 'var(--primary)', textDecoration: 'underline', padding: '0 4px', fontWeight: 600, cursor: 'pointer' }}
-                  onClick={onOpenWeChat}
-                >
-                  微信用户交流群
-                </a>
-              </p>
-            </div>
-          </form>
-        )}
-      </motion.div>
-    </motion.div>
-  );
-}
-
-interface WeChatModalProps {
-  onClose: () => void;
-}
-
-function WeChatModal({ onClose }: WeChatModalProps) {
-  return (
-    <motion.div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="微信用户交流群"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{ zIndex: 10002 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass card modal"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '360px', padding: '24px' }}
-      >
-        <div className="title" style={{ marginBottom: 20, justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span>💬 微信用户交流群</span>
-            </div>
-            <button className="icon-button" onClick={onClose} style={{ border: 'none', background: 'transparent' }}>
-                <CloseIcon width="20" height="20" />
-            </button>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <img src={wxChatImg.src} alt="WeChat Group" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-        </div>
-        <p className="muted" style={{ textAlign: 'center', marginTop: 16, fontSize: '14px' }}>
-            扫码加入群聊，获取最新更新与交流
-        </p>
-      </motion.div>
-    </motion.div>
-  );
-}
 
 interface HoldingActionModalProps {
   fund: FundData | null;
@@ -262,13 +66,13 @@ function HoldingActionModal({ fund, onClose, onAction }: HoldingActionModalProps
         </div>
 
         <div className="grid" style={{ gap: 12 }}>
-          <button className="button col-6" onClick={() => onAction('buy')} style={{ background: 'rgba(34, 211, 238, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)' }}>
+          <button className="button col-6" onClick={() => onAction('buy')} style={{ background: 'var(--primary-soft)', border: '1px solid rgba(143, 167, 188, 0.24)', color: 'var(--primary)' }}>
             加仓
           </button>
-          <button className="button col-6" onClick={() => onAction('sell')} style={{ background: 'rgba(248, 113, 113, 0.1)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
+          <button className="button col-6" onClick={() => onAction('sell')} style={{ background: 'var(--danger-soft)', border: '1px solid rgba(181, 122, 119, 0.24)', color: 'var(--danger)' }}>
             减仓
           </button>
-          <button className="button col-12" onClick={() => onAction('edit')} style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>
+          <button className="button col-12" onClick={() => onAction('edit')} style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', color: 'var(--text)' }}>
             编辑持仓
           </button>
           <button
@@ -276,9 +80,9 @@ function HoldingActionModal({ fund, onClose, onAction }: HoldingActionModalProps
             onClick={() => onAction('clear')}
             style={{
               marginTop: 8,
-              background: 'linear-gradient(180deg, #ef4444, #f87171)',
+              background: 'var(--danger)',
               border: 'none',
-              color: '#2b0b0b',
+              color: 'var(--interactive-contrast)',
               fontWeight: 600
             }}
           >
@@ -533,12 +337,12 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
             <div
                 style={{
                     marginBottom: 16,
-                    background: 'rgba(230, 162, 60, 0.1)',
-                    border: '1px solid rgba(230, 162, 60, 0.2)',
+                    background: 'var(--warning-soft)',
+                    border: '1px solid var(--warning-border)',
                     borderRadius: 8,
                     padding: '8px 12px',
                     fontSize: '12px',
-                    color: '#e6a23c',
+                    color: 'var(--warning)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -553,7 +357,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
 
         {showPendingList ? (
             <div className="pending-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                <div className="pending-list-header" style={{ position: 'sticky', top: 0, zIndex: 1, background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(6px)', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
+                <div className="pending-list-header" style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--surface-floating)', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
                     <button
                         className="button secondary"
                         onClick={() => setShowPendingList(false)}
@@ -564,7 +368,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                 </div>
                 <div className="pending-list-items" style={{ paddingTop: 0 }}>
                     {currentPendingTrades.map((trade, idx) => (
-                        <div key={trade.id || idx} style={{ background: 'rgba(255,255,255,0.05)', padding: 12, borderRadius: 8, marginBottom: 8 }}>
+                        <div key={trade.id || idx} style={{ background: 'var(--surface-soft)', padding: 12, borderRadius: 8, marginBottom: 8 }}>
                             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: trade.type === 'buy' ? 'var(--danger)' : 'var(--success)' }}>
                                     {trade.type === 'buy' ? '买入' : '卖出'}
@@ -578,7 +382,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                             <div className="row" style={{ justifyContent: 'space-between', fontSize: '12px', marginTop: 4 }}>
                                 <span className="muted">状态</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ color: '#e6a23c' }}>等待净值更新...</span>
+                                    <span style={{ color: 'var(--warning)' }}>等待净值更新...</span>
                                     <button
                                         className="button secondary"
                                         onClick={() => setRevokeTrade(trade)}
@@ -586,7 +390,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                                             padding: '2px 8px',
                                             fontSize: '10px',
                                             height: 'auto',
-                                            background: 'rgba(255,255,255,0.1)',
+                                            background: 'var(--surface-strong)',
                                             color: 'var(--text)'
                                         }}
                                     >
@@ -610,7 +414,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
         {showConfirm ? (
             isBuy ? (
             <div style={{ fontSize: '14px' }}>
-                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                <div style={{ background: 'var(--surface-soft)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
                     <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
                         <span className="muted">基金名称</span>
                         <span style={{ fontWeight: 600 }}>{fund?.name}</span>
@@ -635,7 +439,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                         <span className="muted">买入日期</span>
                         <span>{date}</span>
                     </div>
-                    <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
+                    <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                         <span className="muted">交易时段</span>
                         <span>{isAfter3pm ? '15:00后' : '15:00前'}</span>
                     </div>
@@ -648,7 +452,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                     <div style={{ marginBottom: 20 }}>
                         <div className="muted" style={{ marginBottom: 8, fontSize: '12px' }}>持仓变化预览</div>
                         <div className="row" style={{ gap: 12 }}>
-                            <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8 }}>
+                            <div style={{ flex: 1, background: 'var(--surface-inset)', padding: 12, borderRadius: 8 }}>
                                 <div className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>持有份额</div>
                                 <div style={{ fontSize: '12px' }}>
                                     <span style={{ opacity: 0.7 }}>{holding.share.toFixed(2)}</span>
@@ -657,7 +461,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                                 </div>
                             </div>
                             {price ? (
-                                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8 }}>
+                                <div style={{ flex: 1, background: 'var(--surface-inset)', padding: 12, borderRadius: 8 }}>
                                     <div className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>持有市值 (估)</div>
                                     <div style={{ fontSize: '12px' }}>
                                         <span style={{ opacity: 0.7 }}>¥{(holding.share * Number(price)).toFixed(2)}</span>
@@ -675,7 +479,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                         type="button"
                         className="button secondary"
                         onClick={() => setShowConfirm(false)}
-                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}
+                        style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}
                     >
                         返回修改
                     </button>
@@ -684,7 +488,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                         className="button"
                         onClick={handleFinalConfirm}
                         disabled={loadingPrice}
-                        style={{ flex: 1, background: 'var(--primary)', opacity: loadingPrice ? 0.6 : 1, color: '#05263b' }}
+                        style={{ flex: 1, background: 'var(--primary)', opacity: loadingPrice ? 0.6 : 1, color: 'var(--interactive-contrast)' }}
                     >
                         {loadingPrice ? '请稍候' : (price ? '确认买入' : '加入待处理队列')}
                     </button>
@@ -692,7 +496,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
             </div>
             ) : (
             <div style={{ fontSize: '14px' }}>
-                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                <div style={{ background: 'var(--surface-soft)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
                     <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
                         <span className="muted">基金名称</span>
                         <span style={{ fontWeight: 600 }}>{fund?.name}</span>
@@ -717,7 +521,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                         <span className="muted">卖出日期</span>
                         <span>{date}</span>
                     </div>
-                     <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
+                     <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                         <span className="muted">预计回款</span>
                         <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{loadingPrice ? '计算中...' : (price ? `¥${estimatedReturn.toFixed(2)}` : '待计算')}</span>
                     </div>
@@ -730,7 +534,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                     <div style={{ marginBottom: 20 }}>
                         <div className="muted" style={{ marginBottom: 8, fontSize: '12px' }}>持仓变化预览</div>
                         <div className="row" style={{ gap: 12 }}>
-                            <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8 }}>
+                            <div style={{ flex: 1, background: 'var(--surface-inset)', padding: 12, borderRadius: 8 }}>
                                 <div className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>持有份额</div>
                                 <div style={{ fontSize: '12px' }}>
                                     <span style={{ opacity: 0.7 }}>{holding.share.toFixed(2)}</span>
@@ -739,7 +543,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                                 </div>
                             </div>
                             {price ? (
-                                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8 }}>
+                                <div style={{ flex: 1, background: 'var(--surface-inset)', padding: 12, borderRadius: 8 }}>
                                     <div className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>持有市值 (估)</div>
                                     <div style={{ fontSize: '12px' }}>
                                         <span style={{ opacity: 0.7 }}>¥{(holding.share * sellPrice).toFixed(2)}</span>
@@ -757,7 +561,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                         type="button"
                         className="button secondary"
                         onClick={() => setShowConfirm(false)}
-                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}
+                        style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}
                     >
                         返回修改
                     </button>
@@ -819,7 +623,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                 <label className="muted" style={{ display: 'block', marginBottom: 8, fontSize: '14px' }}>
                   交易时段
                 </label>
-                <div className="row" style={{ gap: 8, background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '4px' }}>
+                <div className="row" style={{ gap: 8, background: 'var(--surface-inset)', borderRadius: '8px', padding: '4px' }}>
                   <button
                     type="button"
                     onClick={() => setIsAfter3pm(false)}
@@ -827,7 +631,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                       flex: 1,
                       border: 'none',
                       background: !isAfter3pm ? 'var(--primary)' : 'transparent',
-                      color: !isAfter3pm ? '#05263b' : 'var(--muted)',
+                      color: !isAfter3pm ? 'var(--interactive-contrast)' : 'var(--muted)',
                       borderRadius: '6px',
                       fontSize: '12px',
                       cursor: 'pointer',
@@ -843,7 +647,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                       flex: 1,
                       border: 'none',
                       background: isAfter3pm ? 'var(--primary)' : 'transparent',
-                      color: isAfter3pm ? '#05263b' : 'var(--muted)',
+                      color: isAfter3pm ? 'var(--interactive-contrast)' : 'var(--muted)',
                       borderRadius: '6px',
                       fontSize: '12px',
                       cursor: 'pointer',
@@ -896,7 +700,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                                    flex: 1,
                                    padding: '4px 8px',
                                    fontSize: '12px',
-                                   background: 'rgba(255,255,255,0.1)',
+                                   background: 'var(--surface-strong)',
                                    border: 'none',
                                    borderRadius: '4px',
                                    color: 'var(--text)',
@@ -910,7 +714,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                 )}
                  {holding && (
                     <div className="muted" style={{ fontSize: '12px', marginTop: 6 }}>
-                        当前持仓: {holding.share.toFixed(2)} 份 {pendingSellShare > 0 && <span style={{color: '#e6a23c', marginLeft: 8}}>冻结: {pendingSellShare.toFixed(2)} 份</span>}
+                        当前持仓: {holding.share.toFixed(2)} 份 {pendingSellShare > 0 && <span style={{color: 'var(--warning)', marginLeft: 8}}>冻结: {pendingSellShare.toFixed(2)} 份</span>}
                     </div>
                 )}
               </div>
@@ -961,7 +765,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                 <label className="muted" style={{ display: 'block', marginBottom: 8, fontSize: '14px' }}>
                   交易时段
                 </label>
-                <div className="row" style={{ gap: 8, background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '4px' }}>
+                <div className="row" style={{ gap: 8, background: 'var(--surface-inset)', borderRadius: '8px', padding: '4px' }}>
                   <button
                     type="button"
                     onClick={() => setIsAfter3pm(false)}
@@ -969,7 +773,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                       flex: 1,
                       border: 'none',
                       background: !isAfter3pm ? 'var(--primary)' : 'transparent',
-                      color: !isAfter3pm ? '#05263b' : 'var(--muted)',
+                      color: !isAfter3pm ? 'var(--interactive-contrast)' : 'var(--muted)',
                       borderRadius: '6px',
                       fontSize: '12px',
                       cursor: 'pointer',
@@ -985,7 +789,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
                       flex: 1,
                       border: 'none',
                       background: isAfter3pm ? 'var(--primary)' : 'transparent',
-                      color: isAfter3pm ? '#05263b' : 'var(--muted)',
+                      color: isAfter3pm ? 'var(--interactive-contrast)' : 'var(--muted)',
                       borderRadius: '6px',
                       fontSize: '12px',
                       cursor: 'pointer',
@@ -1010,7 +814,7 @@ function TradeModal({ type, fund, holding, onClose, onConfirm, pendingTrades = [
           )}
 
           <div className="row" style={{ gap: 12, marginTop: 12 }}>
-            <button type="button" className="button secondary" onClick={onClose} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>取消</button>
+            <button type="button" className="button secondary" onClick={onClose} style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}>取消</button>
             <button
               type="submit"
               className="button"
@@ -1181,7 +985,7 @@ function HoldingEditModal({ fund, holding, onClose, onSave }: HoldingEditModalPr
           </div>
         </div>
 
-        <div className="tabs-container" style={{ marginBottom: 20, background: 'rgba(255,255,255,0.05)', padding: 4, borderRadius: 12 }}>
+        <div className="tabs-container" style={{ marginBottom: 20, background: 'var(--surface-soft)', padding: 4, borderRadius: 12 }}>
           <div className="row" style={{ gap: 0 }}>
             <button
               type="button"
@@ -1277,7 +1081,7 @@ function HoldingEditModal({ fund, holding, onClose, onSave }: HoldingEditModalPr
           )}
 
           <div className="row" style={{ gap: 12 }}>
-            <button type="button" className="button secondary" onClick={onClose} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>取消</button>
+            <button type="button" className="button secondary" onClick={onClose} style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}>取消</button>
             <button
               type="submit"
               className="button"
@@ -1384,62 +1188,6 @@ function SuccessModal({ message, onClose }: SuccessModalProps) {
   );
 }
 
-interface CloudConfigModalProps {
-  onConfirm: () => void;
-  onCancel: () => void;
-  type?: 'empty' | 'conflict';
-}
-
-function CloudConfigModal({ onConfirm, onCancel, type = 'empty' }: CloudConfigModalProps) {
-  const isConflict = type === 'conflict';
-  return (
-    <motion.div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={isConflict ? "配置冲突提示" : "云端同步提示"}
-      onClick={isConflict ? undefined : onCancel}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass card modal"
-        style={{ maxWidth: '420px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="title" style={{ marginBottom: 12, justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <CloudIcon width="20" height="20" />
-            <span>{isConflict ? '发现配置冲突' : '云端暂无配置'}</span>
-          </div>
-          {!isConflict && (
-            <button className="icon-button" onClick={onCancel} style={{ border: 'none', background: 'transparent' }}>
-              <CloseIcon width="20" height="20" />
-            </button>
-          )}
-        </div>
-        <p className="muted" style={{ marginBottom: 20, fontSize: '14px', lineHeight: '1.6' }}>
-          {isConflict
-            ? '检测到本地配置与云端不一致，请选择操作：'
-            : '是否将本地配置同步到云端？'}
-        </p>
-        <div className="row" style={{ flexDirection: 'column', gap: 12 }}>
-          <button className="button" onClick={onConfirm}>
-            {isConflict ? '保留本地 (覆盖云端)' : '同步本地到云端'}
-          </button>
-          <button className="button secondary" onClick={onCancel}>
-            {isConflict ? '使用云端 (覆盖本地)' : '暂不同步'}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 interface ConfirmModalProps {
   title: string;
   message: string;
@@ -1479,7 +1227,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel, confirmText = "确�
           {message}
         </p>
         <div className="row" style={{ gap: 12 }}>
-          <button className="button secondary" onClick={onCancel} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>取消</button>
+          <button className="button secondary" onClick={onCancel} style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}>取消</button>
           <button className="button danger" onClick={onConfirm} style={{ flex: 1 }}>{confirmText}</button>
         </div>
       </motion.div>
@@ -1609,7 +1357,7 @@ function GroupManageModal({ groups, onClose, onSave }: GroupManageModalProps) {
                       style={{
                         flex: 1,
                         height: '36px',
-                        background: 'rgba(0,0,0,0.2)',
+                        background: 'var(--surface-inset)',
                         border: !item.name.trim() ? '1px solid var(--danger)' : 'none'
                       }}
                     />
@@ -1635,7 +1383,7 @@ function GroupManageModal({ groups, onClose, onSave }: GroupManageModalProps) {
               padding: '10px',
               borderRadius: '12px',
               border: '1px dashed var(--border)',
-              background: 'rgba(255,255,255,0.02)',
+              background: 'var(--surface-soft)',
               color: 'var(--muted)',
               fontSize: '14px',
               display: 'flex',
@@ -1760,7 +1508,7 @@ function AddFundToGroupModal({ allFunds, currentGroupCodes, onClose, onAdd }: Ad
         </div>
 
         <div className="row" style={{ marginTop: 24, gap: 12 }}>
-          <button className="button secondary" onClick={onClose} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>取消</button>
+          <button className="button secondary" onClick={onClose} style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}>取消</button>
           <button
             className="button"
             onClick={() => onAdd(Array.from(selected))}
@@ -1828,7 +1576,7 @@ function GroupModal({ onClose, onConfirm }: GroupModalProps) {
           />
         </div>
         <div className="row" style={{ gap: 12 }}>
-          <button className="button secondary" onClick={onClose} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}>取消</button>
+          <button className="button secondary" onClick={onClose} style={{ flex: 1, background: 'var(--surface-soft)', color: 'var(--text)' }}>取消</button>
           <button className="button" onClick={() => name.trim() && onConfirm(name.trim())} disabled={!name.trim()} style={{ flex: 1 }}>确定</button>
         </div>
       </motion.div>
@@ -1958,48 +1706,36 @@ function GroupSummary({ funds, holdings, groupName, getProfit }: GroupSummaryPro
 
   return (
     <div className={isSticky ? "group-summary-sticky" : ""}>
-    <div className="glass card group-summary-card" style={{ marginBottom: 8, padding: '16px 20px', background: 'rgba(255, 255, 255, 0.03)', position: 'relative' }}>
+    <div className="glass card group-summary-card">
       <span
-        className="sticky-toggle-btn"
+        className="sticky-toggle-btn group-summary-toggle"
         onClick={() => setIsSticky(!isSticky)}
-        style={{
-          position: 'absolute',
-          top: 4,
-          right: 4,
-          width: 24,
-          height: 24,
-          padding: 4,
-          opacity: 0.6,
-          zIndex: 10,
-          color: 'var(--muted)'
-        }}
       >
         {isSticky ? <PinIcon width="14" height="14" /> : <PinOffIcon width="14" height="14" />}
       </span>
-      <div ref={rowRef} className="row" style={{ alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+      <div ref={rowRef} className="row group-summary-row">
+        <div className="group-summary-primary">
+          <div className="group-summary-heading">
             <div className="muted" style={{ fontSize: '12px' }}>{groupName}</div>
             <button
-              className="fav-button"
+              className="fav-button group-summary-visibility"
               onClick={() => setIsMasked(value => !value)}
               aria-label={isMasked ? '显示资产' : '隐藏资产'}
-              style={{ margin: 0, padding: 2, display: 'inline-flex', alignItems: 'center' }}
             >
               {isMasked ? <EyeOffIcon width="16" height="16" /> : <EyeIcon width="16" height="16" />}
             </button>
           </div>
-          <div style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-            <span style={{ fontSize: '16px', marginRight: 2 }}>¥</span>
+          <div className="group-summary-total">
+            <span className="group-summary-currency">¥</span>
             {isMasked ? (
-              <span style={{ fontSize: assetSize, position: 'relative', top: 4 }}>******</span>
+              <span className="group-summary-value-mask" style={{ fontSize: assetSize }}>******</span>
             ) : (
               <CountUp value={summary.totalAsset} style={{ fontSize: assetSize }} />
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 24 }}>
-          <div style={{ textAlign: 'right' }}>
+        <div className="group-summary-metrics">
+          <div className="group-summary-metric">
             <div className="muted" style={{ fontSize: '12px', marginBottom: 4 }}>当日收益</div>
             <div
               className={summary.totalProfitToday > 0 ? 'up' : summary.totalProfitToday < 0 ? 'down' : ''}
@@ -2015,12 +1751,11 @@ function GroupSummary({ funds, holdings, groupName, getProfit }: GroupSummaryPro
               )}
             </div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
+          <div className="group-summary-metric group-summary-metric-center">
+            <div className="group-summary-label-row">
               <div className="muted" style={{ fontSize: '12px' }}>持有收益</div>
               <div 
-                className="icon-button" 
-                style={{ width: 16, height: 16, padding: 0, border: 'none', background: 'transparent' }} 
+                className="icon-button group-summary-switch"
                 onClick={(e) => { e.stopPropagation(); setShowPercent(!showPercent); }}
                 title="切换显示"
               >
@@ -2091,29 +1826,6 @@ export default function HomePage() {
   // 视图模式
   const [viewMode, setViewMode] = useState<ViewMode>('card');
 
-  // 用户认证状态
-  const [user, setUser] = useState<any>(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [loginSuccess, setLoginSuccess] = useState('');
-  const [loginOtp, setLoginOtp] = useState('');
-
-  const userAvatar = useMemo(() => {
-    if (!user?.id) return '';
-    return createAvatar(glass, {
-      seed: user.id,
-      size: 80
-    }).toDataUri();
-  }, [user?.id]);
-
-  // 反馈弹窗状态
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackNonce, setFeedbackNonce] = useState(0);
-  const [weChatOpen, setWeChatOpen] = useState(false);
-
   // 搜索相关状态
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<FundSearchResult[]>([]);
@@ -2129,7 +1841,6 @@ export default function HomePage() {
   const [topStocksModal, setTopStocksModal] = useState<{ open: boolean; fund: FundData | null }>({ open: false, fund: null });
   const [tradeModal, setTradeModal] = useState<{ open: boolean; fund: FundData | null; type: TradeType }>({ open: false, fund: null, type: 'buy' });
   const [clearConfirm, setClearConfirm] = useState<{ fund: FundData } | null>(null);
-  const [donateOpen, setDonateOpen] = useState(false);
   const [holdings, setHoldings] = useState<HoldingsMap>({});
   const [pendingTrades, setPendingTrades] = useState<PendingTrade[]>([]);
   const [percentModes, setPercentModes] = useState<Record<string, boolean>>({});
@@ -2162,7 +1873,6 @@ export default function HomePage() {
   const todayStr = formatDate();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const checkMobile = () => setIsMobile(window.innerWidth <= 640);
@@ -2170,33 +1880,6 @@ export default function HomePage() {
       window.addEventListener('resize', checkMobile);
       return () => window.removeEventListener('resize', checkMobile);
     }
-  }, []);
-
-  // 检查更新
-  const [hasUpdate, setHasUpdate] = useState(false);
-  const [latestVersion, setLatestVersion] = useState('');
-  const [updateContent, setUpdateContent] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  useEffect(() => {
-    const checkUpdate = async () => {
-      try {
-        const data = await fetchLatestRelease();
-        if (!data?.tagName) return;
-        const remoteVersion = data.tagName.replace(/^v/, '');
-        if (remoteVersion !== packageJson.version) {
-          setHasUpdate(true);
-          setLatestVersion(remoteVersion);
-          setUpdateContent(data.body || '');
-        }
-      } catch (e) {
-        console.error('Check update failed:', e);
-      }
-    };
-
-    checkUpdate();
-    const interval = setInterval(checkUpdate, 10 * 60 * 1000); // 10 minutes
-    return () => clearInterval(interval);
   }, []);
 
   // 存储当前被划开的基金代码
@@ -2569,22 +2252,6 @@ export default function HomePage() {
     }, 3000);
   };
 
-  const handleOpenLogin = () => {
-    setUserMenuOpen(false);
-    if (!isSupabaseConfigured) {
-      showToast('未配置 Supabase，无法登录', 'error');
-      return;
-    }
-    setLoginModalOpen(true);
-  };
-
-  const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [cloudConfigModal, setCloudConfigModal] = useState<{ open: boolean; userId: string | null; type?: 'empty' | 'conflict'; cloudData?: any }>({ open: false, userId: null });
-  const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSyncedRef = useRef('');
-  const skipSyncRef = useRef(false);
-  const userIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -2595,88 +2262,17 @@ export default function HomePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    userIdRef.current = user?.id || null;
-  }, [user]);
-
-  const getFundCodesSignature = useCallback((value: string) => {
-    try {
-      const list = JSON.parse(value || '[]');
-      if (!Array.isArray(list)) return '';
-      const codes = list.map((item) => item?.code).filter(Boolean);
-      return Array.from(new Set(codes)).sort().join('|');
-    } catch (e) {
-      return '';
+  const storageHelper = useMemo(() => ({
+    setItem: (key: string, value: string) => {
+      window.localStorage.setItem(key, value);
+    },
+    removeItem: (key: string) => {
+      window.localStorage.removeItem(key);
+    },
+    clear: () => {
+      window.localStorage.clear();
     }
-  }, []);
-
-  const scheduleSync = useCallback(() => {
-    if (!userIdRef.current) return;
-    if (skipSyncRef.current) return;
-    if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
-    syncDebounceRef.current = setTimeout(() => {
-      const payload = collectLocalPayload();
-      const next = getComparablePayload(payload);
-      if (next === lastSyncedRef.current) return;
-      lastSyncedRef.current = next;
-      syncUserConfig(userIdRef.current, false);
-    }, 2000);
-  }, []);
-
-  const storageHelper = useMemo(() => {
-    const keys = new Set(['funds', 'favorites', 'groups', 'collapsedCodes', 'refreshMs', 'holdings', 'pendingTrades', 'viewMode']);
-    const triggerSync = (key, prevValue, nextValue) => {
-      if (keys.has(key)) {
-        if (key === 'funds') {
-          const prevSig = getFundCodesSignature(prevValue);
-          const nextSig = getFundCodesSignature(nextValue);
-          if (prevSig === nextSig) return;
-        }
-        if (!skipSyncRef.current) {
-          window.localStorage.setItem('localUpdatedAt', nowInTz().toISOString());
-        }
-        scheduleSync();
-      }
-    };
-    return {
-      setItem: (key, value) => {
-        const prevValue = key === 'funds' ? window.localStorage.getItem(key) : null;
-        window.localStorage.setItem(key, value);
-        triggerSync(key, prevValue, value);
-      },
-      removeItem: (key) => {
-        const prevValue = key === 'funds' ? window.localStorage.getItem(key) : null;
-        window.localStorage.removeItem(key);
-        triggerSync(key, prevValue, null);
-      },
-      clear: () => {
-        window.localStorage.clear();
-        if (!skipSyncRef.current) {
-          window.localStorage.setItem('localUpdatedAt', nowInTz().toISOString());
-        }
-        scheduleSync();
-      }
-    };
-  }, [getFundCodesSignature, scheduleSync]);
-
-  useEffect(() => {
-    const keys = new Set(['funds', 'favorites', 'groups', 'collapsedCodes', 'refreshMs', 'holdings', 'pendingTrades', 'viewMode']);
-    const onStorage = (e) => {
-      if (!e.key) return;
-      if (!keys.has(e.key)) return;
-      if (e.key === 'funds') {
-        const prevSig = getFundCodesSignature(e.oldValue);
-        const nextSig = getFundCodesSignature(e.newValue);
-        if (prevSig === nextSig) return;
-      }
-      scheduleSync();
-    };
-    window.addEventListener('storage', onStorage);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
-    };
-  }, [getFundCodesSignature, scheduleSync]);
+  }), []);
 
   const applyViewMode = useCallback((mode: ViewMode) => {
     if (mode !== 'card' && mode !== 'list') return;
@@ -2862,244 +2458,6 @@ export default function HomePage() {
       }
     } catch { }
   }, []);
-
-  // 初始化认证状态监听
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setUser(null);
-      setUserMenuOpen(false);
-      return;
-    }
-    const clearAuthState = () => {
-      setUser(null);
-      setUserMenuOpen(false);
-    };
-
-    const handleSession = async (session, event) => {
-      if (!session?.user) {
-        if (event === 'SIGNED_OUT' && !isLoggingOutRef.current) {
-          setLoginError('会话已过期，请重新登录');
-          setLoginModalOpen(true);
-        }
-        isLoggingOutRef.current = false;
-        clearAuthState();
-        return;
-      }
-      if (session.expires_at && session.expires_at * 1000 <= Date.now()) {
-        isLoggingOutRef.current = true;
-        await supabase.auth.signOut({ scope: 'local' });
-        try {
-          const storageKeys = Object.keys(localStorage);
-          storageKeys.forEach((key) => {
-            if (key === 'supabase.auth.token' || (key.startsWith('sb-') && key.endsWith('-auth-token'))) {
-              storageHelper.removeItem(key);
-            }
-          });
-        } catch { }
-        try {
-          const sessionKeys = Object.keys(sessionStorage);
-          sessionKeys.forEach((key) => {
-            if (key === 'supabase.auth.token' || (key.startsWith('sb-') && key.endsWith('-auth-token'))) {
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch { }
-        clearAuthState();
-        setLoginError('会话已过期，请重新登录');
-        showToast('会话已过期，请重新登录', 'error');
-        setLoginModalOpen(true);
-        return;
-      }
-      setUser(session.user);
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        setLoginModalOpen(false);
-        setLoginEmail('');
-        setLoginSuccess('');
-        setLoginError('');
-      }
-      fetchCloudConfig(session.user.id);
-    };
-
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (error) {
-        clearAuthState();
-        return;
-      }
-      await handleSession(data?.session ?? null, 'INITIAL_SESSION');
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await handleSession(session ?? null, event);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !user?.id) return;
-    const channel = supabase
-      .channel(`user-configs-${user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
-        const incoming = payload?.new?.data;
-        if (!incoming || typeof incoming !== 'object') return;
-        const incomingComparable = getComparablePayload(incoming);
-        if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
-        await applyCloudConfig(incoming, payload.new.updated_at);
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
-        const incoming = payload?.new?.data;
-        if (!incoming || typeof incoming !== 'object') return;
-        const incomingComparable = getComparablePayload(incoming);
-        if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
-        await applyCloudConfig(incoming, payload.new.updated_at);
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    setLoginSuccess('');
-    if (!isSupabaseConfigured) {
-      showToast('未配置 Supabase，无法登录', 'error');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!loginEmail.trim()) {
-      setLoginError('请输入邮箱地址');
-      return;
-    }
-    if (!emailRegex.test(loginEmail.trim())) {
-      setLoginError('请输入有效的邮箱地址');
-      return;
-    }
-
-    setLoginLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: loginEmail.trim(),
-        options: {
-          shouldCreateUser: true
-        }
-      });
-      if (error) throw error;
-      setLoginSuccess('验证码已发送，请查收邮箱输入验证码完成注册/登录');
-    } catch (err) {
-      if (err.message?.includes('rate limit')) {
-        setLoginError('请求过于频繁，请稍后再试');
-      } else if (err.message?.includes('network')) {
-        setLoginError('网络错误，请检查网络连接');
-      } else {
-        setLoginError(err.message || '发送验证码失败，请稍后再试');
-      }
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleVerifyEmailOtp = async () => {
-    setLoginError('');
-    if (!loginOtp || loginOtp.length < 4) {
-      setLoginError('请输入邮箱中的验证码');
-      return;
-    }
-    if (!isSupabaseConfigured) {
-      showToast('未配置 Supabase，无法登录', 'error');
-      return;
-    }
-    try {
-      setLoginLoading(true);
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: loginEmail.trim(),
-        token: loginOtp.trim(),
-        type: 'email'
-      });
-      if (error) throw error;
-      if (data?.user) {
-        setLoginModalOpen(false);
-        setLoginEmail('');
-        setLoginOtp('');
-        setLoginSuccess('');
-        setLoginError('');
-        fetchCloudConfig(data.user.id);
-      }
-    } catch (err) {
-      setLoginError(err.message || '验证失败，请检查验证码或稍后再试');
-    }
-    setLoginLoading(false);
-  };
-
-  // 登出
-  const handleLogout = async () => {
-    isLoggingOutRef.current = true;
-    if (!isSupabaseConfigured) {
-      setLoginModalOpen(false);
-      setLoginError('');
-      setLoginSuccess('');
-      setLoginEmail('');
-      setLoginOtp('');
-      setUserMenuOpen(false);
-      setUser(null);
-      return;
-    }
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { error } = await supabase.auth.signOut({ scope: 'local' });
-        if (error && error.code !== 'session_not_found') {
-          throw error;
-        }
-      }
-    } catch (err) {
-      showToast(err.message, 'error')
-      console.error('登出失败', err);
-    } finally {
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch { }
-      try {
-        const storageKeys = Object.keys(localStorage);
-        storageKeys.forEach((key) => {
-          if (key === 'supabase.auth.token' || (key.startsWith('sb-') && key.endsWith('-auth-token'))) {
-            storageHelper.removeItem(key);
-          }
-        });
-      } catch { }
-      try {
-        const sessionKeys = Object.keys(sessionStorage);
-        sessionKeys.forEach((key) => {
-          if (key === 'supabase.auth.token' || (key.startsWith('sb-') && key.endsWith('-auth-token'))) {
-            sessionStorage.removeItem(key);
-          }
-        });
-      } catch { }
-      setLoginModalOpen(false);
-      setLoginError('');
-      setLoginSuccess('');
-      setLoginEmail('');
-      setLoginOtp('');
-      setUserMenuOpen(false);
-      setUser(null);
-    }
-  };
-
-  // 关闭用户菜单（点击外部时）
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    if (userMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [userMenuOpen]);
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -3378,93 +2736,6 @@ export default function HomePage() {
     return Number.isFinite(num) ? num : null;
   };
 
-  function getComparablePayload(payload: any): string {
-    if (!payload || typeof payload !== 'object') return '';
-    const rawFunds = Array.isArray(payload.funds) ? payload.funds : [];
-    const fundCodes = rawFunds
-      .map((fund) => normalizeCode(fund?.code || fund?.CODE))
-      .filter(Boolean);
-    const uniqueFundCodes = Array.from(new Set(fundCodes)).sort();
-
-    const favorites = Array.isArray(payload.favorites)
-      ? Array.from(new Set(payload.favorites.map(normalizeCode).filter((code) => uniqueFundCodes.includes(code)))).sort()
-      : [];
-
-    const collapsedCodes = Array.isArray(payload.collapsedCodes)
-      ? Array.from(new Set(payload.collapsedCodes.map(normalizeCode).filter((code) => uniqueFundCodes.includes(code)))).sort()
-      : [];
-
-    const groups = Array.isArray(payload.groups)
-      ? payload.groups
-          .map((group) => {
-            const id = normalizeCode(group?.id);
-            if (!id) return null;
-            const name = typeof group?.name === 'string' ? group.name : '';
-            const codes = Array.isArray(group?.codes)
-              ? Array.from(new Set(group.codes.map(normalizeCode).filter((code) => uniqueFundCodes.includes(code)))).sort()
-              : [];
-            return { id, name, codes };
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.id.localeCompare(b.id))
-      : [];
-
-    const holdingsSource = payload.holdings && typeof payload.holdings === 'object' && !Array.isArray(payload.holdings)
-      ? payload.holdings
-      : {};
-    const holdings = {};
-    Object.keys(holdingsSource)
-      .map(normalizeCode)
-      .filter((code) => uniqueFundCodes.includes(code))
-      .sort()
-      .forEach((code) => {
-        const value = holdingsSource[code] || {};
-        const share = normalizeNumber(value.share);
-        const cost = normalizeNumber(value.cost);
-        if (share === null && cost === null) return;
-        holdings[code] = { share, cost };
-      });
-
-    const pendingTrades = Array.isArray(payload.pendingTrades)
-      ? payload.pendingTrades
-          .map((trade) => {
-            const fundCode = normalizeCode(trade?.fundCode);
-            if (!fundCode) return null;
-            return {
-              id: trade?.id ? String(trade.id) : '',
-              fundCode,
-              type: trade?.type || '',
-              share: normalizeNumber(trade?.share),
-              amount: normalizeNumber(trade?.amount),
-              feeRate: normalizeNumber(trade?.feeRate),
-              feeMode: trade?.feeMode || '',
-              feeValue: normalizeNumber(trade?.feeValue),
-              date: trade?.date || '',
-              isAfter3pm: !!trade?.isAfter3pm
-            };
-          })
-          .filter((trade) => trade && uniqueFundCodes.includes(trade.fundCode))
-          .sort((a, b) => {
-            const keyA = a.id || `${a.fundCode}|${a.type}|${a.date}|${a.share ?? ''}|${a.amount ?? ''}|${a.feeMode}|${a.feeValue ?? ''}|${a.feeRate ?? ''}|${a.isAfter3pm ? 1 : 0}`;
-            const keyB = b.id || `${b.fundCode}|${b.type}|${b.date}|${b.share ?? ''}|${b.amount ?? ''}|${b.feeMode}|${b.feeValue ?? ''}|${b.feeRate ?? ''}|${b.isAfter3pm ? 1 : 0}`;
-            return keyA.localeCompare(keyB);
-          })
-      : [];
-
-    const viewMode = payload.viewMode === 'list' ? 'list' : 'card';
-
-    return JSON.stringify({
-      funds: uniqueFundCodes,
-      favorites,
-      groups,
-      collapsedCodes,
-      refreshMs: Number.isFinite(payload.refreshMs) ? payload.refreshMs : 30000,
-      holdings,
-      pendingTrades,
-      viewMode
-    });
-  }
-
   const collectLocalPayload = () => {
     try {
       const funds = JSON.parse(localStorage.getItem('funds') || '[]');
@@ -3545,145 +2816,6 @@ export default function HomePage() {
         exportedAt: nowInTz().toISOString()
       };
     }
-  };
-
-  const applyCloudConfig = async (cloudData: any, cloudUpdatedAt?: string) => {
-    if (!cloudData || typeof cloudData !== 'object') return;
-    skipSyncRef.current = true;
-    try {
-      if (cloudUpdatedAt) {
-        storageHelper.setItem('localUpdatedAt', toTz(cloudUpdatedAt).toISOString());
-      }
-      const nextFunds = Array.isArray(cloudData.funds) ? dedupeByCode(cloudData.funds) : [];
-      setFunds(nextFunds);
-      storageHelper.setItem('funds', JSON.stringify(nextFunds));
-      const nextFundCodes = new Set(nextFunds.map((f) => f.code));
-
-      const nextFavorites = Array.isArray(cloudData.favorites) ? cloudData.favorites : [];
-      setFavorites(new Set(nextFavorites));
-      storageHelper.setItem('favorites', JSON.stringify(nextFavorites));
-
-      const nextGroups = Array.isArray(cloudData.groups) ? cloudData.groups : [];
-      setGroups(nextGroups);
-      storageHelper.setItem('groups', JSON.stringify(nextGroups));
-
-      const nextCollapsed = Array.isArray(cloudData.collapsedCodes) ? cloudData.collapsedCodes : [];
-      setCollapsedCodes(new Set(nextCollapsed));
-      storageHelper.setItem('collapsedCodes', JSON.stringify(nextCollapsed));
-
-      const nextRefreshMs = Number.isFinite(cloudData.refreshMs) && cloudData.refreshMs >= 5000 ? cloudData.refreshMs : 30000;
-      setRefreshMs(nextRefreshMs);
-      setTempSeconds(Math.round(nextRefreshMs / 1000));
-      storageHelper.setItem('refreshMs', String(nextRefreshMs));
-
-      if (cloudData.viewMode === 'card' || cloudData.viewMode === 'list') {
-        applyViewMode(cloudData.viewMode);
-      }
-
-      const nextHoldings = cloudData.holdings && typeof cloudData.holdings === 'object' ? cloudData.holdings : {};
-      setHoldings(nextHoldings);
-      storageHelper.setItem('holdings', JSON.stringify(nextHoldings));
-
-      const nextPendingTrades = Array.isArray(cloudData.pendingTrades)
-        ? cloudData.pendingTrades.filter((trade) => trade && nextFundCodes.has(trade.fundCode))
-        : [];
-      setPendingTrades(nextPendingTrades);
-      storageHelper.setItem('pendingTrades', JSON.stringify(nextPendingTrades));
-
-      if (nextFunds.length) {
-        const codes = Array.from(new Set(nextFunds.map((f) => f.code)));
-        if (codes.length) await refreshAll(codes);
-      }
-
-      const payload = collectLocalPayload();
-      lastSyncedRef.current = getComparablePayload(payload);
-    } finally {
-      skipSyncRef.current = false;
-    }
-  };
-
-  const fetchCloudConfig = async (userId: string) => {
-    if (!userId) return;
-    try {
-      const { data, error } = await supabase
-        .from('user_configs')
-        .select('id, data, updated_at')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data?.id) {
-        const { error: insertError } = await supabase
-          .from('user_configs')
-          .insert({ user_id: userId });
-        if (insertError) throw insertError;
-        setCloudConfigModal({ open: true, userId, type: 'empty' });
-        return;
-      }
-      if (data?.data && typeof data.data === 'object' && Object.keys(data.data).length > 0) {
-        const localPayload = collectLocalPayload();
-        const localComparable = getComparablePayload(localPayload);
-        const cloudComparable = getComparablePayload(data.data);
-
-        if (localComparable !== cloudComparable) {
-          // 如果数据不一致，无论时间戳如何，都提示用户
-          // 用户可以选择使用本地数据覆盖云端，或者使用云端数据覆盖本地
-          setCloudConfigModal({ open: true, userId, type: 'conflict', cloudData: data.data });
-          return;
-        }
-
-        await applyCloudConfig(data.data, data.updated_at);
-        return;
-      }
-      setCloudConfigModal({ open: true, userId, type: 'empty' });
-    } catch (e) {
-      console.error('获取云端配置失败', e);
-    }
-  };
-
-  const syncUserConfig = async (userId: string, showTip = true) => {
-    if (!userId) {
-      showToast(`userId 不存在，请重新登录`, 'error');
-      return;
-    }
-    try {
-      setIsSyncing(true);
-      const payload = collectLocalPayload();
-      const now = nowInTz().toISOString();
-      const { data: upsertData, error: updateError } = await supabase
-        .from('user_configs')
-        .upsert(
-          {
-            user_id: userId,
-            data: payload,
-            updated_at: now
-          },
-          { onConflict: 'user_id' }
-        )
-        .select();
-
-      if (updateError) throw updateError;
-      if (!upsertData || upsertData.length === 0) {
-        throw new Error('同步失败：未写入任何数据，请检查账号状态或重新登录');
-      }
-
-      storageHelper.setItem('localUpdatedAt', now);
-
-      if (showTip) {
-        setSuccessModal({ open: true, message: '已同步云端配置' });
-      }
-    } catch (e) {
-      console.error('同步云端配置异常', e);
-      // 临时关闭同步异常提示
-      // showToast(`同步云端配置异常:${e}`, 'error');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleSyncLocalConfig = async () => {
-    const userId = cloudConfigModal.userId;
-    setCloudConfigModal({ open: false, userId: null });
-    await syncUserConfig(userId);
   };
 
   const exportLocalData = async () => {
@@ -3854,23 +2986,17 @@ export default function HomePage() {
   useEffect(() => {
     const isAnyModalOpen =
       settingsOpen ||
-      feedbackOpen ||
       addResultOpen ||
       addFundToGroupOpen ||
       groupManageOpen ||
       groupModalOpen ||
       successModal.open ||
-      cloudConfigModal.open ||
-      logoutConfirmOpen ||
       holdingModal.open ||
       actionModal.open ||
       topStocksModal.open ||
       tradeModal.open ||
       !!clearConfirm ||
-      donateOpen ||
-      !!fundDeleteConfirm ||
-      updateModalOpen ||
-      weChatOpen;
+      !!fundDeleteConfirm;
 
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -3883,22 +3009,17 @@ export default function HomePage() {
     };
   }, [
     settingsOpen,
-    feedbackOpen,
     addResultOpen,
     addFundToGroupOpen,
     groupManageOpen,
     groupModalOpen,
     successModal.open,
-    cloudConfigModal.open,
-    logoutConfirmOpen,
     holdingModal.open,
     actionModal.open,
     topStocksModal.open,
     tradeModal.open,
     clearConfirm,
-    donateOpen,
-    updateModalOpen,
-    weChatOpen
+    fundDeleteConfirm
   ]);
 
   useEffect(() => {
@@ -3918,7 +3039,6 @@ export default function HomePage() {
 
   return (
     <div className="container content">
-      <Announcement />
       <div className="navbar glass">
         {refreshing && <div className="loading-bar"></div>}
         <div className="brand">
@@ -3927,47 +3047,8 @@ export default function HomePage() {
             <path d="M5 14c2-4 7-6 14-5" stroke="var(--primary)" strokeWidth="2" />
           </svg>
           <span>养基小宝</span>
-          <AnimatePresence>
-            {isSyncing && (
-              <motion.div
-                key="sync-icon"
-                initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                animate={{ opacity: 1, width: 'auto', marginLeft: 8 }}
-                exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}
-                title="正在同步到云端..."
-              >
-                <motion.svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                >
-                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" stroke="var(--primary)" />
-                  <path d="M12 12v9" stroke="var(--accent)" />
-                  <path d="m16 16-4-4-4 4" stroke="var(--accent)" />
-                </motion.svg>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
-        <div className="actions">
-          {hasUpdate && (
-            <div
-              className="badge"
-              title={`发现新版本 ${latestVersion}，点击前往下载`}
-              style={{ cursor: 'pointer', borderColor: 'var(--success)', color: 'var(--success)' }}
-              onClick={() => setUpdateModalOpen(true)}
-            >
-              <UpdateIcon width="14" height="14" />
-            </div>
-          )}
+        <div className="actions navbar-actions">
           <img alt="项目Github地址" src={githubImg.src} style={{ width: '30px', height: '30px', cursor: 'pointer' }} onClick={() => window.open("https://github.com/zhengshengning/fund-baby")} />
           <button
             className="icon-button"
@@ -3977,7 +3058,7 @@ export default function HomePage() {
           >
             {theme === 'dark' ? <SunIcon width="20" height="20" /> : <MoonIcon width="20" height="20" />}
           </button>
-          <div className="badge" title="当前刷新频率">
+          <div className="badge refresh-badge" title="当前刷新频率">
             <span>刷新</span>
             <strong>{Math.round(refreshMs / 1000)}秒</strong>
           </div>
@@ -3991,116 +3072,14 @@ export default function HomePage() {
           >
             <RefreshIcon className={refreshing ? 'spin' : ''} width="18" height="18" />
           </button>
-          {/*<button*/}
-          {/*  className="icon-button"*/}
-          {/*  aria-label="打开设置"*/}
-          {/*  onClick={() => setSettingsOpen(true)}*/}
-          {/*  title="设置"*/}
-          {/*  hidden*/}
-          {/*>*/}
-          {/*  <SettingsIcon width="18" height="18" />*/}
-          {/*</button>*/}
-          {/* 用户菜单 */}
-          <div className="user-menu-container" ref={userMenuRef}>
-            <button
-              className={`icon-button user-menu-trigger ${user ? 'logged-in' : ''}`}
-              aria-label={user ? '用户菜单' : '登录'}
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              title={user ? (user.email || '用户') : '用户菜单'}
-            >
-              {user ? (
-                <div className="user-avatar-small">
-                  {userAvatar ? (
-                    <img
-                      src={userAvatar}
-                      alt="用户头像"
-                      style={{ width: '100%', height: '100%', borderRadius: '50%' }}
-                    />
-                  ) : (
-                    (user.email?.charAt(0).toUpperCase() || 'U')
-                  )}
-                </div>
-              ) : (
-                <UserIcon width="18" height="18" />
-              )}
-            </button>
-
-            <AnimatePresence>
-              {userMenuOpen && (
-                <motion.div
-                  className="user-menu-dropdown glass"
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ transformOrigin: 'top right' }}
-                >
-                  {user ? (
-                    <>
-                      <div className="user-menu-header">
-                        <div className="user-avatar-large">
-                          {userAvatar ? (
-                            <img
-                              src={userAvatar}
-                              alt="用户头像"
-                              style={{ width: '100%', height: '100%', borderRadius: '50%' }}
-                            />
-                          ) : (
-                            (user.email?.charAt(0).toUpperCase() || 'U')
-                          )}
-                        </div>
-                        <div className="user-info">
-                          <span className="user-email">{user.email}</span>
-                          <span className="user-status">已登录</span>
-                        </div>
-                      </div>
-                      <div className="user-menu-divider" />
-                      <button
-                        className="user-menu-item"
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setSettingsOpen(true);
-                        }}
-                      >
-                        <SettingsIcon width="16" height="16" />
-                        <span>设置</span>
-                      </button>
-                      <button
-                        className="user-menu-item danger"
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setLogoutConfirmOpen(true);
-                        }}
-                      >
-                        <LogoutIcon width="16" height="16" />
-                        <span>登出</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="user-menu-item"
-                        onClick={handleOpenLogin}
-                      >
-                        <LoginIcon width="16" height="16" />
-                        <span>登录</span>
-                      </button>
-                      <button
-                        className="user-menu-item"
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setSettingsOpen(true);
-                        }}
-                      >
-                        <SettingsIcon width="16" height="16" />
-                        <span>设置</span>
-                      </button>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <button
+            className="icon-button"
+            aria-label="打开设置"
+            onClick={() => setSettingsOpen(true)}
+            title="设置"
+          >
+            <SettingsIcon width="18" height="18" />
+          </button>
         </div>
       </div>
 
@@ -4113,8 +3092,8 @@ export default function HomePage() {
           </div>
 
           <div className="search-container" ref={dropdownRef}>
-            <form className="form" onSubmit={addFund}>
-              <div className="search-input-wrapper" style={{ flex: 1, gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <form className="form add-fund-form" onSubmit={addFund}>
+              <div className="search-input-wrapper add-fund-input-wrapper">
                 {selectedFunds.length > 0 && (
                   <div className="selected-inline-chips">
                     {selectedFunds.map(fund => (
@@ -4197,7 +3176,7 @@ export default function HomePage() {
         </div>
 
         <div className="col-12">
-          <div className="filter-bar" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div className="filter-bar">
             <div className="tabs-container">
               <div
                 className="tabs-scroll-area"
@@ -4274,12 +3253,12 @@ export default function HomePage() {
               </button>
             </div>
 
-            <div className="sort-group" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="view-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '2px' }}>
+            <div className="sort-group">
+              <div className="view-toggle">
                 <button
                   className={`icon-button ${viewMode === 'card' ? 'active' : ''}`}
                   onClick={() => { applyViewMode('card'); }}
-                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'card' ? 'var(--primary)' : 'transparent', color: viewMode === 'card' ? '#05263b' : 'var(--muted)' }}
+                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'card' ? 'var(--primary)' : 'transparent', color: viewMode === 'card' ? 'var(--interactive-contrast)' : 'var(--muted)' }}
                   title="卡片视图"
                 >
                   <GridIcon width="16" height="16" />
@@ -4287,16 +3266,16 @@ export default function HomePage() {
                 <button
                   className={`icon-button ${viewMode === 'list' ? 'active' : ''}`}
                   onClick={() => { applyViewMode('list'); }}
-                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? '#05263b' : 'var(--muted)' }}
+                  style={{ border: 'none', width: '32px', height: '32px', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? 'var(--interactive-contrast)' : 'var(--muted)' }}
                   title="表格视图"
                 >
                   <ListIcon width="16" height="16" />
                 </button>
               </div>
 
-              <div className="divider" style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
+              <div className="divider" />
 
-              <div className="sort-items" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="sort-items">
                 <span className="muted" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <SortIcon width="14" height="14" />
                   排序
@@ -4368,33 +3347,6 @@ export default function HomePage() {
                   animate={{ opacity: 1 }}
                   className="button-dashed"
                   onClick={() => setAddFundToGroupOpen(true)}
-                  style={{
-                    width: '100%',
-                    height: '48px',
-                    border: '2px dashed rgba(255,255,255,0.1)',
-                    background: 'transparent',
-                    borderRadius: '12px',
-                    color: 'var(--muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    marginBottom: '16px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontSize: '14px',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--primary)';
-                    e.currentTarget.style.color = 'var(--primary)';
-                    e.currentTarget.style.background = 'rgba(34, 211, 238, 0.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                    e.currentTarget.style.color = 'var(--muted)';
-                    e.currentTarget.style.background = 'transparent';
-                  }}
                 >
                   <PlusIcon width="18" height="18" />
                   <span>添加基金到此分组</span>
@@ -4668,7 +3620,7 @@ export default function HomePage() {
                                       }
                                     }}
                                     title="设置持仓"
-                                    style={{ width: '28px', height: '28px', color: 'var(--primary)', borderColor: 'rgba(34, 211, 238, 0.3)', background: 'rgba(34, 211, 238, 0.1)' }}
+                                    style={{ width: '28px', height: '28px', color: 'var(--primary)', borderColor: 'rgba(143, 167, 188, 0.26)', background: 'var(--primary-soft)' }}
                                   >
                                     <SettingsIcon width="14" height="14" />
                                   </button>
@@ -4828,7 +3780,7 @@ export default function HomePage() {
                                 {/* 历史净值走势图 (日线) - 默认收起 */}
                                 {Array.isArray(f.historyTrend) && f.historyTrend.length > 0 && (
                                   <details style={{ marginBottom: 12 }} className="chart-details">
-                                    <summary style={{ fontSize: '12px', color: '#666', marginBottom: 4, cursor: 'pointer', outline: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <summary style={{ fontSize: '12px', color: 'var(--muted-strong)', marginBottom: 4, cursor: 'pointer', outline: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <ChevronIcon width="12" height="12" className="arrow" style={{ transform: 'rotate(-90deg)', transition: 'transform 0.2s' }} />
                                         <span>近90日净值走势</span>
                                     </summary>
@@ -4841,16 +3793,16 @@ export default function HomePage() {
                                 {/* 当日分时估值图 (仅当有数据时显示) - 默认收起 */}
                                 {intradayMap[f.code] && intradayMap[f.code].length > 0 && (
                                     <details style={{ marginBottom: 12 }} className="chart-details">
-                                        <summary style={{ fontSize: '12px', color: '#666', marginBottom: 4, cursor: 'pointer', outline: 'none', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <summary style={{ fontSize: '12px', color: 'var(--muted-strong)', marginBottom: 4, cursor: 'pointer', outline: 'none', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                 <ChevronIcon width="12" height="12" className="arrow" style={{ transform: 'rotate(-90deg)', transition: 'transform 0.2s' }} />
                                                 <span>当日分时估值</span>
                                             </div>
-                                            <span style={{ fontSize: '10px', color: '#999' }}>
+                                            <span style={{ fontSize: '10px', color: 'var(--muted)' }}>
                                                 {intradayMap[f.code][intradayMap[f.code].length - 1].time}
                                             </span>
                                         </summary>
-                                        <div style={{ height: 180, background: 'rgba(0,0,0,0.02)', borderRadius: 8, marginTop: 8 }}>
+                                        <div style={{ height: 180, background: 'var(--surface-soft)', borderRadius: 8, marginTop: 8 }}>
                                             <FundIntradayChart data={intradayMap[f.code]} />
                                         </div>
                                     </details>
@@ -4862,7 +3814,7 @@ export default function HomePage() {
                                   </div>
                                 )}
                                 <div
-                                  style={{ fontSize: '12px', color: '#666', marginBottom: 8, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                                  style={{ fontSize: '12px', color: 'var(--muted-strong)', marginBottom: 8, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
                                   onClick={(e) => {
                                       e.stopPropagation();
                                       setTopStocksModal({ open: true, fund: f });
@@ -4901,85 +3853,9 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {logoutConfirmOpen && (
-          <ConfirmModal
-            title="确认登出"
-            message="确定要退出当前账号吗？"
-            confirmText="确认登出"
-            onConfirm={() => {
-              setLogoutConfirmOpen(false);
-              handleLogout();
-            }}
-            onCancel={() => setLogoutConfirmOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
       <div className="footer">
         <p style={{ marginBottom: 8 }}>数据源：实时估值与重仓直连东方财富，仅供个人学习及参考使用，不作为任何投资建议</p>
-        <div style={{ marginBottom: '12px' }}>
-          提示：不登陆个人数据保存在个人浏览器中，登陆后数据将保存在线上数据库
-        </div>
-        <div style={{ marginTop: 12, opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-          <div style={{ margin: 0 }}>
-            遇到任何问题或需求建议可
-            <button
-              className="link-button"
-              onClick={() => {
-                setFeedbackNonce((n) => n + 1);
-                setFeedbackOpen(true);
-              }}
-              style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0 4px', textDecoration: 'underline', fontSize: 'inherit', fontWeight: 600 }}
-            >
-              点此提交反馈
-            </button>
-          </div>
-          <button
-            onClick={() => setDonateOpen(true)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--muted)',
-              fontSize: '12px',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 8px',
-              borderRadius: '6px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--primary)';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--muted)';
-              e.currentTarget.style.background = 'transparent';
-            }}
-          >
-            <span>☕</span>
-            <span>点此请作者喝杯咖啡</span>
-          </button>
-        </div>
       </div>
-
-      <AnimatePresence>
-        {feedbackOpen && (
-          <FeedbackModal
-            key={feedbackNonce}
-            onClose={() => setFeedbackOpen(false)}
-            user={user}
-            onOpenWeChat={() => setWeChatOpen(true)}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {weChatOpen && (
-            <WeChatModal onClose={() => setWeChatOpen(false)} />
-        )}
-      </AnimatePresence>
       <AnimatePresence>
         {addResultOpen && (
           <AddResultModal
@@ -5064,38 +3940,6 @@ export default function HomePage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {donateOpen && (
-          <div className="modal-overlay" onClick={() => setDonateOpen(false)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass card modal"
-              style={{ maxWidth: '360px' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="title" style={{ marginBottom: 20, justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span>☕ 请作者喝杯咖啡</span>
-                </div>
-                <button className="icon-button" onClick={() => setDonateOpen(false)} style={{ border: 'none', background: 'transparent' }}>
-                  <CloseIcon width="20" height="20" />
-                </button>
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <DonateTabs />
-              </div>
-
-              <div className="muted" style={{ fontSize: '12px', textAlign: 'center', lineHeight: 1.5 }}>
-                感谢您的支持！您的鼓励是我持续维护和更新的动力。
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {groupManageOpen && (
           <GroupManageModal
             groups={groups}
@@ -5119,21 +3963,6 @@ export default function HomePage() {
           <SuccessModal
             message={successModal.message}
             onClose={() => setSuccessModal({ open: false, message: '' })}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {cloudConfigModal.open && (
-          <CloudConfigModal
-            type={cloudConfigModal.type}
-            onConfirm={handleSyncLocalConfig}
-            onCancel={() => {
-              if (cloudConfigModal.type === 'conflict' && cloudConfigModal.cloudData) {
-                applyCloudConfig(cloudConfigModal.cloudData);
-              }
-              setCloudConfigModal({ open: false, userId: null });
-            }}
           />
         )}
       </AnimatePresence>
@@ -5208,180 +4037,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 更新提示弹窗 */}
-      <AnimatePresence>
-        {updateModalOpen && (
-          <motion.div
-            className="modal-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="更新提示"
-            onClick={() => setUpdateModalOpen(false)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ zIndex: 10002 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass card modal"
-              style={{ maxWidth: '400px' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="title" style={{ marginBottom: 12 }}>
-                <UpdateIcon width="20" height="20" style={{color: 'var(--success)'}} />
-                <span>更新提示</span>
-              </div>
-              <div style={{ marginBottom: 24 }}>
-                <p className="muted" style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: 12 }}>
-                  检测到新版本，是否刷新浏览器以更新？
-                  <br/>
-                  更新内容如下：
-                </p>
-                {updateContent && (
-                  <div style={{
-                    background: 'rgba(0,0,0,0.2)',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    lineHeight: '1.5',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    whiteSpace: 'pre-wrap',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                  }}>
-                    {updateContent}
-                  </div>
-                )}
-              </div>
-              <div className="row" style={{ gap: 12 }}>
-                <button
-                  className="button secondary"
-                  onClick={() => setUpdateModalOpen(false)}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)' }}
-                >
-                  取消
-                </button>
-                <button
-                  className="button"
-                  onClick={() => window.location.reload()}
-                  style={{ flex: 1, background: 'var(--success)', color: '#fff', border: 'none' }}
-                >
-                  刷新浏览器
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 登录模态框 */}
-      {loginModalOpen && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="登录"
-          onClick={() => {
-            setLoginModalOpen(false);
-            setLoginError('');
-            setLoginSuccess('');
-            setLoginEmail('');
-          }}
-        >
-          <div className="glass card modal login-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="title" style={{ marginBottom: 16 }}>
-              <MailIcon width="20" height="20" />
-              <span>邮箱登录</span>
-              <span className="muted">使用邮箱验证登录</span>
-            </div>
-
-            <form onSubmit={handleSendOtp}>
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <div style={{
-                  marginBottom: 12,
-                  padding: '8px 12px',
-                  background: 'rgba(230, 162, 60, 0.1)',
-                  border: '1px solid rgba(230, 162, 60, 0.2)',
-                  borderRadius: '4px',
-                  fontSize: '0.8rem',
-                  color: '#e6a23c',
-                  lineHeight: '1.4'
-                }}>
-                  ⚠️ 登录功能目前正在测试，使用过程中如遇到问题欢迎大家在 <a href="https://github.com/zhengshengning/fund-baby/issues" target="_blank" style={{ textDecoration: 'underline', color: 'inherit' }}>Github</a> 上反馈
-                </div>
-                <div className="muted" style={{ marginBottom: 8, fontSize: '0.8rem' }}>
-                  请输入邮箱，我们将发送验证码到您的邮箱
-                </div>
-                <input
-                  style={{width: '100%'}}
-                  className="input"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  disabled={loginLoading || !!loginSuccess}
-                />
-              </div>
-
-              {loginSuccess && (
-                <div className="login-message success" style={{ marginBottom: 12 }}>
-                  <span>{loginSuccess}</span>
-                </div>
-              )}
-
-              {loginSuccess && (
-                <div className="form-group" style={{ marginBottom: 16 }}>
-                  <div className="muted" style={{ marginBottom: 8, fontSize: '0.8rem' }}>
-                    请输入邮箱验证码以完成注册/登录
-                  </div>
-                  <input
-                    className="input"
-                    type="text"
-                    placeholder="输入验证码"
-                    value={loginOtp}
-                    onChange={(e) => setLoginOtp(e.target.value)}
-                    disabled={loginLoading}
-                    maxLength={8}
-                  />
-                </div>
-              )}
-              {loginError && (
-                <div className="login-message error" style={{ marginBottom: 12 }}>
-                  <span>{loginError}</span>
-                </div>
-              )}
-              <div className="row" style={{ justifyContent: 'flex-end', gap: 12 }}>
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => {
-                    setLoginModalOpen(false);
-                    setLoginError('');
-                    setLoginSuccess('');
-                    setLoginEmail('');
-                    setLoginOtp('');
-                  }}
-                  disabled={loginLoading}
-                >
-                  取消
-                </button>
-                <button
-                  className="button"
-                  type={loginSuccess ? 'button' : 'submit'}
-                  onClick={loginSuccess ? handleVerifyEmailOtp : undefined}
-                  disabled={loginLoading || (loginSuccess && !loginOtp)}
-                >
-                  {loginLoading ? '处理中...' : loginSuccess ? '确认验证码' : '发送邮箱验证码'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* 全局轻提示 Toast */}
       <AnimatePresence>
         {toast.show && (
@@ -5395,13 +4050,12 @@ export default function HomePage() {
               left: '50%',
               zIndex: 9999,
               padding: '10px 20px',
-              background: toast.type === 'error' ? 'rgba(239, 68, 68, 0.9)' :
-                          toast.type === 'success' ? 'rgba(34, 197, 94, 0.9)' :
-                          'rgba(30, 41, 59, 0.9)',
-              color: '#fff',
+              background: toast.type === 'error' ? 'var(--danger)' :
+                          toast.type === 'success' ? 'var(--success)' :
+                          'var(--surface-floating)',
+              color: toast.type === 'info' ? 'var(--text)' : 'var(--interactive-contrast)',
               borderRadius: '8px',
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow: 'var(--shadow-sm)',
               fontSize: '14px',
               fontWeight: 500,
               display: 'flex',

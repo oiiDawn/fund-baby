@@ -2,6 +2,21 @@ import './globals.css';
 import AnalyticsGate from './components/AnalyticsGate';
 import packageJson from '../package.json';
 import type { Metadata } from 'next';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: `养基小宝 V${packageJson.version}`,
@@ -28,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body>
+      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
         <AnalyticsGate GA_ID={GA_ID} />
         {children}
       </body>

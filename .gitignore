@@ -80,6 +80,11 @@ fabric.properties
 /node_modules/
 /.next/
 .vscode/
+.npm-cache/
+.sisyphus/
+.vercel/
+*.tsbuildinfo
+.impeccable.md
 
 .env.local
 .DS_Store

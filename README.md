@@ -1,154 +1,78 @@
-# 养基小宝-实时基金估值 (bund-baby)
+# 养基小宝 - 实时基金估值
 
-**在线预览地址：[https://fund-baby.ningzhengsheng.cn/](https://fund-baby.ningzhengsheng.cn/)**
-> 由于某些平台不能在实时看见基金的估值，所以做了一个基金估值的网站。
+在线预览地址: [https://fund-baby.ningzhengsheng.cn/](https://fund-baby.ningzhengsheng.cn/)
 
-![alt text](app/assets/fund-baby-img1.png)
-![alt text](app/assets/fund-baby-img2.png)
+一个基于 Next.js 的纯前端基金估值与持仓管理工具，支持基金搜索、实时估值、重仓股查看、持仓记录、分组、自选、导入导出和本地持久化。
 
+![app screenshot](app/assets/fund-baby-img1.png)
+![app screenshot](app/assets/fund-baby-img2.png)
 
-## 📖 使用说明
+## 使用说明
 
-1. **添加基金**：在顶部输入框输入 6 位基金代码（如 `110022`），点击“添加”。
-2. **查看详情**：卡片将展示实时估值及前 10 重仓股的占比与今日涨跌。
-3. **调整频率**：点击右上角“设置”图标，可调整自动刷新的间隔时间。
-4. **删除基金**：点击卡片右上角的红色删除图标即可移除。
+1. 添加基金：在顶部搜索框输入基金名称或 6 位基金代码，点击“添加”。
+2. 查看详情：卡片支持查看估值、净值、涨跌幅、持仓收益和重仓股。
+3. 管理持仓：支持加仓、减仓、编辑持仓、清空持仓和待处理交易。
+4. 数据管理：支持自选、分组、导入配置、导出配置。
+5. 本地保存：所有数据默认保存在当前浏览器本地存储。
 
+## 特性
 
-## ✨ 特性
+- 实时估值：通过公开接口获取基金估值、净值和涨跌幅数据。
+- 重仓股追踪：展示基金前 10 大重仓股，并尝试补充行情涨跌数据。
+- 本地持久化：使用 `localStorage` 保存基金列表、设置、持仓和交易数据。
+- 响应式界面：适配桌面端和移动端。
+- 自定义刷新：支持设置自动刷新频率，并提供手动刷新按钮。
+- 导入导出：支持将本地配置导出为 JSON，并从 JSON 导入。
 
-- **实时估值**：通过输入基金编号，实时获取并展示基金的单位净值、估值净值及实时涨跌幅。
-- **重仓追踪**：自动获取基金前 10 大重仓股票，并实时追踪重仓股的盘中涨跌情况。支持收起/展开展示。
-- **纯前端运行**：采用 JSONP 方案直连东方财富、腾讯财经等公开接口，彻底解决跨域问题，支持在 GitHub Pages 等静态环境直接部署。
-- **本地持久化**：使用 `localStorage` 存储已添加的基金列表及配置信息，刷新不丢失。
-- **响应式设计**：完美适配 PC 与移动端。针对移动端优化了文字展示、间距及交互体验。
-- **自选功能**：支持将基金添加至“自选”列表，通过 Tab 切换展示全部基金或仅自选基金。自选状态支持持久化及同步清理。
-- **可自定义频率**：支持设置自动刷新间隔（5秒 - 300秒），并提供手动刷新按钮。
+## 技术栈
 
+- 框架：Next.js
+- 语言：TypeScript
+- 动画：framer-motion
+- 图表：ECharts
+- 日期处理：dayjs
+- 样式：全局 CSS
 
-## 🛠 技术栈
+## 本地开发
 
-> 一个基于 Next.js 开发的纯前端基金估值与重仓股实时追踪工具。采用玻璃拟态设计（Glassmorphism），支持移动端适配，且无需后端服务器即可运行。
+1. 克隆仓库
 
-- **框架**：[Next.js官网](https://nextjs.org/) , [Next.js入门指南：从零构建现代Web应用](https://ningzhengsheng.cn/2026/02/10/Nextjs%E7%BD%91%E9%A1%B5%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/)
-- **样式**：原生 CSS (Global CSS) + 玻璃拟态设计
-- **数据源**：
-  - 基金估值：天天基金 (JSONP)
-  - 重仓数据：东方财富 (HTML Parsing)
-  - 股票行情：腾讯财经 (Script Tag Injection)
-- **部署**：GitHub Actions + GitHub Pages
+```bash
+git clone https://github.com/zhengshengning/fund-baby.git
+cd fund-baby
+```
 
+2. 安装依赖
 
-## 🚀 快速开始
+```bash
+npm install
+```
 
-### 本地开发
+3. 当前版本默认仅使用浏览器本地存储，无需额外环境变量。
 
-1. 克隆仓库：
-   ```bash
-   git clone https://github.com/zhengshengning/fund-baby.git
-   cd fund-baby
-   ```
+4. 启动开发服务器
 
-2. 安装依赖：
-   ```bash
-   npm install
-   ```
+```bash
+npm run dev
+```
 
-3. （可选）配置环境变量（下面有配置说明）：
-   ```bash
-   cp env.example .env.local
-   ```
-   按照 `env.example` 填入以下值：
-   - `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目 URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`：Supabase 匿名公钥
-   - `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`：Web3Forms Access Key
+访问 [http://localhost:3000](http://localhost:3000) 查看效果。
 
-   注：如不使用登录和反馈功能，可无需设置
+## 构建
 
-4. 运行开发服务器：
-   ```bash
-   npm run dev
-   ```
-   访问 [http://localhost:3000](http://localhost:3000) 查看效果。
-
-### supabase 配置说明
-#### 获取配置：
-1. 获取 Supabase 配置
-   - Supabase 用于数据存储（云端同步）和用户登录功能
-   - 访问Supabase官网 [https://supabase.com/](https://supabase.com/) 并注册/登录账号。
-   - 点击 "New Project" 创建一个新项目。
-   - 项目创建完成后，进入项目仪表盘。
-   - 点击左侧菜单底部的 Settings (设置) 图标（齿轮形状），然后选择 Data API。 在 Project URL 下找到 URL，这就是 NEXT_PUBLIC_SUPABASE_URL。
-   - 在 API keys 下找到 Publishable key，这就是 NEXT_PUBLIC_SUPABASE_ANON_KEY。
-
-2. 获取 Web3Forms 配置
-   - Web3Forms 用于接收网页上的“意见反馈”邮件。
-   - 访问Web3Forms 官网 [https://web3forms.com/](https://web3forms.com/)。
-   - 在首页输入您的接收邮箱地址，点击 "Create your Access Key"。
-   - 您的邮箱将会收到一封包含 Access Key 的邮件，这串字符就是 NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY。
-
-#### 配置说明：
-1. 邮件数量修改
-    supabase 免费项目自带每小时2条邮件服务。如果觉得额度不够，可以改成自己的邮箱SMTP。修改路径在 supabase控制台 → Authentication → Email → SMTP Settings。  
-    之后可在 Rate Limits ，自由修改每小时邮件数量。
-
-2. 修改接收到的邮件为验证码
-在 supabase控制台 → Authentication → Email → Confirm sign up，选择 `{{.token}}`。  
-
-3. 目前项目用到的 sql 语句，查看项目 supabase.sql 文件。
-
-更多 supabase 相关内容查阅官方文档。
-
-
-### 构建与Github部署
-
-本项目已配置 GitHub Actions，可以直接部署在github上。
-（操作：Settings → Pages → Build and deployment → Source选择github Actions）。
-每次推送到 `main` 分支时，会自动执行构建并部署到 GitHub Pages。
-如需使用登陆功能，请在 GitHub 项目 Settings → Secrets and variables → Actions 中创建对应的 Repository secrets（字段名称与 `.env.local` 保持一致）。
-
-若要手动构建：
 ```bash
 npm run build
 ```
-静态文件将生成在 `out` 目录下。
 
-### Docker运行
+## Docker
 
-1. 构建镜像
-```
+```bash
 docker build -t fund-baby .
-```
-
-2. 启动容器
-```
 docker run -d -p 3000:3000 --name fund fund-baby
 ```
 
-#### docker-compose
-```
+或使用：
+
+```bash
 docker compose up -d
 ```
-
-
-## 📝 免责声明
-
-本项目所有数据均来自公开接口，仅供个人学习及参考使用。数据可能存在延迟，不作为任何投资建议。
-
-
-## 📄 开源协议 (License)
-
-本项目采用 **[GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html)**（AGPL-3.0）开源协议。
-
-- **允许**：自由使用、修改、分发本软件；若你通过网络服务向用户提供基于本项目的修改版本，须向该服务的用户提供对应源代码。
-- **要求**：基于本项目衍生或修改的作品需以相同协议开源，并保留版权声明与协议全文。
-- **无担保**：软件按「原样」提供，不提供任何明示或暗示的担保。
-
-完整协议文本见仓库根目录 [LICENSE](./LICENSE) 文件，或 [GNU AGPL v3 官方说明](https://www.gnu.org/licenses/agpl-3.0.html)。
-
-
----
-## 💬 联系
-Github主页：[https://github.com/zhengshengning](https://github.com/zhengshengning)
-
-个人博客：[https://ningzhengsheng.cn](https://ningzhengsheng.cn)

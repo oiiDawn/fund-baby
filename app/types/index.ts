@@ -1,6 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-// ── 基金持仓股票 ──
+﻿// 基金持仓股票
 export interface FundHolding {
   code: string;
   name: string;
@@ -8,7 +6,7 @@ export interface FundHolding {
   change: number | null;
 }
 
-// ── 历史净值趋势点 ──
+// 历史净值趋势点
 export interface TrendPoint {
   x: number;
   y: number;
@@ -16,14 +14,14 @@ export interface TrendPoint {
   unitMoney?: string;
 }
 
-// ── 分时数据点 ──
+// 分时数据点
 export interface IntradayPoint {
   time: string;
   value: number;
   growth: string;
 }
 
-// ── 核心基金数据 ──
+// 核心基金数据
 export interface FundData {
   code: string;
   name: string;
@@ -44,7 +42,7 @@ export interface FundData {
   estGszzl?: number;
 }
 
-// ── 用户持仓 ──
+// 用户持仓
 export interface Holding {
   share: number;
   cost: number;
@@ -52,7 +50,7 @@ export interface Holding {
 
 export type HoldingsMap = Record<string, Holding>;
 
-// ── 待处理交易 ──
+// 待处理交易
 export interface PendingTrade {
   id: string;
   fundCode: string;
@@ -66,16 +64,36 @@ export interface PendingTrade {
   date: string;
   isAfter3pm: boolean;
   timestamp?: number;
+  sourceType?: 'manual' | 'dca';
+  sourcePlanId?: string;
 }
 
-// ── 基金分组 ──
+export type DcaFrequency = 'daily' | 'weekly' | 'monthly';
+export type DcaTimeSlot = 'before_3pm' | 'after_3pm';
+
+export interface DcaPlan {
+  id: string;
+  fundCode: string;
+  fundName?: string;
+  amount: number;
+  feeRate: number;
+  frequency: DcaFrequency;
+  timeSlot: DcaTimeSlot;
+  startDate: string;
+  nextRunDate: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 基金分组
 export interface FundGroup {
   id: string;
   name: string;
   codes: string[];
 }
 
-// ── 搜索结果 ──
+// 搜索结果
 export interface FundSearchResult {
   CODE: string;
   NAME: string;
@@ -85,7 +103,7 @@ export interface FundSearchResult {
   CATEGORYDESC?: string;
 }
 
-// ── API 响应类型 ──
+// API 响应类型
 export interface JsonpGzData {
   fundcode: string;
   name: string;
@@ -102,20 +120,6 @@ export interface TencentQuoteData {
   jzrq: string;
 }
 
-// ── 云同步数据结构 ──
-export interface CloudSyncPayload {
-  funds: FundData[];
-  favorites: string[];
-  groups: FundGroup[];
-  collapsedCodes: string[];
-  refreshMs: number;
-  holdings: HoldingsMap;
-  pendingTrades: PendingTrade[];
-  viewMode: ViewMode;
-  exportedAt: string;
-}
-
-// ── UI 状态类型 ──
 export type ViewMode = 'card' | 'list';
 export type SortBy = 'default' | 'name' | 'yield' | 'holding';
 export type SortOrder = 'asc' | 'desc';
@@ -123,14 +127,14 @@ export type TradeType = 'buy' | 'sell';
 export type FeeMode = 'rate' | 'amount';
 export type ToastType = 'info' | 'success' | 'error';
 
-// ── 持仓收益计算结果 ──
+// 持仓收益计算结果
 export interface HoldingProfit {
   amount: number;
   profitToday: number | null;
   profitTotal: number | null;
 }
 
-// ── Window 全局声明 (JSONP 回调) ──
+// Window 全局声明 (JSONP 回调)
 declare global {
   interface Window {
     jsonpgz?: (json: JsonpGzData) => void;
@@ -139,3 +143,4 @@ declare global {
     [key: string]: unknown;
   }
 }
+

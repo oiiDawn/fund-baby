@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+﻿import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import type { FundData, FundHolding, FundSearchResult, IntradayPoint, JsonpGzData, TencentQuoteData, TrendPoint } from '../types';
@@ -148,7 +148,7 @@ export const fetchFundDataFallback = async (c: string): Promise<FundData> => {
     };
     tScript.onerror = () => {
       if (document.body.contains(tScript)) document.body.removeChild(tScript);
-      reject(new Error('基金数据加载失败'));
+      reject(new Error('鍩洪噾数据加载失败'));
     };
     document.body.appendChild(tScript);
   });
@@ -215,7 +215,7 @@ export const fetchFundData = async (c: string): Promise<FundData> => {
             const t = h.replace(/\s+/g, '');
             if (idxCode < 0 && (t.includes('股票代码') || t.includes('证券代码'))) idxCode = i;
             if (idxName < 0 && (t.includes('股票名称') || t.includes('证券名称'))) idxName = i;
-            if (idxWeight < 0 && (t.includes('占净值比例') || t.includes('占比'))) idxWeight = i;
+            if (idxWeight < 0 && (t.includes('占净值比重') || t.includes('占比'))) idxWeight = i;
           });
           const rows = html.match(/<tbody[\s\S]*?<\/tbody>/i) || [];
           const dataRows: string[] = rows.length ? rows[0].match(/<tr[\s\S]*?<\/tr>/gi) || [] : html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
@@ -354,7 +354,7 @@ export const fetchFundData = async (c: string): Promise<FundData> => {
     scriptGz.onerror = () => {
       (window as any).jsonpgz = originalJsonpgz;
       if (document.body.contains(scriptGz)) document.body.removeChild(scriptGz);
-      reject(new Error('基金数据加载失败'));
+      reject(new Error('鍩洪噾数据加载失败'));
     };
     document.body.appendChild(scriptGz);
     setTimeout(() => {
@@ -375,7 +375,7 @@ export const searchFunds = async (val: string): Promise<FundSearchResult[]> => {
         results = data.Datas.filter((d: any) =>
           d.CATEGORY === 700 ||
           d.CATEGORY === '700' ||
-          d.CATEGORYDESC === '基金'
+          d.CATEGORYDESC === '鍩洪噾'
         );
       }
       delete (window as Record<string, unknown>)[callbackName];
@@ -390,7 +390,7 @@ export const searchFunds = async (val: string): Promise<FundSearchResult[]> => {
     script.onerror = () => {
       if (document.body.contains(script)) document.body.removeChild(script);
       delete (window as Record<string, unknown>)[callbackName];
-      reject(new Error('搜索请求失败'));
+      reject(new Error('鎼滅储璇锋眰澶辫触'));
     };
     document.body.appendChild(script);
   });
@@ -415,37 +415,12 @@ export const fetchShanghaiIndexDate = async (): Promise<string | null> => {
     };
     script.onerror = () => {
       if (document.body.contains(script)) document.body.removeChild(script);
-      reject(new Error('指数数据加载失败'));
+      reject(new Error('鎸囨暟数据加载失败'));
     };
     document.body.appendChild(script);
   });
 };
 
-export const fetchLatestRelease = async (): Promise<{ tagName: string; body: string } | null> => {
-  // 暂时禁用版本检查，避免控制台 404 报错
-  return null;
-  /*
-  try {
-    const res = await fetch('https://api.github.com/repos/zhengshengning/fund-baby/releases/latest');
-    if (!res.ok) return null;
-    const data = await res.json();
-    return {
-      tagName: data.tag_name,
-      body: data.body || ''
-    };
-  } catch (e) {
-    return null;
-  }
-  */
-};
-
-export const submitFeedback = async (formData: FormData): Promise<{ success: boolean; message?: string }> => {
-  const response = await fetch('https://api.web3forms.com/submit', {
-    method: 'POST',
-    body: formData
-  });
-  return response.json();
-};
 
 export const fetchIntradayData = async (code: string): Promise<IntradayPoint[] | null> => {
     try {
@@ -481,3 +456,4 @@ export const fetchIntradayData = async (code: string): Promise<IntradayPoint[] |
         return null;
     }
 };
+
