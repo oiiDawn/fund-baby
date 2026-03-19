@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type CSSProperties,
 } from 'react';
 
@@ -14,7 +15,6 @@ import {
   EyeOffIcon,
   PinIcon,
   PinOffIcon,
-  SwitchIcon,
 } from '@/app/components/icons';
 import { cn } from '@/app/lib/cn';
 import {
@@ -39,6 +39,28 @@ interface CountUpProps {
   style?: CSSProperties;
 }
 
+interface SummaryMetricProps {
+  label: ReactNode;
+  value: number;
+  isMasked: boolean;
+  metricSize: number;
+  valueSuffix?: string;
+  onValueClick?: () => void;
+  valueTitle?: string;
+}
+
+function getSignedToneClass(value: number): string {
+  if (value > 0) return upTextClass;
+  if (value < 0) return downTextClass;
+  return '';
+}
+
+function getSignedPrefix(value: number): string {
+  if (value > 0) return '+';
+  if (value < 0) return '-';
+  return '';
+}
+
 function CountUp({
   value,
   prefix = '',
@@ -46,7 +68,7 @@ function CountUp({
   decimals = 2,
   className = '',
   style = {},
-}: CountUpProps) {
+}: CountUpProps): ReactNode {
   const [displayValue, setDisplayValue] = useState(value);
   const previousValue = useRef(value);
 
@@ -85,6 +107,67 @@ function CountUp({
   );
 }
 
+function SummaryMetric({
+  label,
+  value,
+  isMasked,
+  metricSize,
+  valueSuffix,
+  onValueClick,
+  valueTitle,
+}: SummaryMetricProps): ReactNode {
+  const metricValueClass = cn(
+    'inline-flex min-h-[28px] w-full items-baseline justify-start gap-0.5 bg-transparent p-0 text-left sm:justify-end sm:text-right',
+    metricSize <= 14 && 'gap-0',
+    getSignedToneClass(value),
+    onValueClick && 'cursor-pointer',
+  );
+
+  const metricValue = isMasked ? (
+    '******'
+  ) : (
+    <span className="font-mono font-bold tracking-[0.02em] [font-variant-numeric:tabular-nums]">
+      <span>{getSignedPrefix(value)}</span>
+      <CountUp
+        value={Math.abs(value)}
+        suffix={valueSuffix}
+        className="font-mono [font-variant-numeric:tabular-nums]"
+        style={{ fontSize: metricSize }}
+      />
+    </span>
+  );
+
+  return (
+    <div className="flex flex-col items-start sm:items-end">
+      <div className="mb-1 flex min-h-5 w-full items-center text-xs leading-5 text-muted">
+        <span>{label}</span>
+      </div>
+      {onValueClick ? (
+        <div
+          className={metricValueClass}
+          style={{ fontSize: metricSize }}
+          onClick={onValueClick}
+          title={valueTitle}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onValueClick();
+            }
+          }}
+        >
+          {metricValue}
+        </div>
+      ) : (
+        <div className={metricValueClass} style={{ fontSize: metricSize }}>
+          {metricValue}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface GroupSummaryProps {
   funds: FundData[];
   holdings: HoldingsMap;
@@ -100,7 +183,7 @@ export function GroupSummary({
   holdings,
   title,
   getProfit,
-}: GroupSummaryProps) {
+}: GroupSummaryProps): ReactNode {
   const [showPercent, setShowPercent] = useState(true);
   const [isMasked, setIsMasked] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
@@ -239,96 +322,24 @@ export function GroupSummary({
               )}
             </div>
           </div>
-          <div className="flex flex-wrap justify-end gap-6 max-sm:w-full max-sm:justify-start">
-            <div>
-              <div className="mb-1 text-xs text-muted">当日收益</div>
-              <div
-                className={cn(
-                  'font-mono text-lg font-bold',
-                  summary.totalProfitToday > 0
-                    ? upTextClass
-                    : summary.totalProfitToday < 0
-                      ? downTextClass
-                      : '',
-                )}
-                style={{ fontSize: metricSize }}
-              >
-                {isMasked ? (
-                  '******'
-                ) : (
-                  <>
-                    <span className="mr-0.5">
-                      {summary.totalProfitToday > 0
-                        ? '+'
-                        : summary.totalProfitToday < 0
-                          ? '-'
-                          : ''}
-                    </span>
-                    <CountUp
-                      value={Math.abs(summary.totalProfitToday)}
-                      style={{ fontSize: metricSize }}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 flex items-center gap-1 text-xs text-muted">
-                <span>持有收益</span>
-                <button
-                  className={cn(
-                    iconButtonClass,
-                    'h-4 w-4 rounded-none border-none bg-transparent p-0 text-muted hover:bg-transparent',
-                  )}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setShowPercent((value) => !value);
-                  }}
-                  title="切换显示"
-                >
-                  <SwitchIcon width="12" height="12" />
-                </button>
-              </div>
-              <button
-                className={cn(
-                  'font-mono text-lg font-bold',
-                  summary.totalHoldingReturn > 0
-                    ? upTextClass
-                    : summary.totalHoldingReturn < 0
-                      ? downTextClass
-                      : '',
-                )}
-                style={{ fontSize: metricSize }}
-                onClick={() => setShowPercent((value) => !value)}
-                title="点击切换主次显示"
-              >
-                {isMasked ? (
-                  '******'
-                ) : (
-                  <>
-                    <span className="mr-0.5">
-                      {summary.totalHoldingReturn > 0
-                        ? '+'
-                        : summary.totalHoldingReturn < 0
-                          ? '-'
-                          : ''}
-                    </span>
-                    {showPercent ? (
-                      <CountUp
-                        value={Math.abs(summary.returnRate)}
-                        suffix="%"
-                        style={{ fontSize: metricSize }}
-                      />
-                    ) : (
-                      <CountUp
-                        value={Math.abs(summary.totalHoldingReturn)}
-                        style={{ fontSize: metricSize }}
-                      />
-                    )}
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="flex flex-wrap justify-end gap-x-8 gap-y-4 max-sm:w-full max-sm:justify-start">
+            <SummaryMetric
+              label="当日收益"
+              value={summary.totalProfitToday}
+              isMasked={isMasked}
+              metricSize={metricSize}
+            />
+            <SummaryMetric
+              label="持有收益"
+              value={
+                showPercent ? summary.returnRate : summary.totalHoldingReturn
+              }
+              isMasked={isMasked}
+              metricSize={metricSize}
+              valueSuffix={showPercent ? '%' : undefined}
+              onValueClick={() => setShowPercent((value) => !value)}
+              valueTitle="点击切换主次显示"
+            />
           </div>
         </div>
       </div>

@@ -37,7 +37,7 @@ export function TopStocksModal({ fund, onClose }: TopStocksModalProps) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[400px]')}
+        className={cn(modalCardClass, 'max-w-[520px] p-6')}
         onClick={(event) => event.stopPropagation()}
       >
         <div className={modalHeaderClass}>
@@ -55,11 +55,11 @@ export function TopStocksModal({ fund, onClose }: TopStocksModalProps) {
           <div className="text-xs text-muted">#{fund?.code}</div>
         </div>
 
-        <div className="grid max-h-[50vh] gap-2 overflow-y-auto text-[13px]">
+        <div className="grid gap-2.5 text-[13px]">
           {Array.isArray(fund?.holdings) && fund.holdings.length > 0 ? (
             fund.holdings.map((holding, index) => (
               <div
-                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2"
+                className="flex min-h-[52px] items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5"
                 key={index}
               >
                 <span className="truncate font-medium">{holding.name}</span>

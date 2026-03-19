@@ -55,7 +55,7 @@ export function AddFundPanel({
     <div
       className={cn(
         panelClass,
-        'col-span-12 overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,rgba(103,167,255,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.015),transparent_36%),var(--ui-surface-elevated)] p-5',
+        'col-span-12 overflow-visible rounded-[22px] bg-[linear-gradient(135deg,rgba(103,167,255,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.015),transparent_36%),var(--ui-surface-elevated)] p-5',
       )}
       role="region"
       aria-label="添加基金"
@@ -74,9 +74,6 @@ export function AddFundPanel({
               支持基金名称、六位代码与批量勾选，统一纳入资产监控池
             </span>
           </div>
-        </div>
-        <div className="inline-flex h-[30px] items-center rounded-full border border-[rgba(212,176,106,0.28)] bg-[rgba(212,176,106,0.08)] px-3 text-xs font-semibold tracking-[0.06em] text-gold">
-          资产池配置
         </div>
       </div>
 
@@ -122,7 +119,7 @@ export function AddFundPanel({
           <button
             className={cn(
               buttonBaseClass,
-              'bg-primary text-interactive-contrast hover:-translate-y-px hover:bg-primary-strong md:min-w-[120px]',
+              'bg-primary text-interactive-contrast hover:-translate-y-px hover:bg-primary-strong md:min-w-30',
             )}
             type="submit"
             disabled={loading || refreshing}
@@ -139,11 +136,11 @@ export function AddFundPanel({
               exit={{ opacity: 0, y: -10 }}
               className={cn(
                 floatingPanelClass,
-                'absolute left-0 right-0 top-full z-20 mt-3 max-h-[420px] overflow-hidden rounded-[18px]',
+                'absolute left-0 right-0 top-full z-80 mt-3 max-h-105 overflow-hidden rounded-[18px]',
               )}
             >
               {searchResults.length > 0 ? (
-                <div className="max-h-[420px] overflow-y-auto p-2">
+                <div className="max-h-105 overflow-y-auto p-2">
                   {searchResults.map((fund) => {
                     const isSelected = selectedFunds.some(
                       (selectedFund) => selectedFund.CODE === fund.CODE,

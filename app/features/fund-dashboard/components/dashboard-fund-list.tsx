@@ -1,6 +1,6 @@
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -63,6 +63,12 @@ const cardShellClass = cn(
   panelClass,
   'rounded-[22px] bg-[radial-gradient(circle_at_top_right,rgba(103,167,255,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.018),transparent_24%),var(--ui-surface-elevated)] p-4',
 );
+
+const cardSectionClass =
+  'rounded-[18px] border border-border bg-surface-soft transition duration-200';
+
+const cardSectionTriggerClass =
+  'flex min-h-[46px] w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs text-muted-strong transition duration-200 hover:border-border-strong hover:bg-surface-strong';
 
 export function DashboardFundList({
   displayFunds,
@@ -135,7 +141,7 @@ export function DashboardFundList({
                   <motion.div
                     layout="position"
                     key={fund.code}
-                    className="col-span-12 md:col-span-6"
+                    className="col-span-12 h-full md:col-span-6"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -250,8 +256,18 @@ function FundCard({
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
+  const hasHistoryTrend =
+    Array.isArray(fund.historyTrend) && fund.historyTrend.length > 0;
+  const hasIntraday =
+    Array.isArray(intradayMap[fund.code]) && intradayMap[fund.code].length > 0;
+  const hasTopHoldings =
+    Array.isArray(fund.holdings) && fund.holdings.length > 0;
+  const lastIntradayTime = hasIntraday
+    ? intradayMap[fund.code][intradayMap[fund.code].length - 1].time
+    : '暂无数据';
+
   return (
-    <div className={cardShellClass}>
+    <div className={cn(cardShellClass, 'flex h-full flex-col')}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="truncate text-[15px] font-semibold">{fund.name}</div>
@@ -288,61 +304,142 @@ function FundCard({
         />
       </div>
 
-      {Array.isArray(fund.historyTrend) && fund.historyTrend.length > 0 && (
-        <details className="mb-3 border-t border-border pt-3 first:border-t-0 first:pt-0">
-          <summary className="flex cursor-pointer items-center gap-1 text-xs text-muted-strong">
-            <ChevronIcon
-              width="12"
-              height="12"
-              className="transition duration-200 group-open:rotate-90"
-            />
-            <span>近90日净值走势</span>
-          </summary>
-          <div className="mt-2 h-[180px]">
-            <FundTrendChart data={fund.historyTrend} />
+      <div className="mt-auto space-y-3">
+        <CardExpandableSection
+          available={hasHistoryTrend}
+          emptyLabel="暂无走势数据"
+          label="近90日净值走势"
+        >
+          <div className="h-[180px]">
+            <FundTrendChart data={fund.historyTrend ?? []} />
           </div>
-        </details>
-      )}
+        </CardExpandableSection>
 
-      {intradayMap[fund.code] && intradayMap[fund.code].length > 0 && (
-        <details className="mb-3 border-t border-border pt-3">
-          <summary className="flex cursor-pointer items-center justify-between gap-2 text-xs text-muted-strong">
-            <div className="flex items-center gap-1">
-              <ChevronIcon
-                width="12"
-                height="12"
-                className="transition duration-200 group-open:rotate-90"
-              />
-              <span>当日分时估值</span>
-            </div>
-            <span className="text-[10px] text-muted">
-              {intradayMap[fund.code][intradayMap[fund.code].length - 1].time}
-            </span>
-          </summary>
-          <div className="mt-2 h-[180px] rounded-lg bg-surface-soft">
-            <FundIntradayChart data={intradayMap[fund.code]} />
+        <CardExpandableSection
+          available={hasIntraday}
+          emptyLabel="暂无分时数据"
+          label="当日分时估值"
+          meta={lastIntradayTime}
+        >
+          <div className="h-[180px] rounded-xl bg-[rgba(255,255,255,0.02)]">
+            <FundIntradayChart data={intradayMap[fund.code] ?? []} />
           </div>
-        </details>
-      )}
+        </CardExpandableSection>
 
-      {fund.estPricedCoverage > 0.05 && (
-        <div className="mb-2 text-right text-[10px] text-muted">
-          基于 {Math.round(fund.estPricedCoverage * 100)}% 持仓估算
+        <div className="min-h-4 text-right text-[10px] text-muted">
+          {fund.estPricedCoverage > 0.05 ? (
+            `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
+          ) : (
+            <span className="invisible">基于 100% 持仓估算</span>
+          )}
         </div>
-      )}
 
-      <button
-        className="flex w-full items-center gap-1 text-left text-xs text-muted-strong"
-        onClick={(event) => {
-          event.stopPropagation();
-          setTopStocksModal({ open: true, fund });
-        }}
-      >
-        <ChevronIcon width="12" height="12" />
-        <span>前10重仓股票</span>
-        <span className="ml-auto text-[10px] text-muted">点击查看详情</span>
-      </button>
+        <CardActionRow
+          available={hasTopHoldings}
+          emptyLabel="暂无重仓数据"
+          label="前10重仓股票"
+          meta={hasTopHoldings ? '点击查看详情' : undefined}
+          onClick={() => setTopStocksModal({ open: true, fund })}
+        />
+      </div>
     </div>
+  );
+}
+
+function CardExpandableSection({
+  available,
+  emptyLabel,
+  label,
+  meta,
+  children,
+}: {
+  available: boolean;
+  emptyLabel: string;
+  label: string;
+  meta?: string;
+  children: ReactNode;
+}) {
+  if (!available) {
+    return (
+      <div
+        className={cn(
+          cardSectionClass,
+          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-xs text-muted',
+        )}
+      >
+        <ChevronIcon width="12" height="12" className="opacity-30" />
+        <span>{label}</span>
+        <span className="ml-auto text-[10px]">{emptyLabel}</span>
+      </div>
+    );
+  }
+
+  return (
+    <details
+      className={cn(
+        cardSectionClass,
+        'group [&_summary::-webkit-details-marker]:hidden',
+      )}
+    >
+      <summary className={cn(cardSectionTriggerClass, 'cursor-pointer')}>
+        <ChevronIcon
+          width="12"
+          height="12"
+          className="transition duration-200 group-open:rotate-90"
+        />
+        <span>{label}</span>
+        {meta && <span className="ml-auto text-[10px] text-muted">{meta}</span>}
+      </summary>
+      <div className="border-t border-border px-3 py-3">{children}</div>
+    </details>
+  );
+}
+
+function CardActionRow({
+  available,
+  emptyLabel,
+  label,
+  meta,
+  onClick,
+}: {
+  available: boolean;
+  emptyLabel: string;
+  label: string;
+  meta?: string;
+  onClick: () => void;
+}) {
+  if (!available) {
+    return (
+      <div
+        className={cn(
+          cardSectionClass,
+          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-xs text-muted',
+        )}
+      >
+        <ChevronIcon width="12" height="12" className="opacity-30" />
+        <span>{label}</span>
+        <span className="ml-auto text-[10px]">{emptyLabel}</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        cardSectionClass,
+        cardSectionTriggerClass,
+        'cursor-pointer',
+      )}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+    >
+      <ChevronIcon width="12" height="12" />
+      <span>{label}</span>
+      {meta && <span className="ml-auto text-[10px] text-muted">{meta}</span>}
+    </button>
   );
 }
 
