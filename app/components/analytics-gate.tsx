@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Script from 'next/script';
 
 interface AnalyticsGateProps {
@@ -8,13 +8,13 @@ interface AnalyticsGateProps {
 }
 
 export default function AnalyticsGate({ GA_ID }: AnalyticsGateProps) {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
+  const [enabled] = useState(() => {
     try {
       const href = window.location.href || '';
-      setEnabled(href.includes('zhengshengning'));
+      return href.includes('zhengshengning');
     } catch {}
-  }, []);
+    return false;
+  });
 
   if (!enabled) return null;
 

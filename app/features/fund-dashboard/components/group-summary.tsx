@@ -1,0 +1,337 @@
+'use client';
+
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
+
+import {
+  EyeIcon,
+  EyeOffIcon,
+  PinIcon,
+  PinOffIcon,
+  SwitchIcon,
+} from '@/app/components/icons';
+import { cn } from '@/app/lib/cn';
+import {
+  iconButtonClass,
+  panelClass,
+  upTextClass,
+  downTextClass,
+} from '@/app/lib/ui';
+import type {
+  FundData,
+  Holding,
+  HoldingProfit,
+  HoldingsMap,
+} from '@/app/types';
+
+interface CountUpProps {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
+  className?: string;
+  style?: CSSProperties;
+}
+
+function CountUp({
+  value,
+  prefix = '',
+  suffix = '',
+  decimals = 2,
+  className = '',
+  style = {},
+}: CountUpProps) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const previousValue = useRef(value);
+
+  useEffect(() => {
+    if (previousValue.current === value) return;
+
+    const start = previousValue.current;
+    const end = value;
+    const duration = 600;
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 4);
+      const current = start + (end - start) * ease;
+
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        previousValue.current = value;
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value]);
+
+  return (
+    <span className={className} style={style}>
+      {prefix}
+      {Math.abs(displayValue).toFixed(decimals)}
+      {suffix}
+    </span>
+  );
+}
+
+interface GroupSummaryProps {
+  funds: FundData[];
+  holdings: HoldingsMap;
+  groupName: string;
+  getProfit: (
+    fund: FundData,
+    holding: Holding | undefined,
+  ) => HoldingProfit | null;
+}
+
+export function GroupSummary({
+  funds,
+  holdings,
+  groupName,
+  getProfit,
+}: GroupSummaryProps) {
+  const [showPercent, setShowPercent] = useState(true);
+  const [isMasked, setIsMasked] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const [assetSize, setAssetSize] = useState(24);
+  const [metricSize, setMetricSize] = useState(18);
+  const [winW, setWinW] = useState(() =>
+    typeof window === 'undefined' ? 0 : window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const summary = useMemo(() => {
+    let totalAsset = 0;
+    let totalProfitToday = 0;
+    let totalHoldingReturn = 0;
+    let totalCost = 0;
+    let hasHolding = false;
+
+    funds.forEach((fund) => {
+      const holding = holdings[fund.code];
+      const profit = getProfit(fund, holding);
+
+      if (!profit) return;
+
+      hasHolding = true;
+      totalAsset += profit.amount;
+      totalProfitToday += profit.profitToday;
+
+      if (profit.profitTotal !== null) {
+        totalHoldingReturn += profit.profitTotal;
+
+        if (
+          holding &&
+          typeof holding.cost === 'number' &&
+          typeof holding.share === 'number'
+        ) {
+          totalCost += holding.cost * holding.share;
+        }
+      }
+    });
+
+    return {
+      totalAsset,
+      totalProfitToday,
+      totalHoldingReturn,
+      hasHolding,
+      returnRate: totalCost > 0 ? (totalHoldingReturn / totalCost) * 100 : 0,
+    };
+  }, [funds, holdings, getProfit]);
+
+  useLayoutEffect(() => {
+    const element = rowRef.current;
+    if (!element) return;
+
+    const tooTall = element.clientHeight > 80;
+    if (tooTall) {
+      setAssetSize((size) => Math.max(16, size - 1));
+      setMetricSize((size) => Math.max(12, size - 1));
+    }
+  }, [
+    winW,
+    summary.totalAsset,
+    summary.totalProfitToday,
+    summary.totalHoldingReturn,
+    summary.returnRate,
+    showPercent,
+    assetSize,
+    metricSize,
+  ]);
+
+  if (!summary.hasHolding) return null;
+
+  return (
+    <div className={isSticky ? 'sticky top-24 z-40 max-md:top-28' : ''}>
+      <div
+        className={cn(
+          panelClass,
+          'mb-3 rounded-[22px] bg-[radial-gradient(circle_at_top_right,rgba(103,167,255,0.14),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent_24%),var(--ui-surface-elevated)] px-5 py-4',
+        )}
+      >
+        <button
+          className={cn(
+            iconButtonClass,
+            'absolute right-4 top-4 hidden h-6 w-6 rounded-md max-sm:inline-flex',
+          )}
+          onClick={() => setIsSticky((value) => !value)}
+        >
+          {isSticky ? (
+            <PinIcon width="14" height="14" />
+          ) : (
+            <PinOffIcon width="14" height="14" />
+          )}
+        </button>
+        <div
+          ref={rowRef}
+          className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="text-xs uppercase tracking-[0.08em] text-muted">
+                {groupName}
+              </div>
+              <button
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted transition hover:bg-surface-soft hover:text-text"
+                onClick={() => setIsMasked((value) => !value)}
+                aria-label={isMasked ? '显示资产' : '隐藏资产'}
+              >
+                {isMasked ? (
+                  <EyeOffIcon width="16" height="16" />
+                ) : (
+                  <EyeIcon width="16" height="16" />
+                )}
+              </button>
+            </div>
+            <div className="flex items-end gap-1 font-mono font-bold tracking-[0.03em]">
+              <span className="mb-1 text-base">¥</span>
+              {isMasked ? (
+                <span
+                  style={{ fontSize: assetSize }}
+                  className="relative top-1"
+                >
+                  ******
+                </span>
+              ) : (
+                <CountUp
+                  value={summary.totalAsset}
+                  style={{ fontSize: assetSize }}
+                />
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-end gap-6 max-sm:w-full max-sm:justify-start">
+            <div>
+              <div className="mb-1 text-xs text-muted">当日收益</div>
+              <div
+                className={cn(
+                  'font-mono text-lg font-bold',
+                  summary.totalProfitToday > 0
+                    ? upTextClass
+                    : summary.totalProfitToday < 0
+                      ? downTextClass
+                      : '',
+                )}
+                style={{ fontSize: metricSize }}
+              >
+                {isMasked ? (
+                  '******'
+                ) : (
+                  <>
+                    <span className="mr-0.5">
+                      {summary.totalProfitToday > 0
+                        ? '+'
+                        : summary.totalProfitToday < 0
+                          ? '-'
+                          : ''}
+                    </span>
+                    <CountUp
+                      value={Math.abs(summary.totalProfitToday)}
+                      style={{ fontSize: metricSize }}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="mb-1 flex items-center gap-1 text-xs text-muted">
+                <span>持有收益</span>
+                <button
+                  className={cn(
+                    iconButtonClass,
+                    'h-4 w-4 rounded-none border-none bg-transparent p-0 text-muted hover:bg-transparent',
+                  )}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShowPercent((value) => !value);
+                  }}
+                  title="切换显示"
+                >
+                  <SwitchIcon width="12" height="12" />
+                </button>
+              </div>
+              <button
+                className={cn(
+                  'font-mono text-lg font-bold',
+                  summary.totalHoldingReturn > 0
+                    ? upTextClass
+                    : summary.totalHoldingReturn < 0
+                      ? downTextClass
+                      : '',
+                )}
+                style={{ fontSize: metricSize }}
+                onClick={() => setShowPercent((value) => !value)}
+                title="点击切换主次显示"
+              >
+                {isMasked ? (
+                  '******'
+                ) : (
+                  <>
+                    <span className="mr-0.5">
+                      {summary.totalHoldingReturn > 0
+                        ? '+'
+                        : summary.totalHoldingReturn < 0
+                          ? '-'
+                          : ''}
+                    </span>
+                    {showPercent ? (
+                      <CountUp
+                        value={Math.abs(summary.returnRate)}
+                        suffix="%"
+                        style={{ fontSize: metricSize }}
+                      />
+                    ) : (
+                      <CountUp
+                        value={Math.abs(summary.totalHoldingReturn)}
+                        style={{ fontSize: metricSize }}
+                      />
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

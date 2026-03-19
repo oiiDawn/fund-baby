@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default {
+const config = {
   resolve: {
     alias: {
       '@': path.resolve(dirname, '.'),
@@ -23,3 +23,5 @@ export default {
     },
   },
 };
+
+export default config;

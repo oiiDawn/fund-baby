@@ -1,8 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarIcon, MinusIcon, PlusIcon } from './Icons';
+
+import { cn } from '@/app/lib/cn';
+import {
+  iconButtonClass,
+  inputClass,
+  mutedTextClass,
+  subtleTextClass,
+  upTextClass,
+  downTextClass,
+} from '@/app/lib/ui';
+
+import { CalendarIcon, MinusIcon, PlusIcon } from './icons';
 import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 
 interface DatePickerProps {
@@ -15,6 +26,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   const [currentMonth, setCurrentMonth] = useState(() =>
     value ? toTz(value) : nowInTz(),
   );
+  const calendarId = useId();
 
   useEffect(() => {
     const close = () => setIsOpen(false);
@@ -58,95 +70,61 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div
-      className="date-picker"
-      style={{ position: 'relative' }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div
-        className="input-trigger"
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        className={cn(
+          'flex h-10 w-full items-center justify-between rounded-lg border border-border bg-surface-inset px-3 text-left text-sm text-text transition duration-200 hover:border-border-strong hover:bg-surface-soft',
+          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]',
+        )}
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 12px',
-          height: '40px',
-          background: 'var(--surface-inset)',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          border: '1px solid var(--border)',
-          transition: 'all 0.2s',
-        }}
+        aria-expanded={isOpen ? 'true' : 'false'}
+        aria-haspopup="dialog"
+        aria-controls={calendarId}
+        aria-label={value ? `已选择日期 ${value}` : '选择日期'}
       >
         <span>{value || '选择日期'}</span>
-        <CalendarIcon width="16" height="16" className="muted" />
-      </div>
+        <CalendarIcon width="16" height="16" className="text-muted" />
+      </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            id={calendarId}
+            role="dialog"
+            aria-label="选择日期"
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="glass card"
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              width: '100%',
-              marginTop: 8,
-              padding: 12,
-              zIndex: 10,
-              background: 'var(--surface-floating)',
-              border: '1px solid var(--border)',
-            }}
+            className="absolute left-0 top-full z-10 mt-2 w-full rounded-[18px] border border-border bg-surface-floating p-3 shadow-panel"
           >
-            <div
-              className="calendar-header"
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12,
-              }}
-            >
+            <div className="mb-3 flex items-center justify-between">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="icon-button"
-                style={{ width: 24, height: 24 }}
+                className={cn(iconButtonClass, 'h-6 w-6 rounded-md')}
+                aria-label="上一个月"
+                title="上一个月"
               >
                 &lt;
               </button>
-              <span style={{ fontWeight: 600 }}>
+              <span className="text-sm font-semibold">
                 {year}年 {month + 1}月
               </span>
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="icon-button"
-                style={{ width: 24, height: 24 }}
+                className={cn(iconButtonClass, 'h-6 w-6 rounded-md')}
+                aria-label="下一个月"
+                title="下一个月"
               >
                 &gt;
               </button>
             </div>
 
-            <div
-              className="calendar-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(7, 1fr)',
-                gap: 4,
-                textAlign: 'center',
-              }}
-            >
+            <div className="grid grid-cols-7 gap-1 text-center">
               {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
-                <div
-                  key={d}
-                  className="muted"
-                  style={{ fontSize: '12px', marginBottom: 4 }}
-                >
+                <div key={d} className="mb-1 text-xs text-muted">
                   {d}
                 </div>
               ))}
@@ -162,44 +140,30 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
                 const isFuture = current.isAfter(today);
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={i}
-                    onClick={(e) => !isFuture && handleSelect(e, d)}
-                    style={{
-                      height: 28,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '13px',
-                      borderRadius: '6px',
-                      cursor: isFuture ? 'not-allowed' : 'pointer',
-                      background: isSelected
-                        ? 'var(--primary)'
-                        : isToday
-                          ? 'var(--surface-strong)'
-                          : 'transparent',
-                      color: isFuture
-                        ? 'var(--muted)'
-                        : isSelected
-                          ? 'var(--interactive-contrast)'
-                          : 'var(--text)',
-                      fontWeight: isSelected || isToday ? 600 : 400,
-                      opacity: isFuture ? 0.3 : 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected && !isFuture)
-                        e.currentTarget.style.background =
-                          'var(--surface-strong)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected && !isFuture)
-                        e.currentTarget.style.background = isToday
-                          ? 'var(--surface-strong)'
-                          : 'transparent';
-                    }}
+                    onClick={(e) => handleSelect(e, d)}
+                    disabled={isFuture}
+                    aria-pressed={isSelected}
+                    aria-current={isToday ? 'date' : undefined}
+                    title={dateStr}
+                    className={cn(
+                      'flex h-7 items-center justify-center rounded-md border border-transparent text-[13px] transition',
+                      isSelected &&
+                        'bg-primary font-semibold text-interactive-contrast',
+                      !isSelected &&
+                        isToday &&
+                        'bg-surface-strong font-semibold text-text',
+                      !isSelected &&
+                        !isToday &&
+                        !isFuture &&
+                        'text-text hover:bg-surface-strong',
+                      isFuture && 'cursor-not-allowed text-muted opacity-30',
+                    )}
                   >
                     {d}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -242,39 +206,31 @@ export function NumericInput({
     onChange(fmt(next));
   };
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="relative">
       <input
         type="number"
         step="any"
-        className="input no-zoom"
+        className={cn(inputClass, 'pr-14 text-base md:text-[0.95rem]')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{ width: '100%', paddingRight: 56 }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          right: 6,
-          top: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-        }}
-      >
+      <div className="absolute right-1.5 top-1.5 flex flex-col gap-1.5">
         <button
-          className="icon-button"
+          className={cn(iconButtonClass, 'h-4 w-11 rounded-md p-0')}
           type="button"
           onClick={inc}
-          style={{ width: 44, height: 16, padding: 0 }}
+          aria-label="增加数值"
+          title="增加数值"
         >
           <PlusIcon width="14" height="14" />
         </button>
         <button
-          className="icon-button"
+          className={cn(iconButtonClass, 'h-4 w-11 rounded-md p-0')}
           type="button"
           onClick={dec}
-          style={{ width: 44, height: 16, padding: 0 }}
+          aria-label="减少数值"
+          title="减少数值"
         >
           <MinusIcon width="14" height="14" />
         </button>
@@ -291,45 +247,35 @@ interface StatProps {
 }
 
 export function Stat({ label, value, delta, subValue }: StatProps) {
-  const dir = delta != null ? (delta > 0 ? 'up' : delta < 0 ? 'down' : '') : '';
+  const dir =
+    delta != null
+      ? delta > 0
+        ? upTextClass
+        : delta < 0
+          ? downTextClass
+          : ''
+      : '';
   return (
-    <div
-      className="stat"
-      style={{
-        flexDirection: 'column',
-        gap: 4,
-        minWidth: 0,
-        alignItems: 'center',
-      }}
-    >
+    <div className="flex min-w-0 flex-col items-center gap-1">
       <span
-        className="label"
-        style={{
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
+        className={cn(
+          mutedTextClass,
+          'w-full truncate text-center text-[10px] md:text-xs',
+        )}
       >
         {label}
       </span>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+      <div className="flex flex-col items-center">
         <span
-          className={`value ${dir}`}
-          style={{ lineHeight: 1.2, whiteSpace: 'nowrap' }}
+          className={cn(
+            'whitespace-nowrap font-mono text-sm font-semibold leading-[1.2] md:text-base',
+            dir,
+          )}
         >
           {value}
         </span>
         {subValue && (
-          <span
-            className="muted"
-            style={{ fontSize: '11px', marginTop: 2, fontWeight: 500 }}
-          >
+          <span className={cn(subtleTextClass, 'mt-0.5 font-medium')}>
             {subValue}
           </span>
         )}

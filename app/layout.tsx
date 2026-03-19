@@ -1,22 +1,7 @@
 import './globals.css';
-import AnalyticsGate from './components/AnalyticsGate';
+import AnalyticsGate from './components/analytics-gate';
 import packageJson from '../package.json';
 import type { Metadata } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
-
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-body',
-  display: 'swap',
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-mono',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: `养基小宝 V${packageJson.version}`,
@@ -50,7 +35,16 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <body
+        style={
+          {
+            '--font-body':
+              '"Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+            '--font-mono':
+              '"Cascadia Code", "SFMono-Regular", "JetBrains Mono", ui-monospace, monospace',
+          } as React.CSSProperties
+        }
+      >
         <AnalyticsGate GA_ID={GA_ID} />
         {children}
       </body>

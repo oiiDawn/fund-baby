@@ -5,23 +5,25 @@ import * as echarts from 'echarts/core';
 import { LineChart } from 'echarts/charts';
 import { TooltipComponent, GridComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { TrendPoint } from '../types';
+import type { IntradayPoint } from '../types';
 
 echarts.use([TooltipComponent, GridComponent, LineChart, CanvasRenderer]);
 
-interface FundTrendChartProps {
-  data: TrendPoint[];
+interface FundIntradayChartProps {
+  data: IntradayPoint[];
 }
 
-export default function FundTrendChart({ data }: FundTrendChartProps) {
+interface TooltipParam {
+  dataIndex: number;
+}
+
+export default function FundIntradayChart({ data }: FundIntradayChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
-    if (!Array.isArray(data) || data.length < 2) return;
+    if (!Array.isArray(data) || data.length === 0) return;
     if (!chartRef.current) return;
-
-    let destroyed = false;
 
     if (instanceRef.current) {
       instanceRef.current.dispose();
@@ -31,60 +33,48 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
     const el = chartRef.current;
     const chart = echarts.init(el);
     instanceRef.current = chart;
+    const theme = getComputedStyle(document.documentElement);
 
-    const ys = data.map((d) => Number(d.y)).filter((v) => Number.isFinite(v));
-    if (ys.length < 2) return;
+    const values = data.map((d) => d.value);
 
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-
-    const lastPoint = data[data.length - 1] || ({} as TrendPoint);
-    const lastChange = Number(lastPoint.equityReturn);
-    const isUp = lastChange > 0;
-    const isDown = lastChange < 0;
-    const colorUp = '#ff4d4f';
-    const colorDown = '#52c41a';
-    const colorFlat = '#999999';
-    const lineColor = isUp ? colorUp : isDown ? colorDown : colorFlat;
+    const startVal = data[0].value;
+    const endVal = data[data.length - 1].value;
+    const color =
+      endVal >= startVal
+        ? theme.getPropertyValue('--ui-danger').trim() || '#ff4d4f'
+        : theme.getPropertyValue('--ui-success').trim() || '#52c41a';
+    const axisColor =
+      theme.getPropertyValue('--ui-border').trim() || 'rgba(0,0,0,0.08)';
+    const labelColor = theme.getPropertyValue('--ui-muted').trim() || '#999999';
 
     const option = {
       animation: false,
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'line' },
-        formatter(params: any) {
-          const p = params && params[0];
+        formatter(params: TooltipParam[]) {
+          const p = params[0];
           if (!p) return '';
-          const date = new Date(p.value[0]);
-          const d =
-            Number.isFinite(date.getTime()) &&
-            `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-              2,
-              '0',
-            )}-${String(date.getDate()).padStart(2, '0')}`;
-          return `${d || ''}<br/>净值：${p.value[1]}`;
+          const item = data[p.dataIndex];
+          return `时间: ${item.time}<br/>估值: ${item.value}<br/>涨幅: ${item.growth}%`;
         },
       },
       grid: {
-        left: 8,
-        right: 8,
+        left: 5,
+        right: 5,
         top: 10,
         bottom: 20,
         containLabel: true,
       },
       xAxis: {
-        type: 'time',
+        type: 'category',
+        data: data.map((d) => d.time),
         boundaryGap: false,
-        axisLine: { show: true, lineStyle: { color: '#e5e5e5' } },
+        axisLine: { show: true, lineStyle: { color: axisColor } },
         axisTick: { show: false },
         axisLabel: {
-          show: true,
-          color: '#999',
+          interval: 'auto',
+          color: labelColor,
           fontSize: 10,
-          formatter: (value: number) => {
-            const d = new Date(value);
-            return `${d.getMonth() + 1}-${d.getDate()}`;
-          },
         },
         splitLine: { show: false },
       },
@@ -93,17 +83,17 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
         scale: true,
         min: (value: { min: number }) => Math.floor(value.min * 1000) / 1000,
         max: (value: { max: number }) => Math.ceil(value.max * 1000) / 1000,
-        axisLine: { show: true, lineStyle: { color: '#e5e5e5' } },
+        axisLine: { show: true, lineStyle: { color: axisColor } },
         axisTick: { show: false },
         axisLabel: {
           show: true,
-          color: '#999',
+          color: labelColor,
           fontSize: 10,
           formatter: (val: number) => val.toFixed(3),
         },
         splitLine: {
           show: true,
-          lineStyle: { color: 'rgba(0,0,0,0.05)', type: 'dashed' },
+          lineStyle: { color: axisColor, type: 'dashed' },
         },
       },
       series: [
@@ -113,42 +103,37 @@ export default function FundTrendChart({ data }: FundTrendChartProps) {
           smooth: true,
           lineStyle: {
             width: 1.5,
-            color: lineColor,
+            color: color,
           },
           areaStyle: {
             opacity: 0.1,
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: lineColor },
+              { offset: 0, color: color },
               { offset: 1, color: 'rgba(255, 255, 255, 0)' },
             ]),
           },
-          data: data.map((d) => [d.x, Number(d.y)]),
+          data: values,
         },
       ],
     };
 
     chart.setOption(option);
 
-    const handleResize = () => {
-      chart.resize();
-    };
+    const handleResize = () => chart.resize();
     window.addEventListener('resize', handleResize);
 
     return () => {
-      destroyed = true;
       window.removeEventListener('resize', handleResize);
       if (instanceRef.current) {
         instanceRef.current.dispose();
-        instanceRef.current = null;
       }
     };
   }, [data]);
 
-  if (!Array.isArray(data) || data.length < 2) return null;
+  if (!Array.isArray(data) || data.length === 0) return null;
 
   return (
     <div
-      className="fund-trend-chart"
       ref={chartRef}
       style={{
         width: '100%',

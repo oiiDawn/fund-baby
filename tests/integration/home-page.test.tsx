@@ -22,7 +22,7 @@ const fundApiMocks = vi.hoisted(() => ({
   searchFunds: vi.fn(async () => sampleSearchResults),
 }));
 
-vi.mock('@/app/api/fund', () => ({
+vi.mock('@/app/features/fund-dashboard/services/fund-api', () => ({
   fetchFundData: fundApiMocks.fetchFundData,
   fetchIntradayData: fundApiMocks.fetchIntradayData,
   fetchShanghaiIndexDate: fundApiMocks.fetchShanghaiIndexDate,
