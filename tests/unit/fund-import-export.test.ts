@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { FundSnapshot } from '@/app/features/fund-dashboard/types';
+import type { FundSnapshot } from '@/app/types';
 import {
   collectFundSnapshot,
   mergeFundSnapshots,
-} from '@/app/features/fund-dashboard/services/fund-import-export';
+} from '@/app/services/fund-import-export';
 import {
   buildSampleSnapshot,
   sampleFund,
@@ -78,3 +78,6 @@ describe('fund-import-export services', () => {
     expect(result.snapshot.funds).toHaveLength(2);
   });
 });
+
+
+

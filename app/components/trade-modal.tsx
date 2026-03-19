@@ -16,7 +16,7 @@ import {
   secondaryButtonClass,
   titleRowClass,
 } from '@/app/lib/ui';
-import { fetchSmartFundNetValue } from '@/app/features/fund-dashboard/services/fund-api';
+import { fetchSmartFundNetValue } from '@/app/services/fund-api';
 import type {
   FeeMode,
   FundData,
@@ -25,7 +25,7 @@ import type {
   TradeType,
 } from '@/app/types';
 
-import { ConfirmModal } from '@/app/features/fund-dashboard/components/confirm-modal';
+import { ConfirmModal } from '@/app/components/confirm-modal';
 
 interface BaseTradeConfirmData {
   price: number;
@@ -536,3 +536,4 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

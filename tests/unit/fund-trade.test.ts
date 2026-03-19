@@ -4,7 +4,7 @@ import {
   getHoldingProfitForFund,
   getPendingTradeQueryDate,
   processPendingTrades,
-} from '@/app/features/fund-dashboard/services/fund-trade';
+} from '@/app/services/fund-trade';
 import {
   sampleFund,
   sampleHolding,
@@ -59,3 +59,5 @@ describe('fund-trade services', () => {
     );
   });
 });
+
+

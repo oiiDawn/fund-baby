@@ -22,7 +22,7 @@ const fundApiMocks = vi.hoisted(() => ({
   searchFunds: vi.fn(async () => sampleSearchResults),
 }));
 
-vi.mock('@/app/features/fund-dashboard/services/fund-api', () => ({
+vi.mock('@/app/services/fund-api', () => ({
   fetchFundData: fundApiMocks.fetchFundData,
   fetchIntradayData: fundApiMocks.fetchIntradayData,
   fetchShanghaiIndexDate: fundApiMocks.fetchShanghaiIndexDate,
@@ -82,3 +82,5 @@ describe('HomePage integration', () => {
     );
   });
 });
+
+

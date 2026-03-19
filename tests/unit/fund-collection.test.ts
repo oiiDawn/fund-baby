@@ -4,7 +4,7 @@ import {
   dedupeFundsByCode,
   mergeUpdatedFunds,
   sortFunds,
-} from '@/app/features/fund-dashboard/services/fund-collection';
+} from '@/app/services/fund-collection';
 import { sampleFund, secondaryFund } from '@/tests/fixtures/funds/sample-data';
 
 describe('fund-collection services', () => {
@@ -62,3 +62,5 @@ describe('fund-collection services', () => {
     ]);
   });
 });
+
+

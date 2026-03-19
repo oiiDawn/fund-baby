@@ -7,7 +7,7 @@ import type {
   HoldingProfit,
   PendingTrade,
 } from '@/app/types';
-import type { TradeSettlementResult } from '@/app/features/fund-dashboard/types';
+import type { TradeSettlementResult } from '@/app/types';
 
 interface GetHoldingProfitOptions {
   fund: FundData;
@@ -145,3 +145,4 @@ export const processPendingTrades = async ({
     processedCount: processedIds.length,
   };
 };
+

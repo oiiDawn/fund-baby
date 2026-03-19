@@ -1,4 +1,4 @@
-﻿// 基金持仓股票
+// 基金持仓股票
 export interface FundHolding {
   code: string;
   name: string;
@@ -36,7 +36,6 @@ export interface FundData {
   historyTrend?: TrendPoint[];
   yesterdayChange?: number | null;
   time?: string;
-  // 估值相关
   estPricedCoverage?: number;
   estGsz?: number;
   estGszzl?: number;
@@ -125,6 +124,58 @@ export interface HoldingProfit {
   amount: number;
   profitToday: number | null;
   profitTotal: number | null;
+}
+
+export interface PersistedHolding {
+  share: number | null;
+  cost: number | null;
+}
+
+export interface FundSnapshot {
+  version: 1;
+  funds: FundData[];
+  collapsedCodes: string[];
+  refreshMs: number;
+  holdings: Record<string, PersistedHolding>;
+  pendingTrades: PendingTrade[];
+  viewMode: ViewMode;
+  exportedAt: string;
+}
+
+export interface NormalizedFund extends FundData {
+  dwjzValue: number | null;
+  gszValue: number | null;
+  gszzlValue: number | null;
+  zzlValue: number | null;
+}
+
+export interface FundDashboardState {
+  funds: FundData[];
+  holdings: Record<string, Holding>;
+  pendingTrades: PendingTrade[];
+  collapsedCodes: Set<string>;
+  viewMode: ViewMode;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+}
+
+export interface TradeDraft {
+  fundCode: string;
+  type: 'buy' | 'sell';
+  share: number | null;
+  amount: number | null;
+  feeRate?: number;
+  feeMode?: FeeMode;
+  feeValue?: string | number;
+  date: string;
+  isAfter3pm: boolean;
+}
+
+export interface TradeSettlementResult {
+  holdings: Record<string, Holding>;
+  pendingTrades: PendingTrade[];
+  processedIds: string[];
+  processedCount: number;
 }
 
 // Window 全局声明 (JSONP 回调)

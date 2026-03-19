@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createFundDashboardRepository } from '@/app/features/fund-dashboard/repository/fund-dashboard-repository';
+import { createFundDashboardRepository } from '@/app/repository/fund-dashboard-repository';
 import {
   buildSampleSnapshot,
   secondaryFund,
@@ -85,3 +85,5 @@ describe('fund-dashboard repository', () => {
     expect(result.snapshot).not.toHaveProperty('groups');
   });
 });
+
+

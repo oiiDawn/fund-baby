@@ -1,13 +1,18 @@
-import type { FundData, Holding, PendingTrade, ViewMode } from '@/app/types';
+import type {
+  FundData,
+  Holding,
+  PendingTrade,
+  ViewMode,
+} from '@/app/types';
 import {
   collectFundSnapshot,
   mergeFundSnapshots,
-} from '@/app/features/fund-dashboard/services/fund-import-export';
+} from '@/app/services/fund-import-export';
 import {
   createBrowserFundStorage,
   FUND_STORAGE_KEYS,
-} from '@/app/features/fund-dashboard/storage/fund-storage';
-import type { FundSnapshot } from '@/app/features/fund-dashboard/types';
+} from '@/app/storage/fund-storage';
+import type { FundSnapshot } from '@/app/types';
 
 export interface DashboardBootstrapState {
   funds: FundData[];
@@ -95,3 +100,4 @@ export function createFundDashboardRepository() {
     },
   };
 }
+

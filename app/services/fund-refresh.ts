@@ -5,7 +5,7 @@ import type { FundData, IntradayPoint } from '@/app/types';
 import {
   dedupeFundsByCode,
   mergeUpdatedFunds,
-} from '@/app/features/fund-dashboard/services/fund-collection';
+} from '@/app/services/fund-collection';
 
 interface ResolveTradingDayStatusOptions {
   now?: Dayjs;
@@ -66,3 +66,4 @@ export const loadFundBatch = async ({
     failedCodes,
   };
 };
+

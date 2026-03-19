@@ -20,7 +20,7 @@ import {
   upTextClass,
   downTextClass,
 } from '@/app/lib/ui';
-import { GroupSummary } from '@/app/features/fund-dashboard/components/group-summary';
+import { GroupSummary } from '@/app/components/group-summary';
 import type {
   FundData,
   Holding,
@@ -966,3 +966,4 @@ function CardStatsRow({
     </>
   );
 }
+

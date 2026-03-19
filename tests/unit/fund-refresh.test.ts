@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   loadFundBatch,
   resolveTradingDayStatus,
-} from '@/app/features/fund-dashboard/services/fund-refresh';
+} from '@/app/services/fund-refresh';
 import {
   sampleFund,
   sampleIntraday,
@@ -47,3 +47,5 @@ describe('fund-refresh services', () => {
     expect(result.intradayMap[sampleFund.code]).toEqual(sampleIntraday);
   });
 });
+
+

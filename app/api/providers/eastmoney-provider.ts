@@ -4,14 +4,14 @@ import type {
   JsonpGzData,
   TrendPoint,
 } from '@/app/types';
-import { loadBrowserScript } from '@/app/features/fund-dashboard/api/providers/browser-script';
+import { loadBrowserScript } from '@/app/api/providers/browser-script';
 import {
   extractFundNetValueFromHtml,
   parseFundHoldingsHtml,
   parseSearchResults,
   type SearchApiResponse,
-} from '@/app/features/fund-dashboard/api/providers/fund-parsers';
-import { enrichHoldingsWithTencentQuotes } from '@/app/features/fund-dashboard/api/providers/tencent-provider';
+} from '@/app/api/providers/fund-parsers';
+import { enrichHoldingsWithTencentQuotes } from '@/app/api/providers/tencent-provider';
 
 export async function fetchEastMoneyFundNetValue(
   code: string,
@@ -193,3 +193,4 @@ export async function fetchEastMoneyFundTrend(code: string): Promise<{
     return { historyTrend: [], yesterdayChange: null };
   }
 }
+

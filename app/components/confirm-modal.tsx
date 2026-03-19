@@ -29,7 +29,7 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   return (
     <motion.div
-      className={cn(modalOverlayClass, 'z-[10002]')}
+      className={cn(modalOverlayClass, 'z-10002')}
       role="dialog"
       aria-modal="true"
       onClick={(event) => {
@@ -44,7 +44,7 @@ export function ConfirmModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[400px]')}
+        className={cn(modalCardClass, 'max-w-100')}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-3 flex items-center gap-2.5 text-base font-semibold">

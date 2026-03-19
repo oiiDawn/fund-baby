@@ -1,4 +1,9 @@
-import type { FundData, HoldingProfit, SortBy, SortOrder } from '@/app/types';
+import type {
+  FundData,
+  HoldingProfit,
+  SortBy,
+  SortOrder,
+} from '@/app/types';
 
 export const dedupeFundsByCode = <T extends { code?: string | null }>(
   list: T[],
@@ -70,3 +75,4 @@ export const sortFunds = (
 
     return 0;
   });
+

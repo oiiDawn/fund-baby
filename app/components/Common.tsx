@@ -13,7 +13,7 @@ import {
   downTextClass,
 } from '@/app/lib/ui';
 
-import { CalendarIcon, MinusIcon, PlusIcon } from './icons';
+import { CalendarIcon, MinusIcon, PlusIcon } from '@/app/components/icons';
 import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 
 interface DatePickerProps {
@@ -75,7 +75,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
         type="button"
         className={cn(
           'flex h-10 w-full items-center justify-between rounded-lg border border-border bg-surface-inset px-3 text-left text-sm text-text transition duration-200 hover:border-border-strong hover:bg-surface-soft',
-          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]',
+          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-(--ui-focus-ring)',
         )}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen ? 'true' : 'false'}

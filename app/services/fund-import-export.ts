@@ -1,14 +1,18 @@
-import type { FundData, PendingTrade, ViewMode } from '@/app/types';
+import type {
+  FundData,
+  PendingTrade,
+  ViewMode,
+} from '@/app/types';
 import type {
   FundSnapshot,
   PersistedHolding,
-} from '@/app/features/fund-dashboard/types';
-import { dedupeFundsByCode } from '@/app/features/fund-dashboard/services/fund-collection';
+} from '@/app/types';
+import { dedupeFundsByCode } from '@/app/services/fund-collection';
 import {
   FUND_STORAGE_KEYS,
   type StorageLike,
   createFundStorage,
-} from '@/app/features/fund-dashboard/storage/fund-storage';
+} from '@/app/storage/fund-storage';
 
 const SNAPSHOT_VERSION = 1 as const;
 
@@ -148,3 +152,4 @@ export const mergeFundSnapshots = (
     appendedCodes,
   };
 };
+

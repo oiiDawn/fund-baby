@@ -6,7 +6,7 @@ import {
   parseSearchResults,
   parseShanghaiIndexDate,
   parseTencentFundQuote,
-} from '@/app/features/fund-dashboard/api/providers/fund-parsers';
+} from '@/app/api/providers/fund-parsers';
 
 describe('fund api parsers', () => {
   it('extracts a fund net value from eastmoney html', () => {
@@ -78,3 +78,5 @@ describe('fund api parsers', () => {
     ]);
   });
 });
+
+

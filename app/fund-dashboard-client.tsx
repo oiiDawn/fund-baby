@@ -8,7 +8,7 @@ import {
   fetchShanghaiIndexDate,
   fetchSmartFundNetValue,
   searchFunds,
-} from '@/app/features/fund-dashboard/services/fund-api';
+} from '@/app/services/fund-api';
 import type {
   HoldingProfit,
   IntradayPoint,
@@ -25,39 +25,39 @@ import type {
 import { cn } from '@/app/lib/cn';
 import { formatDate, nowInTz } from '@/app/lib/date';
 import { panelClass } from '@/app/lib/ui';
-import { AddFundPanel } from '@/app/features/fund-dashboard/components/add-fund-panel';
-import { DashboardFilterBar } from '@/app/features/fund-dashboard/components/dashboard-filter-bar';
-import { DashboardFundList } from '@/app/features/fund-dashboard/components/dashboard-fund-list';
-import { DashboardHeader } from '@/app/features/fund-dashboard/components/dashboard-header';
+import { AddFundPanel } from '@/app/components/add-fund-panel';
+import { DashboardFilterBar } from '@/app/components/dashboard-filter-bar';
+import { DashboardFundList } from '@/app/components/dashboard-fund-list';
+import { DashboardHeader } from '@/app/components/dashboard-header';
 import {
   AddResultModal,
   ConfirmModal,
   SuccessModal,
-} from '@/app/features/fund-dashboard/components/dashboard-management-modals';
-import { DashboardSettingsModal } from '@/app/features/fund-dashboard/components/dashboard-settings-modal';
+} from '@/app/components/dashboard-management-modals';
+import { DashboardSettingsModal } from '@/app/components/dashboard-settings-modal';
 import {
   HoldingActionModal,
   HoldingEditModal,
   TopStocksModal,
   TradeModal,
   type TradeConfirmData,
-} from '@/app/features/fund-dashboard/components/dashboard-trade-modals';
+} from '@/app/components/dashboard-trade-modals';
 import {
   dedupeFundsByCode,
   sortFunds,
-} from '@/app/features/fund-dashboard/services/fund-collection';
+} from '@/app/services/fund-collection';
 import {
   loadFundBatch,
   resolveTradingDayStatus,
-} from '@/app/features/fund-dashboard/services/fund-refresh';
+} from '@/app/services/fund-refresh';
 import {
   getHoldingProfitForFund,
   processPendingTrades,
-} from '@/app/features/fund-dashboard/services/fund-trade';
-import { useDashboardModalEffects } from '@/app/features/fund-dashboard/hooks/use-dashboard-modal-effects';
-import { useFundSearch } from '@/app/features/fund-dashboard/hooks/use-fund-search';
-import { createFundDashboardRepository } from '@/app/features/fund-dashboard/repository/fund-dashboard-repository';
-import type { FundSnapshot } from '@/app/features/fund-dashboard/types';
+} from '@/app/services/fund-trade';
+import { useDashboardModalEffects } from '@/app/hooks/use-dashboard-modal-effects';
+import { useFundSearch } from '@/app/hooks/use-fund-search';
+import { createFundDashboardRepository } from '@/app/repository/fund-dashboard-repository';
+import type { FundSnapshot } from '@/app/types';
 
 interface SaveFilePickerWritable {
   write: (data: Blob) => Promise<void>;
@@ -1017,3 +1017,4 @@ export default function FundDashboardPage() {
     </div>
   );
 }
+

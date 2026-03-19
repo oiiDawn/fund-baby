@@ -1,6 +1,10 @@
 import { nowInTz, toTz } from '@/app/lib/date';
-import type { FundData, JsonpGzData, TencentQuoteData } from '@/app/types';
-import { loadBrowserScript } from '@/app/features/fund-dashboard/api/providers/browser-script';
+import type {
+  FundData,
+  JsonpGzData,
+  TencentQuoteData,
+} from '@/app/types';
+import { loadBrowserScript } from '@/app/api/providers/browser-script';
 import {
   fetchEastMoneyFundHoldings,
   fetchEastMoneyFundNetValue,
@@ -8,12 +12,12 @@ import {
   fetchEastMoneySearchResults,
   fetchEastMoneyValuation,
   searchEastMoneyFundName,
-} from '@/app/features/fund-dashboard/api/providers/eastmoney-provider';
+} from '@/app/api/providers/eastmoney-provider';
 import {
   fetchIntradayDataFromTencent,
   fetchShanghaiIndexDateFromTencent,
   fetchTencentFundQuote,
-} from '@/app/features/fund-dashboard/api/providers/tencent-provider';
+} from '@/app/api/providers/tencent-provider';
 
 export const loadScript = loadBrowserScript;
 export const fetchFundNetValue = fetchEastMoneyFundNetValue;
@@ -125,3 +129,4 @@ export const fetchFundData = async (code: string): Promise<FundData> => {
     yesterdayChange: trend.yesterdayChange,
   };
 };
+

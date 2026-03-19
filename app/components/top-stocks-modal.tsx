@@ -102,3 +102,4 @@ export function TopStocksModal({ fund, onClose }: TopStocksModalProps) {
     </motion.div>
   );
 }
+

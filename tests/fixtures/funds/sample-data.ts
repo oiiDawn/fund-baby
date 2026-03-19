@@ -5,7 +5,7 @@ import type {
   IntradayPoint,
   PendingTrade,
 } from '@/app/types';
-import type { FundSnapshot } from '@/app/features/fund-dashboard/types';
+import type { FundSnapshot } from '@/app/types';
 
 export const sampleFund: FundData = {
   code: '004253',
@@ -104,3 +104,6 @@ export const buildSampleSnapshot = (
   exportedAt: '2026-03-18T10:00:00.000Z',
   ...overrides,
 });
+
+
+

@@ -1,8 +1,12 @@
-import type { FundHolding, IntradayPoint, TencentQuoteData } from '@/app/types';
+import type {
+  FundHolding,
+  IntradayPoint,
+  TencentQuoteData,
+} from '@/app/types';
 import {
   parseShanghaiIndexDate,
   parseTencentFundQuote,
-} from '@/app/features/fund-dashboard/api/providers/fund-parsers';
+} from '@/app/api/providers/fund-parsers';
 
 function getStockQuoteSymbol(code: string): string | null {
   if (/^\d{6}$/.test(code)) {
@@ -167,3 +171,4 @@ export async function fetchIntradayDataFromTencent(
     return null;
   }
 }
+
