@@ -37,8 +37,6 @@ describe('HomePage integration', () => {
     vi.useRealTimers();
     window.localStorage.clear();
     window.localStorage.setItem('funds', JSON.stringify([sampleFund]));
-    window.localStorage.setItem('favorites', '[]');
-    window.localStorage.setItem('groups', '[]');
     window.localStorage.setItem('collapsedCodes', '[]');
     window.localStorage.setItem('pendingTrades', '[]');
     window.localStorage.setItem('holdings', '{}');
@@ -58,6 +56,8 @@ describe('HomePage integration', () => {
       screen.getByPlaceholderText('搜索基金名称或代码...'),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('打开设置')).toBeInTheDocument();
+    expect(screen.queryByText(/^自选/)).not.toBeInTheDocument();
+    expect(screen.queryByTitle('新增分组')).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText('打开设置'));
     expect(screen.getByRole('dialog', { name: '设置' })).toBeInTheDocument();

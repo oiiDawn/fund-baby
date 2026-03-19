@@ -1,166 +1,34 @@
 'use client';
 
-import type { RefObject } from 'react';
-
-import { AnimatePresence, motion } from 'framer-motion';
-
 import { cn } from '@/app/lib/cn';
-import {
-  activeChipClass,
-  activeTabClass,
-  chipClass,
-  iconButtonClass,
-  panelClass,
-  tabClass,
-} from '@/app/lib/ui';
+import { activeChipClass, chipClass, panelClass } from '@/app/lib/ui';
 
-import { GridIcon, ListIcon, PlusIcon, SortIcon } from '@/app/components/icons';
-import type { FundGroup, SortBy, SortOrder, ViewMode } from '@/app/types';
+import { GridIcon, ListIcon, SortIcon } from '@/app/components/icons';
+import type { SortBy, SortOrder, ViewMode } from '@/app/types';
 
 interface DashboardFilterBarProps {
-  canLeft: boolean;
-  canRight: boolean;
-  currentTab: string;
-  favoritesSize: number;
-  fundsLength: number;
-  groups: FundGroup[];
   sortBy: SortBy;
   sortOrder: SortOrder;
-  tabsRef: RefObject<HTMLDivElement | null>;
   viewMode: ViewMode;
   onApplyViewMode: (mode: ViewMode) => void;
-  onHandleMouseDown: () => void;
-  onHandleMouseLeaveOrUp: () => void;
-  onHandleMouseMove: (event: React.MouseEvent) => void;
-  onHandleWheel: (event: React.WheelEvent) => void;
-  onOpenAddGroup: () => void;
-  onOpenGroupManage: () => void;
-  onSetCurrentTab: (tab: string) => void;
   onSetSortBy: (sortBy: SortBy) => void;
   onSetSortOrder: React.Dispatch<React.SetStateAction<SortOrder>>;
-  onUpdateTabOverflow: () => void;
 }
 
 export function DashboardFilterBar({
-  canLeft,
-  canRight,
-  currentTab,
-  favoritesSize,
-  fundsLength,
-  groups,
   sortBy,
   sortOrder,
-  tabsRef,
   viewMode,
   onApplyViewMode,
-  onHandleMouseDown,
-  onHandleMouseLeaveOrUp,
-  onHandleMouseMove,
-  onHandleWheel,
-  onOpenAddGroup,
-  onOpenGroupManage,
-  onSetCurrentTab,
   onSetSortBy,
   onSetSortOrder,
-  onUpdateTabOverflow,
 }: DashboardFilterBarProps) {
   return (
     <div className={cn(panelClass, 'mb-3 rounded-[20px] px-4 py-3')}>
-      <div className="flex flex-wrap items-center gap-2">
-        <div
-          className="min-w-0 flex-1 overflow-hidden"
-          data-mask-left={canLeft}
-          data-mask-right={canRight}
-        >
-          <div
-            className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]"
-            ref={tabsRef}
-            onMouseDown={onHandleMouseDown}
-            onMouseLeave={onHandleMouseLeaveOrUp}
-            onMouseUp={onHandleMouseLeaveOrUp}
-            onMouseMove={onHandleMouseMove}
-            onWheel={onHandleWheel}
-            onScroll={onUpdateTabOverflow}
-          >
-            <AnimatePresence mode="popLayout">
-              <motion.button
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                key="all"
-                className={cn(tabClass, currentTab === 'all' && activeTabClass)}
-                onClick={() => onSetCurrentTab('all')}
-                transition={{
-                  type: 'spring',
-                  stiffness: 500,
-                  damping: 30,
-                  mass: 1,
-                }}
-              >
-                全部 ({fundsLength})
-              </motion.button>
-              <motion.button
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                key="fav"
-                className={cn(tabClass, currentTab === 'fav' && activeTabClass)}
-                onClick={() => onSetCurrentTab('fav')}
-                transition={{
-                  type: 'spring',
-                  stiffness: 500,
-                  damping: 30,
-                  mass: 1,
-                }}
-              >
-                自选 ({favoritesSize})
-              </motion.button>
-              {groups.map((group) => (
-                <motion.button
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  key={group.id}
-                  className={cn(
-                    tabClass,
-                    currentTab === group.id && activeTabClass,
-                  )}
-                  onClick={() => onSetCurrentTab(group.id)}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 500,
-                    damping: 30,
-                    mass: 1,
-                  }}
-                >
-                  {group.name} ({group.codes.length})
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-        {groups.length > 0 && (
-          <button
-            className={iconButtonClass}
-            onClick={onOpenGroupManage}
-            title="管理分组"
-          >
-            <SortIcon width="16" height="16" />
-          </button>
-        )}
-        <button
-          className={iconButtonClass}
-          onClick={onOpenAddGroup}
-          title="新增分组"
-        >
-          <PlusIcon width="16" height="16" />
-        </button>
+      <div className="mb-3 text-sm text-muted-strong">
+        监控列表支持卡片与表格切换，并可按涨跌幅或持有收益排序。
       </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
         <div className="flex rounded-md border border-border bg-transparent p-0.5">
           <button
             className={cn(

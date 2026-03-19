@@ -19,7 +19,6 @@ import type {
   ToastType,
   ViewMode,
   FundData,
-  FundGroup,
   Holding,
   HoldingsMap,
 } from '@/app/types';
@@ -31,11 +30,8 @@ import { DashboardFilterBar } from '@/app/features/fund-dashboard/components/das
 import { DashboardFundList } from '@/app/features/fund-dashboard/components/dashboard-fund-list';
 import { DashboardHeader } from '@/app/features/fund-dashboard/components/dashboard-header';
 import {
-  AddFundToGroupModal,
   AddResultModal,
   ConfirmModal,
-  GroupManageModal,
-  GroupModal,
   SuccessModal,
 } from '@/app/features/fund-dashboard/components/dashboard-management-modals';
 import { DashboardSettingsModal } from '@/app/features/fund-dashboard/components/dashboard-settings-modal';
@@ -47,7 +43,6 @@ import {
   type TradeConfirmData,
 } from '@/app/features/fund-dashboard/components/dashboard-trade-modals';
 import {
-  filterFundsByTab,
   dedupeFundsByCode,
   sortFunds,
 } from '@/app/features/fund-dashboard/services/fund-collection';
@@ -104,14 +99,6 @@ export default function FundDashboardPage() {
 
   // 收起/展开状态
   const [, setCollapsedCodes] = useState<Set<string>>(new Set());
-
-  // 自选状态
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [groups, setGroups] = useState<FundGroup[]>([]); // [{ id, name, codes: [] }]
-  const [currentTab, setCurrentTab] = useState('all');
-  const [groupModalOpen, setGroupModalOpen] = useState(false);
-  const [groupManageOpen, setGroupManageOpen] = useState(false);
-  const [addFundToGroupOpen, setAddFundToGroupOpen] = useState(false);
 
   // 排序状态
   const [sortBy, setSortBy] = useState<SortBy>('default');
@@ -186,7 +173,6 @@ export default function FundDashboardPage() {
   };
 
   const [isTradingDay, setIsTradingDay] = useState(true);
-  const tabsRef = useRef<HTMLDivElement>(null);
   const [fundDeleteConfirm, setFundDeleteConfirm] = useState<{
     code: string;
     name: string;
@@ -268,35 +254,9 @@ export default function FundDashboardPage() {
   };
 
   // 过滤和排序后的基金列表
-  const displayFunds = sortFunds(
-    filterFundsByTab(funds, currentTab, favorites, groups),
-    sortBy,
-    sortOrder,
-    (fund) => getHoldingProfit(fund, holdings[fund.code]),
+  const displayFunds = sortFunds(funds, sortBy, sortOrder, (fund) =>
+    getHoldingProfit(fund, holdings[fund.code]),
   );
-
-  // 自动滚动选中 Tab 到可视区域
-  useEffect(() => {
-    if (!tabsRef.current) return;
-    if (currentTab === 'all') {
-      tabsRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-      return;
-    }
-    const activeTab = tabsRef.current.querySelector('.tab.active');
-    if (activeTab) {
-      activeTab.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest',
-      });
-    }
-  }, [currentTab]);
-
-  // 鼠标拖拽滚动逻辑
-  const [isDragging, setIsDragging] = useState(false);
-  // Removed startX and scrollLeft state as we use movementX now
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
 
   const handleSaveHolding = (
     code: string,
@@ -404,41 +364,6 @@ export default function FundDashboardPage() {
     setTradeModal({ open: false, fund: null, type: 'buy' });
   };
 
-  const handleMouseDown = () => {
-    if (!tabsRef.current) return;
-    setIsDragging(true);
-  };
-
-  const handleMouseLeaveOrUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !tabsRef.current) return;
-    e.preventDefault();
-    tabsRef.current.scrollLeft -= e.movementX;
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!tabsRef.current) return;
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    tabsRef.current.scrollLeft += delta;
-  };
-
-  const updateTabOverflow = () => {
-    if (!tabsRef.current) return;
-    const el = tabsRef.current;
-    setCanLeft(el.scrollLeft > 0);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
-  };
-
-  useEffect(() => {
-    updateTabOverflow();
-    const onResize = () => updateTabOverflow();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [groups, funds.length, favorites.size]);
-
   // 成功提示弹窗
   const [successModal, setSuccessModal] = useState<{
     open: boolean;
@@ -479,77 +404,6 @@ export default function FundDashboardPage() {
     [storageHelper],
   );
 
-  const toggleFavorite = (code: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) {
-        next.delete(code);
-      } else {
-        next.add(code);
-      }
-      storageHelper.saveFavorites(next);
-      if (next.size === 0) setCurrentTab('all');
-      return next;
-    });
-  };
-
-  const handleAddGroup = (name: string) => {
-    const newGroup = {
-      id: `group_${Date.now()}`,
-      name,
-      codes: [],
-    };
-    const next = [...groups, newGroup];
-    setGroups(next);
-    storageHelper.saveGroups(next);
-    setCurrentTab(newGroup.id);
-    setGroupModalOpen(false);
-  };
-
-  const handleUpdateGroups = (newGroups: FundGroup[]) => {
-    setGroups(newGroups);
-    storageHelper.saveGroups(newGroups);
-    // 如果当前选中的分组被删除了，切换回“全部”
-    if (
-      currentTab !== 'all' &&
-      currentTab !== 'fav' &&
-      !newGroups.find((g) => g.id === currentTab)
-    ) {
-      setCurrentTab('all');
-    }
-  };
-
-  const handleAddFundsToGroup = (codes: string[]) => {
-    if (!codes || codes.length === 0) return;
-    const next = groups.map((g) => {
-      if (g.id === currentTab) {
-        return {
-          ...g,
-          codes: Array.from(new Set([...g.codes, ...codes])),
-        };
-      }
-      return g;
-    });
-    setGroups(next);
-    storageHelper.saveGroups(next);
-    setAddFundToGroupOpen(false);
-    setSuccessModal({ open: true, message: `成功添加 ${codes.length} 支基金` });
-  };
-
-  const removeFundFromCurrentGroup = (code: string) => {
-    const next = groups.map((g) => {
-      if (g.id === currentTab) {
-        return {
-          ...g,
-          codes: g.codes.filter((c) => c !== code),
-        };
-      }
-      return g;
-    });
-    setGroups(next);
-    storageHelper.saveGroups(next);
-  };
-
   // 按 code 去重，保留第一次出现的项，避免列表重复
   // `refreshAll` intentionally stays out of the deps list here so bootstrapping
   // only runs against the persisted snapshot we just loaded.
@@ -586,9 +440,7 @@ export default function FundDashboardPage() {
       setRefreshMs(bootstrap.refreshMs);
       setTempSeconds(Math.round(bootstrap.refreshMs / 1000));
       setCollapsedCodes(bootstrap.collapsedCodes);
-      setFavorites(bootstrap.favorites);
       setPendingTrades(bootstrap.pendingTrades);
-      setGroups(bootstrap.groups);
       setHoldings(bootstrap.holdings);
       setViewMode(bootstrap.viewMode);
     } catch {}
@@ -704,30 +556,12 @@ export default function FundDashboardPage() {
     setFunds(next);
     storageHelper.saveFunds(next);
 
-    // 同步删除分组中的失效代码
-    const nextGroups = groups.map((g) => ({
-      ...g,
-      codes: g.codes.filter((c) => c !== removeCode),
-    }));
-    setGroups(nextGroups);
-    storageHelper.saveGroups(nextGroups);
-
     // 同步删除展开收起状态
     setCollapsedCodes((prev) => {
       if (!prev.has(removeCode)) return prev;
       const nextSet = new Set(prev);
       nextSet.delete(removeCode);
       storageHelper.saveCollapsedCodes(nextSet);
-      return nextSet;
-    });
-
-    // 同步删除自选状态
-    setFavorites((prev) => {
-      if (!prev.has(removeCode)) return prev;
-      const nextSet = new Set(prev);
-      nextSet.delete(removeCode);
-      storageHelper.saveFavorites(nextSet);
-      if (nextSet.size === 0) setCurrentTab('all');
       return nextSet;
     });
 
@@ -832,8 +666,6 @@ export default function FundDashboardPage() {
         );
 
         setFunds(snapshot.funds);
-        setFavorites(new Set(snapshot.favorites));
-        setGroups(snapshot.groups);
         setCollapsedCodes(new Set(snapshot.collapsedCodes));
         setRefreshMs(snapshot.refreshMs);
         setTempSeconds(Math.round(snapshot.refreshMs / 1000));
@@ -841,8 +673,6 @@ export default function FundDashboardPage() {
         setPendingTrades(snapshot.pendingTrades);
 
         storageHelper.saveFunds(snapshot.funds);
-        storageHelper.saveFavorites(snapshot.favorites);
-        storageHelper.saveGroups(snapshot.groups);
         storageHelper.saveCollapsedCodes(snapshot.collapsedCodes);
         storageHelper.saveRefreshMs(snapshot.refreshMs);
         storageHelper.saveHoldings(snapshot.holdings as HoldingsMap);
@@ -869,9 +699,6 @@ export default function FundDashboardPage() {
   const isAnyModalOpen =
     settingsOpen ||
     addResultOpen ||
-    addFundToGroupOpen ||
-    groupManageOpen ||
-    groupModalOpen ||
     successModal.open ||
     holdingModal.open ||
     actionModal.open ||
@@ -885,13 +712,6 @@ export default function FundDashboardPage() {
     isSettingsOpen: settingsOpen,
     onCloseSettings: () => setSettingsOpen(false),
   });
-
-  const getGroupName = () => {
-    if (currentTab === 'all') return '全部资产';
-    if (currentTab === 'fav') return '自选资产';
-    const group = groups.find((g) => g.id === currentTab);
-    return group ? `${group.name}资产` : '分组资产';
-  };
 
   const holdingsCount = Object.values(holdings).filter((holding) => {
     if (!holding) return false;
@@ -925,7 +745,7 @@ export default function FundDashboardPage() {
             基金资产总览
           </h1>
           <p className="max-w-[44rem] text-[0.98rem] text-muted-strong">
-            围绕估值、持仓、分组和交易节奏构建的一体化看板，帮助你更快把握仓位状态与资金波动。
+            围绕估值、持仓和交易节奏构建的一体化监控看板，帮助你更快把握仓位状态与资金波动。
           </p>
         </div>
         <div className="grid grid-cols-1 border-t border-l border-border sm:grid-cols-2">
@@ -936,9 +756,7 @@ export default function FundDashboardPage() {
             <strong className="text-[1.55rem] font-bold tracking-[0.04em]">
               {funds.length}
             </strong>
-            <span className="text-sm text-muted">
-              当前标签：{getGroupName()}
-            </span>
+            <span className="text-sm text-muted">统一展示全部监控基金</span>
           </div>
           <div className="flex min-h-[92px] flex-col justify-between border-b border-r border-border px-4 py-3">
             <span className="text-[0.76rem] uppercase tracking-[0.08em] text-muted">
@@ -992,51 +810,29 @@ export default function FundDashboardPage() {
 
         <div className="col-span-12">
           <DashboardFilterBar
-            canLeft={canLeft}
-            canRight={canRight}
-            currentTab={currentTab}
-            favoritesSize={favorites.size}
-            fundsLength={funds.length}
-            groups={groups}
             sortBy={sortBy}
             sortOrder={sortOrder}
-            tabsRef={tabsRef}
             viewMode={viewMode}
             onApplyViewMode={applyViewMode}
-            onHandleMouseDown={handleMouseDown}
-            onHandleMouseLeaveOrUp={handleMouseLeaveOrUp}
-            onHandleMouseMove={handleMouseMove}
-            onHandleWheel={handleWheel}
-            onOpenAddGroup={() => setGroupModalOpen(true)}
-            onOpenGroupManage={() => setGroupManageOpen(true)}
-            onSetCurrentTab={setCurrentTab}
             onSetSortBy={setSortBy}
             onSetSortOrder={setSortOrder}
-            onUpdateTabOverflow={updateTabOverflow}
           />
 
           <DashboardFundList
-            currentTab={currentTab}
             displayFunds={displayFunds}
-            favorites={favorites}
-            funds={funds}
-            getGroupName={getGroupName}
             getHoldingProfit={getHoldingProfit}
             holdings={holdings}
             intradayMap={intradayMap}
             isMobile={isMobile}
             isTradingDay={isTradingDay}
             refreshing={refreshing}
-            removeFundFromCurrentGroup={removeFundFromCurrentGroup}
             requestRemoveFund={requestRemoveFund}
             setActionModal={setActionModal}
-            setAddFundToGroupOpen={setAddFundToGroupOpen}
             setHoldingModal={setHoldingModal}
             setSwipedFundCode={setSwipedFundCode}
             setTopStocksModal={setTopStocksModal}
             swipedFundCode={swipedFundCode}
             todayStr={todayStr}
-            toggleFavorite={toggleFavorite}
             viewMode={viewMode}
           />
         </div>
@@ -1066,19 +862,6 @@ export default function FundDashboardPage() {
           <AddResultModal
             failures={addFailures}
             onClose={() => setAddResultOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {addFundToGroupOpen && (
-          <AddFundToGroupModal
-            allFunds={funds}
-            currentGroupCodes={
-              groups.find((g) => g.id === currentTab)?.codes || []
-            }
-            onClose={() => setAddFundToGroupOpen(false)}
-            onAdd={handleAddFundsToGroup}
           />
         )}
       </AnimatePresence>
@@ -1144,25 +927,6 @@ export default function FundDashboardPage() {
             holding={holdings[holdingModal.fund?.code]}
             onClose={() => setHoldingModal({ open: false, fund: null })}
             onSave={(data) => handleSaveHolding(holdingModal.fund?.code, data)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {groupManageOpen && (
-          <GroupManageModal
-            groups={groups}
-            onClose={() => setGroupManageOpen(false)}
-            onSave={handleUpdateGroups}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {groupModalOpen && (
-          <GroupModal
-            onClose={() => setGroupModalOpen(false)}
-            onConfirm={handleAddGroup}
           />
         )}
       </AnimatePresence>

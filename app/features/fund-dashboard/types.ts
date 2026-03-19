@@ -1,7 +1,6 @@
 import type {
   FeeMode,
   FundData,
-  FundGroup,
   Holding,
   PendingTrade,
   SortBy,
@@ -17,8 +16,6 @@ export interface PersistedHolding {
 export interface FundSnapshot {
   version: 1;
   funds: FundData[];
-  favorites: string[];
-  groups: FundGroup[];
   collapsedCodes: string[];
   refreshMs: number;
   holdings: Record<string, PersistedHolding>;
@@ -38,8 +35,6 @@ export interface FundDashboardState {
   funds: FundData[];
   holdings: Record<string, Holding>;
   pendingTrades: PendingTrade[];
-  groups: FundGroup[];
-  favorites: Set<string>;
   collapsedCodes: Set<string>;
   viewMode: ViewMode;
   sortBy: SortBy;

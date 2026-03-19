@@ -7,14 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Stat } from '@/app/components/common';
 import FundIntradayChart from '@/app/components/fund-intraday-chart';
 import FundTrendChart from '@/app/components/fund-trend-chart';
-import {
-  ChevronIcon,
-  ExitIcon,
-  PlusIcon,
-  SettingsIcon,
-  StarIcon,
-  TrashIcon,
-} from '@/app/components/icons';
+import { ChevronIcon, SettingsIcon, TrashIcon } from '@/app/components/icons';
 import { cn } from '@/app/lib/cn';
 import { nowInTz } from '@/app/lib/date';
 import {
@@ -22,7 +15,6 @@ import {
   iconButtonClass,
   iconButtonDangerClass,
   panelClass,
-  primaryButtonClass,
   secondaryButtonClass,
   subtleTextClass,
   upTextClass,
@@ -44,11 +36,7 @@ interface ModalState {
 }
 
 interface DashboardFundListProps {
-  currentTab: string;
   displayFunds: FundData[];
-  favorites: Set<string>;
-  funds: FundData[];
-  getGroupName: () => string;
   getHoldingProfit: (
     fund: FundData,
     holding: Holding | undefined,
@@ -58,16 +46,13 @@ interface DashboardFundListProps {
   isMobile: boolean;
   isTradingDay: boolean;
   refreshing: boolean;
-  removeFundFromCurrentGroup: (code: string) => void;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setAddFundToGroupOpen: Dispatch<SetStateAction<boolean>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setSwipedFundCode: Dispatch<SetStateAction<string | null>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   swipedFundCode: string | null;
   todayStr: string;
-  toggleFavorite: (code: string) => void;
   viewMode: ViewMode;
 }
 
@@ -80,27 +65,20 @@ const cardShellClass = cn(
 );
 
 export function DashboardFundList({
-  currentTab,
   displayFunds,
-  favorites,
-  funds,
-  getGroupName,
   getHoldingProfit,
   holdings,
   intradayMap,
   isMobile,
   isTradingDay,
   refreshing,
-  removeFundFromCurrentGroup,
   requestRemoveFund,
   setActionModal,
-  setAddFundToGroupOpen,
   setHoldingModal,
   setSwipedFundCode,
   setTopStocksModal,
   swipedFundCode,
   todayStr,
-  toggleFavorite,
   viewMode,
 }: DashboardFundListProps) {
   if (displayFunds.length === 0) {
@@ -128,17 +106,7 @@ export function DashboardFundList({
             />
           </svg>
         </div>
-        <div className="mb-5 text-sm text-muted">
-          {funds.length === 0 ? '尚未添加基金' : '该分组下暂无数据'}
-        </div>
-        {currentTab !== 'all' && currentTab !== 'fav' && funds.length > 0 && (
-          <button
-            className={primaryButtonClass}
-            onClick={() => setAddFundToGroupOpen(true)}
-          >
-            添加基金到此分组
-          </button>
-        )}
+        <div className="mb-5 text-sm text-muted">尚未添加基金</div>
       </div>
     );
   }
@@ -148,21 +116,9 @@ export function DashboardFundList({
       <GroupSummary
         funds={displayFunds}
         holdings={holdings}
-        groupName={getGroupName()}
+        title="监控资产"
         getProfit={getHoldingProfit}
       />
-
-      {currentTab !== 'all' && currentTab !== 'fav' && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-4 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-[rgba(212,176,106,0.26)] bg-[linear-gradient(180deg,rgba(212,176,106,0.08),transparent_70%),var(--ui-surface-soft)] px-4 text-sm font-semibold text-muted-strong transition hover:border-[rgba(212,176,106,0.42)] hover:text-text"
-          onClick={() => setAddFundToGroupOpen(true)}
-        >
-          <PlusIcon width="18" height="18" />
-          <span>添加基金到此分组</span>
-        </motion.button>
-      )}
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -186,20 +142,16 @@ export function DashboardFundList({
                     transition={{ duration: 0.2 }}
                   >
                     <FundCard
-                      currentTab={currentTab}
-                      favorites={favorites}
                       fund={fund}
                       getHoldingProfit={getHoldingProfit}
                       holdings={holdings}
                       intradayMap={intradayMap}
                       refreshing={refreshing}
-                      removeFundFromCurrentGroup={removeFundFromCurrentGroup}
                       requestRemoveFund={requestRemoveFund}
                       setActionModal={setActionModal}
                       setHoldingModal={setHoldingModal}
                       setTopStocksModal={setTopStocksModal}
                       todayStr={todayStr}
-                      toggleFavorite={toggleFavorite}
                     />
                   </motion.div>
                 ))}
@@ -236,37 +188,29 @@ export function DashboardFundList({
                   >
                     {isMobile ? (
                       <MobileListRow
-                        currentTab={currentTab}
-                        favorites={favorites}
                         fund={fund}
                         getHoldingProfit={getHoldingProfit}
                         holdings={holdings}
                         isTradingDay={isTradingDay}
                         refreshing={refreshing}
-                        removeFundFromCurrentGroup={removeFundFromCurrentGroup}
                         requestRemoveFund={requestRemoveFund}
                         setActionModal={setActionModal}
                         setHoldingModal={setHoldingModal}
                         setSwipedFundCode={setSwipedFundCode}
                         swipedFundCode={swipedFundCode}
                         todayStr={todayStr}
-                        toggleFavorite={toggleFavorite}
                       />
                     ) : (
                       <DesktopListRow
-                        currentTab={currentTab}
-                        favorites={favorites}
                         fund={fund}
                         getHoldingProfit={getHoldingProfit}
                         holdings={holdings}
                         isTradingDay={isTradingDay}
                         refreshing={refreshing}
-                        removeFundFromCurrentGroup={removeFundFromCurrentGroup}
                         requestRemoveFund={requestRemoveFund}
                         setActionModal={setActionModal}
                         setHoldingModal={setHoldingModal}
                         todayStr={todayStr}
-                        toggleFavorite={toggleFavorite}
                       />
                     )}
                   </motion.div>
@@ -281,23 +225,17 @@ export function DashboardFundList({
 }
 
 function FundCard({
-  currentTab,
-  favorites,
   fund,
   getHoldingProfit,
   holdings,
   intradayMap,
   refreshing,
-  removeFundFromCurrentGroup,
   requestRemoveFund,
   setActionModal,
   setHoldingModal,
   setTopStocksModal,
   todayStr,
-  toggleFavorite,
 }: {
-  currentTab: string;
-  favorites: Set<string>;
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -306,31 +244,18 @@ function FundCard({
   holdings: HoldingsMap;
   intradayMap: Record<string, IntradayPoint[]>;
   refreshing: boolean;
-  removeFundFromCurrentGroup: (code: string) => void;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
-  toggleFavorite: (code: string) => void;
 }) {
   return (
     <div className={cardShellClass}>
       <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <FundPinButton
-            currentTab={currentTab}
-            favorites={favorites}
-            fund={fund}
-            removeFundFromCurrentGroup={removeFundFromCurrentGroup}
-            toggleFavorite={toggleFavorite}
-          />
-          <div className="min-w-0">
-            <div className="truncate text-[15px] font-semibold">
-              {fund.name}
-            </div>
-            <div className={subtleTextClass}>#{fund.code}</div>
-          </div>
+        <div className="min-w-0">
+          <div className="truncate text-[15px] font-semibold">{fund.name}</div>
+          <div className={subtleTextClass}>#{fund.code}</div>
         </div>
         <div className="flex items-start gap-2 text-right">
           <div className="text-xs text-muted">
@@ -422,22 +347,16 @@ function FundCard({
 }
 
 function DesktopListRow({
-  currentTab,
-  favorites,
   fund,
   getHoldingProfit,
   holdings,
   isTradingDay,
   refreshing,
-  removeFundFromCurrentGroup,
   requestRemoveFund,
   setActionModal,
   setHoldingModal,
   todayStr,
-  toggleFavorite,
 }: {
-  currentTab: string;
-  favorites: Set<string>;
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -446,12 +365,10 @@ function DesktopListRow({
   holdings: HoldingsMap;
   isTradingDay: boolean;
   refreshing: boolean;
-  removeFundFromCurrentGroup: (code: string) => void;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
-  toggleFavorite: (code: string) => void;
 }) {
   return (
     <div
@@ -460,31 +377,22 @@ function DesktopListRow({
         'border-b border-border bg-transparent py-3.5 transition hover:bg-[rgba(255,255,255,0.03)] last:border-b-0',
       )}
     >
-      <div className="flex min-w-0 items-center gap-2">
-        <FundPinButton
-          currentTab={currentTab}
-          favorites={favorites}
-          fund={fund}
-          removeFundFromCurrentGroup={removeFundFromCurrentGroup}
-          toggleFavorite={toggleFavorite}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1">
-            <span className="truncate text-sm font-semibold">{fund.name}</span>
-            {fund.jzrq === todayStr && (
-              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-soft text-[10px] text-success">
-                ✓
-              </span>
-            )}
-          </div>
-          <span className={subtleTextClass}>
-            #{fund.code} ·{' '}
-            {(fund.noValuation
-              ? fund.jzrq || '-'
-              : fund.gztime || fund.time || '-'
-            ).replace(/^\d{4}-/, '')}
-          </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1">
+          <span className="truncate text-sm font-semibold">{fund.name}</span>
+          {fund.jzrq === todayStr && (
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-soft text-[10px] text-success">
+              ✓
+            </span>
+          )}
         </div>
+        <span className={subtleTextClass}>
+          #{fund.code} ·{' '}
+          {(fund.noValuation
+            ? fund.jzrq || '-'
+            : fund.gztime || fund.time || '-'
+          ).replace(/^\d{4}-/, '')}
+        </span>
       </div>
       <ListRowChangeCell
         fund={fund}
@@ -526,24 +434,18 @@ function DesktopListRow({
 }
 
 function MobileListRow({
-  currentTab,
-  favorites,
   fund,
   getHoldingProfit,
   holdings,
   isTradingDay,
   refreshing,
-  removeFundFromCurrentGroup,
   requestRemoveFund,
   setActionModal,
   setHoldingModal,
   setSwipedFundCode,
   swipedFundCode,
   todayStr,
-  toggleFavorite,
 }: {
-  currentTab: string;
-  favorites: Set<string>;
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -552,14 +454,12 @@ function MobileListRow({
   holdings: HoldingsMap;
   isTradingDay: boolean;
   refreshing: boolean;
-  removeFundFromCurrentGroup: (code: string) => void;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setSwipedFundCode: Dispatch<SetStateAction<string | null>>;
   swipedFundCode: string | null;
   todayStr: string;
-  toggleFavorite: (code: string) => void;
 }) {
   const holding = holdings[fund.code];
   const profit = getHoldingProfit(fund, holding);
@@ -595,18 +495,9 @@ function MobileListRow({
         }}
       >
         <div className="mb-3 flex items-start justify-between gap-3 border-b border-border pb-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <FundPinButton
-              currentTab={currentTab}
-              favorites={favorites}
-              fund={fund}
-              removeFundFromCurrentGroup={removeFundFromCurrentGroup}
-              toggleFavorite={toggleFavorite}
-            />
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">{fund.name}</div>
-              <div className={subtleTextClass}>#{fund.code}</div>
-            </div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold">{fund.name}</div>
+            <div className={subtleTextClass}>#{fund.code}</div>
           </div>
           <div className="text-right">
             {profit ? (
@@ -666,53 +557,6 @@ function MobileListRow({
         </div>
       </motion.div>
     </>
-  );
-}
-
-function FundPinButton({
-  currentTab,
-  favorites,
-  fund,
-  removeFundFromCurrentGroup,
-  toggleFavorite,
-}: {
-  currentTab: string;
-  favorites: Set<string>;
-  fund: FundData;
-  removeFundFromCurrentGroup: (code: string) => void;
-  toggleFavorite: (code: string) => void;
-}) {
-  if (currentTab !== 'all' && currentTab !== 'fav') {
-    return (
-      <button
-        className={cn(
-          iconButtonClass,
-          'h-8 w-8 border-transparent bg-transparent',
-        )}
-        onClick={() => removeFundFromCurrentGroup(fund.code)}
-        title="从当前分组移除"
-      >
-        <ExitIcon
-          width="18"
-          height="18"
-          style={{ transform: 'rotate(180deg)' }}
-        />
-      </button>
-    );
-  }
-
-  return (
-    <button
-      className={cn(
-        iconButtonClass,
-        'h-8 w-8 border-transparent bg-transparent',
-        favorites.has(fund.code) && 'text-accent',
-      )}
-      onClick={() => toggleFavorite(fund.code)}
-      title={favorites.has(fund.code) ? '取消自选' : '添加自选'}
-    >
-      <StarIcon width="18" height="18" filled={favorites.has(fund.code)} />
-    </button>
   );
 }
 

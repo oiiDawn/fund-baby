@@ -1,10 +1,4 @@
-import type {
-  FundData,
-  FundGroup,
-  Holding,
-  PendingTrade,
-  ViewMode,
-} from '@/app/types';
+import type { FundData, Holding, PendingTrade, ViewMode } from '@/app/types';
 import {
   collectFundSnapshot,
   mergeFundSnapshots,
@@ -19,9 +13,7 @@ export interface DashboardBootstrapState {
   funds: FundData[];
   refreshMs: number;
   collapsedCodes: Set<string>;
-  favorites: Set<string>;
   pendingTrades: PendingTrade[];
-  groups: FundGroup[];
   holdings: Record<string, Holding>;
   viewMode: ViewMode;
   theme: string;
@@ -37,6 +29,8 @@ export function createFundDashboardRepository() {
   return {
     ...storage,
     loadBootstrapState(): DashboardBootstrapState {
+      storage.removeItem('favorites');
+      storage.removeItem('groups');
       const rawFunds = storage.getItem(FUND_STORAGE_KEYS.funds);
       const parsedFunds = rawFunds ? JSON.parse(rawFunds) : [];
       const refreshMs = Number.parseInt(
@@ -53,14 +47,10 @@ export function createFundDashboardRepository() {
         collapsedCodes: toUniqueSet(
           storage.getJSON<string[]>(FUND_STORAGE_KEYS.collapsedCodes, []),
         ),
-        favorites: toUniqueSet(
-          storage.getJSON<string[]>(FUND_STORAGE_KEYS.favorites, []),
-        ),
         pendingTrades: storage.getJSON<PendingTrade[]>(
           FUND_STORAGE_KEYS.pendingTrades,
           [],
         ),
-        groups: storage.getJSON<FundGroup[]>(FUND_STORAGE_KEYS.groups, []),
         holdings: storage.getJSON<Record<string, Holding>>(
           FUND_STORAGE_KEYS.holdings,
           {},
@@ -81,14 +71,8 @@ export function createFundDashboardRepository() {
     saveCollapsedCodes(codes: Iterable<string>) {
       storage.setJSON(FUND_STORAGE_KEYS.collapsedCodes, Array.from(codes));
     },
-    saveFavorites(codes: Iterable<string>) {
-      storage.setJSON(FUND_STORAGE_KEYS.favorites, Array.from(codes));
-    },
     savePendingTrades(pendingTrades: PendingTrade[]) {
       storage.setJSON(FUND_STORAGE_KEYS.pendingTrades, pendingTrades);
-    },
-    saveGroups(groups: FundGroup[]) {
-      storage.setJSON(FUND_STORAGE_KEYS.groups, groups);
     },
     saveHoldings(holdings: Record<string, Holding>) {
       storage.setJSON(FUND_STORAGE_KEYS.holdings, holdings);

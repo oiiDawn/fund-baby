@@ -1,7 +1,5 @@
 export const FUND_STORAGE_KEYS = {
   funds: 'funds',
-  favorites: 'favorites',
-  groups: 'groups',
   collapsedCodes: 'collapsedCodes',
   refreshMs: 'refreshMs',
   holdings: 'holdings',

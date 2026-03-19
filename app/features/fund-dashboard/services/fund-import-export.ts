@@ -1,12 +1,9 @@
-import type { FundData, FundGroup, PendingTrade, ViewMode } from '@/app/types';
+import type { FundData, PendingTrade, ViewMode } from '@/app/types';
 import type {
   FundSnapshot,
   PersistedHolding,
 } from '@/app/features/fund-dashboard/types';
-import {
-  dedupeFundsByCode,
-  mergeGroups,
-} from '@/app/features/fund-dashboard/services/fund-collection';
+import { dedupeFundsByCode } from '@/app/features/fund-dashboard/services/fund-collection';
 import {
   FUND_STORAGE_KEYS,
   type StorageLike,
@@ -52,20 +49,9 @@ export const collectFundSnapshot = (
     repository.getJSON<FundData[]>(FUND_STORAGE_KEYS.funds, []),
   );
   const fundCodes = new Set(funds.map((fund) => fund.code));
-  const favorites = repository
-    .getJSON<string[]>(FUND_STORAGE_KEYS.favorites, [])
-    .filter((code) => fundCodes.has(code));
   const collapsedCodes = repository
     .getJSON<string[]>(FUND_STORAGE_KEYS.collapsedCodes, [])
     .filter((code) => fundCodes.has(code));
-  const groups = repository
-    .getJSON<FundGroup[]>(FUND_STORAGE_KEYS.groups, [])
-    .map((group) => ({
-      ...group,
-      codes: Array.isArray(group.codes)
-        ? group.codes.filter((code) => fundCodes.has(code))
-        : [],
-    }));
   const pendingTrades = repository
     .getJSON<PendingTrade[]>(FUND_STORAGE_KEYS.pendingTrades, [])
     .filter((trade) => trade && fundCodes.has(trade.fundCode));
@@ -79,8 +65,6 @@ export const collectFundSnapshot = (
   return {
     version: SNAPSHOT_VERSION,
     funds,
-    favorites,
-    groups,
     collapsedCodes,
     refreshMs: Number.isFinite(refreshMs) ? refreshMs : 30000,
     holdings: sanitizeHoldings(
@@ -111,13 +95,6 @@ export const mergeFundSnapshots = (
   const funds = dedupeFundsByCode([...currentFunds, ...incomingFunds]);
   const fundCodes = new Set(funds.map((fund) => fund.code));
 
-  const favorites = Array.from(
-    new Set([
-      ...current.favorites.filter((code) => fundCodes.has(code)),
-      ...(incomingRaw.favorites || []).filter((code) => fundCodes.has(code)),
-    ]),
-  );
-
   const collapsedCodes = Array.from(
     new Set([
       ...current.collapsedCodes.filter((code) => fundCodes.has(code)),
@@ -126,14 +103,6 @@ export const mergeFundSnapshots = (
       ),
     ]),
   );
-
-  const groups = mergeGroups(
-    current.groups,
-    Array.isArray(incomingRaw.groups) ? incomingRaw.groups : [],
-  ).map((group) => ({
-    ...group,
-    codes: group.codes.filter((code) => fundCodes.has(code)),
-  }));
 
   const holdings = {
     ...current.holdings,
@@ -162,8 +131,6 @@ export const mergeFundSnapshots = (
     snapshot: {
       version: SNAPSHOT_VERSION,
       funds,
-      favorites,
-      groups,
       collapsedCodes,
       refreshMs:
         typeof incomingRaw.refreshMs === 'number' &&

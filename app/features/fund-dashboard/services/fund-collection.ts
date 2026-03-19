@@ -1,10 +1,4 @@
-import type {
-  FundData,
-  FundGroup,
-  HoldingProfit,
-  SortBy,
-  SortOrder,
-} from '@/app/types';
+import type { FundData, HoldingProfit, SortBy, SortOrder } from '@/app/types';
 
 export const dedupeFundsByCode = <T extends { code?: string | null }>(
   list: T[],
@@ -36,51 +30,6 @@ export const mergeUpdatedFunds = (
 
   return dedupeFundsByCode(merged);
 };
-
-export const mergeGroups = (
-  currentGroups: FundGroup[],
-  incomingGroups: FundGroup[],
-) => {
-  const mergedGroups = [...currentGroups];
-
-  incomingGroups.forEach((incomingGroup) => {
-    const existingIndex = mergedGroups.findIndex(
-      (group) => group.id === incomingGroup.id,
-    );
-    if (existingIndex >= 0) {
-      mergedGroups[existingIndex] = {
-        ...mergedGroups[existingIndex],
-        ...incomingGroup,
-        codes: Array.from(
-          new Set([
-            ...mergedGroups[existingIndex].codes,
-            ...(Array.isArray(incomingGroup.codes) ? incomingGroup.codes : []),
-          ]),
-        ),
-      };
-      return;
-    }
-    mergedGroups.push({
-      ...incomingGroup,
-      codes: Array.isArray(incomingGroup.codes) ? incomingGroup.codes : [],
-    });
-  });
-
-  return mergedGroups;
-};
-
-export const filterFundsByTab = (
-  funds: FundData[],
-  currentTab: string,
-  favorites: Set<string>,
-  groups: FundGroup[],
-) =>
-  funds.filter((fund) => {
-    if (currentTab === 'all') return true;
-    if (currentTab === 'fav') return favorites.has(fund.code);
-    const group = groups.find((item) => item.id === currentTab);
-    return group ? group.codes.includes(fund.code) : true;
-  });
 
 export const sortFunds = (
   funds: FundData[],

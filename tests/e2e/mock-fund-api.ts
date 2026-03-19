@@ -86,8 +86,6 @@ export const seedLocalStorage = (page: Page) =>
       },
     ];
     localStorage.setItem('funds', JSON.stringify(funds));
-    localStorage.setItem('favorites', '[]');
-    localStorage.setItem('groups', '[]');
     localStorage.setItem('collapsedCodes', '[]');
     localStorage.setItem('pendingTrades', '[]');
     localStorage.setItem('holdings', '{}');

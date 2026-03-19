@@ -86,13 +86,6 @@ export interface DcaPlan {
   updatedAt: string;
 }
 
-// 基金分组
-export interface FundGroup {
-  id: string;
-  name: string;
-  codes: string[];
-}
-
 // 搜索结果
 export interface FundSearchResult {
   CODE: string;

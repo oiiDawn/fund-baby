@@ -18,11 +18,11 @@ describe('fund-dashboard repository', () => {
     });
 
     window.localStorage.setItem('funds', JSON.stringify(snapshot.funds));
+    window.localStorage.setItem('favorites', JSON.stringify(['004253']));
     window.localStorage.setItem(
-      'favorites',
-      JSON.stringify(snapshot.favorites),
+      'groups',
+      JSON.stringify([{ id: 'legacy', name: '旧分组', codes: ['004253'] }]),
     );
-    window.localStorage.setItem('groups', JSON.stringify(snapshot.groups));
     window.localStorage.setItem(
       'collapsedCodes',
       JSON.stringify(snapshot.collapsedCodes),
@@ -41,24 +41,26 @@ describe('fund-dashboard repository', () => {
 
     expect(bootstrap.funds).toHaveLength(1);
     expect(bootstrap.refreshMs).toBe(snapshot.refreshMs);
-    expect(Array.from(bootstrap.favorites)).toEqual(snapshot.favorites);
     expect(Array.from(bootstrap.collapsedCodes)).toEqual(
       snapshot.collapsedCodes,
     );
     expect(bootstrap.viewMode).toBe('list');
     expect(bootstrap.theme).toBe('light');
+    expect(window.localStorage.getItem('favorites')).toBeNull();
+    expect(window.localStorage.getItem('groups')).toBeNull();
   });
 
   it('merges imported snapshots through the repository facade', () => {
     const current = buildSampleSnapshot();
-    const imported = buildSampleSnapshot({
-      funds: [...current.funds, secondaryFund],
+    const imported = {
+      ...buildSampleSnapshot({
+        funds: [...current.funds, secondaryFund],
+      }),
       favorites: [secondaryFund.code],
-    });
+      groups: [{ id: 'legacy', name: '旧分组', codes: [secondaryFund.code] }],
+    };
 
     window.localStorage.setItem('funds', JSON.stringify(current.funds));
-    window.localStorage.setItem('favorites', JSON.stringify(current.favorites));
-    window.localStorage.setItem('groups', JSON.stringify(current.groups));
     window.localStorage.setItem(
       'collapsedCodes',
       JSON.stringify(current.collapsedCodes),
@@ -79,6 +81,7 @@ describe('fund-dashboard repository', () => {
 
     expect(result.appendedCodes).toEqual([secondaryFund.code]);
     expect(result.snapshot.funds).toHaveLength(2);
-    expect(result.snapshot.favorites).toContain(secondaryFund.code);
+    expect(result.snapshot).not.toHaveProperty('favorites');
+    expect(result.snapshot).not.toHaveProperty('groups');
   });
 });

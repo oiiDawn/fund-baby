@@ -1,6 +1,5 @@
 import type {
   FundData,
-  FundGroup,
   FundSearchResult,
   Holding,
   IntradayPoint,
@@ -66,11 +65,6 @@ export const samplePendingSellTrade: PendingTrade = {
   isAfter3pm: false,
 };
 
-export const sampleGroups: FundGroup[] = [
-  { id: '新能源', name: '新能源', codes: [sampleFund.code] },
-  { id: '消费', name: '消费', codes: [secondaryFund.code] },
-];
-
 export const sampleSearchResults: FundSearchResult[] = [
   {
     CODE: sampleFund.code,
@@ -97,8 +91,6 @@ export const buildSampleSnapshot = (
 ): FundSnapshot => ({
   version: 1,
   funds: [sampleFund],
-  favorites: [sampleFund.code],
-  groups: sampleGroups,
   collapsedCodes: [],
   refreshMs: 30000,
   holdings: {

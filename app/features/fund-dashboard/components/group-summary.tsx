@@ -88,7 +88,7 @@ function CountUp({
 interface GroupSummaryProps {
   funds: FundData[];
   holdings: HoldingsMap;
-  groupName: string;
+  title: string;
   getProfit: (
     fund: FundData,
     holding: Holding | undefined,
@@ -98,7 +98,7 @@ interface GroupSummaryProps {
 export function GroupSummary({
   funds,
   holdings,
-  groupName,
+  title,
   getProfit,
 }: GroupSummaryProps) {
   const [showPercent, setShowPercent] = useState(true);
@@ -208,7 +208,7 @@ export function GroupSummary({
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2">
               <div className="text-xs uppercase tracking-[0.08em] text-muted">
-                {groupName}
+                {title}
               </div>
               <button
                 className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted transition hover:bg-surface-soft hover:text-text"
