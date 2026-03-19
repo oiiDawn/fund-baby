@@ -28,7 +28,6 @@ import { panelClass } from '@/app/lib/ui';
 import { AddFundPanel } from '@/app/components/add-fund-panel';
 import { DashboardFilterBar } from '@/app/components/dashboard-filter-bar';
 import { DashboardFundList } from '@/app/components/dashboard-fund-list';
-import { DashboardHeader } from '@/app/components/dashboard-header';
 import {
   AddResultModal,
   ConfirmModal,
@@ -713,88 +712,17 @@ export default function FundDashboardPage() {
     onCloseSettings: () => setSettingsOpen(false),
   });
 
-  const holdingsCount = Object.values(holdings).filter((holding) => {
-    if (!holding) return false;
-    const share = Number(holding.share ?? 0);
-    return Number.isFinite(share) && share > 0;
-  }).length;
-
   return (
-    <div className="mx-auto max-w-[1240px] px-4 pb-6 pt-32 md:px-6 md:pt-28">
-      <DashboardHeader
-        fundsCount={funds.length}
-        holdingsCount={holdingsCount}
-        isTradingDay={isTradingDay}
-        refreshMs={refreshMs}
-        refreshing={refreshing}
-        theme={theme}
-        onManualRefresh={manualRefresh}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onToggleTheme={toggleTheme}
-      />
-
+    <div className="mx-auto flex max-w-[1320px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 xl:gap-8">
       <section
-        className="mb-5 grid gap-4 border-b border-border pb-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
-        aria-label="基金资产概览"
+        className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)] xl:items-start"
+        aria-label="基金工作台控制区"
       >
-        <div className="border-b border-border pb-4 lg:border-b-0 lg:pb-0">
-          <div className="mb-2 text-[0.74rem] font-bold uppercase tracking-[0.22em] text-gold">
-            Fund Intelligence Console
-          </div>
-          <h1 className="mb-2 text-[clamp(1.7rem,2.8vw,2.3rem)] font-bold leading-tight">
-            基金资产总览
-          </h1>
-          <p className="max-w-[44rem] text-[0.98rem] text-muted-strong">
-            围绕估值、持仓和交易节奏构建的一体化监控看板，帮助你更快把握仓位状态与资金波动。
-          </p>
-        </div>
-        <div className="grid grid-cols-1 border-t border-l border-border sm:grid-cols-2">
-          <div className="flex min-h-[92px] flex-col justify-between border-b border-r border-border px-4 py-3">
-            <span className="text-[0.76rem] uppercase tracking-[0.08em] text-muted">
-              监控基金
-            </span>
-            <strong className="text-[1.55rem] font-bold tracking-[0.04em]">
-              {funds.length}
-            </strong>
-            <span className="text-sm text-muted">统一展示全部监控基金</span>
-          </div>
-          <div className="flex min-h-[92px] flex-col justify-between border-b border-r border-border px-4 py-3">
-            <span className="text-[0.76rem] uppercase tracking-[0.08em] text-muted">
-              有效持仓
-            </span>
-            <strong className="text-[1.55rem] font-bold tracking-[0.04em]">
-              {holdingsCount}
-            </strong>
-            <span className="text-sm text-muted">聚焦真实资产暴露</span>
-          </div>
-          <div className="flex min-h-[92px] flex-col justify-between border-b border-r border-border px-4 py-3">
-            <span className="text-[0.76rem] uppercase tracking-[0.08em] text-muted">
-              待处理交易
-            </span>
-            <strong className="text-[1.55rem] font-bold tracking-[0.04em]">
-              {pendingTrades.length}
-            </strong>
-            <span className="text-sm text-muted">等待净值确认后入账</span>
-          </div>
-          <div className="flex min-h-[92px] flex-col justify-between border-b border-r border-border px-4 py-3">
-            <span className="text-[0.76rem] uppercase tracking-[0.08em] text-muted">
-              市场状态
-            </span>
-            <strong className="text-[1.55rem] font-bold tracking-[0.04em] text-gold">
-              {isTradingDay ? 'OPEN' : 'CLOSED'}
-            </strong>
-            <span className="text-sm text-muted">
-              {isTradingDay ? '估值与行情实时跟踪中' : '按最近交易日结算'}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-12 gap-4">
         <AddFundPanel
           dropdownRef={dropdownRef}
           error={error}
           funds={funds}
+          hasFunds={funds.length > 0}
           isSearching={isSearching}
           loading={loading}
           refreshing={refreshing}
@@ -802,41 +730,45 @@ export default function FundDashboardPage() {
           searchTerm={searchTerm}
           selectedFunds={selectedFunds}
           showDropdown={showDropdown}
+          theme={theme}
           onAddFund={addFund}
           onHandleSearchInput={handleSearchInput}
+          onManualRefresh={manualRefresh}
+          onOpenSettings={() => setSettingsOpen(true)}
           onSetShowDropdown={setShowDropdown}
+          onToggleTheme={toggleTheme}
           onToggleSelectFund={toggleSelectFund}
         />
 
-        <div className="col-span-12">
-          <DashboardFilterBar
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            viewMode={viewMode}
-            onApplyViewMode={applyViewMode}
-            onSetSortBy={setSortBy}
-            onSetSortOrder={setSortOrder}
-          />
+        <DashboardFilterBar
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          viewMode={viewMode}
+          onApplyViewMode={applyViewMode}
+          onSetSortBy={setSortBy}
+          onSetSortOrder={setSortOrder}
+        />
+      </section>
 
-          <DashboardFundList
-            displayFunds={displayFunds}
-            getHoldingProfit={getHoldingProfit}
-            holdings={holdings}
-            intradayMap={intradayMap}
-            isMobile={isMobile}
-            isTradingDay={isTradingDay}
-            refreshing={refreshing}
-            requestRemoveFund={requestRemoveFund}
-            setActionModal={setActionModal}
-            setHoldingModal={setHoldingModal}
-            setSwipedFundCode={setSwipedFundCode}
-            setTopStocksModal={setTopStocksModal}
-            swipedFundCode={swipedFundCode}
-            todayStr={todayStr}
-            viewMode={viewMode}
-          />
-        </div>
-      </div>
+      <section className="flex flex-col gap-4" aria-label="基金监控列表">
+        <DashboardFundList
+          displayFunds={displayFunds}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          intradayMap={intradayMap}
+          isMobile={isMobile}
+          isTradingDay={isTradingDay}
+          refreshing={refreshing}
+          requestRemoveFund={requestRemoveFund}
+          setActionModal={setActionModal}
+          setHoldingModal={setHoldingModal}
+          setSwipedFundCode={setSwipedFundCode}
+          setTopStocksModal={setTopStocksModal}
+          swipedFundCode={swipedFundCode}
+          todayStr={todayStr}
+          viewMode={viewMode}
+        />
+      </section>
       <AnimatePresence>
         {fundDeleteConfirm && (
           <ConfirmModal
@@ -852,7 +784,7 @@ export default function FundDashboardPage() {
         )}
       </AnimatePresence>
 
-      <div className="mt-6 pb-14 text-center text-xs text-muted">
+      <div className="pb-10 text-center text-xs text-muted">
         <p className="mb-2">
           数据源：实时估值与重仓直连东方财富，仅供个人学习及参考使用，不作为任何投资建议
         </p>

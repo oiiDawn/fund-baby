@@ -39,9 +39,9 @@ export default function RootLayout({
         style={
           {
             '--font-body':
-              '"Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+              '"PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif',
             '--font-mono':
-              '"Cascadia Code", "SFMono-Regular", "JetBrains Mono", ui-monospace, monospace',
+              '"IBM Plex Mono", "Cascadia Code", "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace',
           } as React.CSSProperties
         }
       >

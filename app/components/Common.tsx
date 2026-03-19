@@ -124,7 +124,10 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
 
             <div className="grid grid-cols-7 gap-1 text-center">
               {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
-                <div key={d} className="mb-1 text-xs text-muted">
+                <div
+                  key={d}
+                  className="mb-1 text-[0.72rem] font-medium tracking-[0.04em] text-muted"
+                >
                   {d}
                 </div>
               ))}
@@ -149,7 +152,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
                     aria-current={isToday ? 'date' : undefined}
                     title={dateStr}
                     className={cn(
-                      'flex h-7 items-center justify-center rounded-md border border-transparent text-[13px] transition',
+                      'flex h-7 items-center justify-center rounded-md border border-transparent text-[0.8125rem] font-medium transition',
                       isSelected &&
                         'bg-primary font-semibold text-interactive-contrast',
                       !isSelected &&
@@ -210,7 +213,7 @@ export function NumericInput({
       <input
         type="number"
         step="any"
-        className={cn(inputClass, 'pr-14 text-base md:text-[0.95rem]')}
+        className={cn(inputClass, 'pr-14')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -260,7 +263,7 @@ export function Stat({ label, value, delta, subValue }: StatProps) {
       <span
         className={cn(
           mutedTextClass,
-          'w-full truncate text-center text-[10px] md:text-xs',
+          'w-full truncate text-center text-[0.72rem] font-medium tracking-[0.06em] text-muted md:text-[0.75rem]',
         )}
       >
         {label}
@@ -268,14 +271,14 @@ export function Stat({ label, value, delta, subValue }: StatProps) {
       <div className="flex flex-col items-center">
         <span
           className={cn(
-            'whitespace-nowrap font-mono text-sm font-semibold leading-[1.2] md:text-base',
+            'whitespace-nowrap font-mono text-[0.95rem] font-semibold leading-none md:text-[1.0625rem]',
             dir,
           )}
         >
           {value}
         </span>
         {subValue && (
-          <span className={cn(subtleTextClass, 'mt-0.5 font-medium')}>
+          <span className={cn(subtleTextClass, 'mt-0.5 text-[0.75rem]')}>
             {subValue}
           </span>
         )}

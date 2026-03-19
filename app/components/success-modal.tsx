@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 
 import { cn } from '@/app/lib/cn';
 import {
+  badgeClass,
   modalCardClass,
   modalOverlayClass,
   primaryButtonClass,
 } from '@/app/lib/ui';
+import { CheckCircleIcon } from '@/app/components/icons';
 
 interface SuccessModalProps {
   message: string;
@@ -34,9 +36,18 @@ export function SuccessModal({ message, onClose }: SuccessModalProps) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="py-5 text-center">
-          <div className="mb-4 text-5xl">🎉</div>
+          <div className="mb-4 flex justify-center">
+            <div
+              className={cn(
+                badgeClass,
+                'h-16 w-16 justify-center rounded-[20px] border-[color:var(--ui-primary-border)] bg-primary-soft text-primary',
+              )}
+            >
+              <CheckCircleIcon width="30" height="30" />
+            </div>
+          </div>
           <h3 className="mb-2 text-lg font-semibold">{message}</h3>
-          <p className="text-sm text-muted">操作已完成，您可以继续使用。</p>
+          <p className="text-sm text-muted">操作已完成，状态已经同步更新。</p>
           <button
             className={cn(primaryButtonClass, 'mt-6 w-full')}
             onClick={onClose}

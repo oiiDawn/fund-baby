@@ -65,7 +65,7 @@ export function HoldingActionModal({
           <button
             className={cn(
               primaryButtonClass,
-              'border border-[rgba(143,167,188,0.24)] bg-primary-soft text-primary hover:bg-primary-soft',
+              'border-[color:var(--ui-primary-border)] bg-primary-soft text-primary hover:bg-primary-soft',
             )}
             onClick={() => onAction('buy')}
           >
@@ -74,7 +74,7 @@ export function HoldingActionModal({
           <button
             className={cn(
               dangerButtonClass,
-              'border border-[rgba(181,122,119,0.24)] bg-danger-soft text-danger hover:bg-danger-soft',
+              'border-[color:var(--ui-danger-border)] bg-danger-soft text-danger hover:bg-danger-soft',
             )}
             onClick={() => onAction('sell')}
           >

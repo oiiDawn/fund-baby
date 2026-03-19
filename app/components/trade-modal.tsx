@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { DatePicker, NumericInput } from '@/app/components/common';
-import { CloseIcon } from '@/app/components/icons';
+import {
+  CloseIcon,
+  MinusIcon,
+  PlusIcon,
+  SwitchIcon,
+} from '@/app/components/icons';
 import { cn } from '@/app/lib/cn';
 import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 import {
@@ -209,8 +214,10 @@ export function TradeModal({
 
   const timeToggleClass = (active: boolean) =>
     cn(
-      'flex-1 rounded-md px-3 py-2 text-sm transition',
-      active ? 'bg-primary text-interactive-contrast' : 'text-muted',
+      'flex-1 rounded-md px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]',
+      active
+        ? 'bg-primary text-interactive-contrast'
+        : 'text-muted hover:bg-surface-soft hover:text-text',
     );
 
   return (
@@ -233,7 +240,23 @@ export function TradeModal({
       >
         <div className={modalHeaderClass}>
           <div className={titleRowClass}>
-            <span className="text-xl">{isBuy ? '📥' : '📤'}</span>
+            <span
+              className={cn(
+                'inline-flex h-9 w-9 items-center justify-center rounded-xl border',
+                isBuy
+                  ? 'border-[color:var(--ui-primary-border)] bg-primary-soft text-primary'
+                  : 'border-[color:var(--ui-danger-border)] bg-danger-soft text-danger',
+              )}
+              aria-hidden="true"
+            >
+              {showConfirm ? (
+                <SwitchIcon width="18" height="18" />
+              ) : isBuy ? (
+                <PlusIcon width="18" height="18" />
+              ) : (
+                <MinusIcon width="18" height="18" />
+              )}
+            </span>
             <span>
               {showConfirm
                 ? isBuy
@@ -357,7 +380,7 @@ export function TradeModal({
                 className={cn(
                   isBuy
                     ? primaryButtonClass
-                    : 'inline-flex h-11 flex-1 items-center justify-center rounded-[14px] bg-danger px-4 text-sm font-semibold text-interactive-contrast transition hover:-translate-y-px',
+                    : `${secondaryButtonClass} flex-1 border-[color:var(--ui-danger-border)] bg-danger-soft text-danger hover:bg-danger-soft`,
                 )}
                 onClick={handleFinalConfirm}
                 disabled={loadingPrice}

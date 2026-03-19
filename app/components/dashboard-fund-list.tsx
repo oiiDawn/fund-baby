@@ -61,14 +61,27 @@ const desktopTableColumns =
 
 const cardShellClass = cn(
   panelClass,
-  'rounded-[22px] bg-[radial-gradient(circle_at_top_right,rgba(103,167,255,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.018),transparent_24%),var(--ui-surface-elevated)] p-4',
+  'ui-panel-accent rounded-[var(--ui-radius-lg)] p-[var(--space-md)]',
 );
 
 const cardSectionClass =
-  'rounded-[18px] border border-border bg-surface-soft transition duration-200';
+  'rounded-[var(--ui-radius-md)] border border-border bg-surface-soft transition duration-200';
 
 const cardSectionTriggerClass =
-  'flex min-h-[46px] w-full items-center gap-2 px-3.5 py-2.5 text-left text-xs text-muted-strong transition duration-200 hover:border-border-strong hover:bg-surface-strong';
+  'flex min-h-[46px] w-full items-center gap-[var(--space-2xs)] px-[var(--space-sm)] py-[var(--space-xs)] text-left text-[0.8125rem] font-medium tracking-[0.01em] text-muted-strong transition duration-200 hover:border-border-strong hover:bg-surface-strong';
+
+function getCardSpanClass(index: number, total: number): string {
+  if (total === 1) return 'col-span-12';
+  if (total === 2) return 'col-span-12 md:col-span-6';
+  if (total === 3) {
+    if (index === 0) return 'col-span-12 xl:col-span-7';
+    if (index === 1) return 'col-span-12 md:col-span-6 xl:col-span-5';
+    return 'col-span-12';
+  }
+  if (index === 0) return 'col-span-12 xl:col-span-7';
+  if (index === 1) return 'col-span-12 md:col-span-6 xl:col-span-5';
+  return 'col-span-12 md:col-span-6 xl:col-span-4';
+}
 
 export function DashboardFundList({
   displayFunds,
@@ -137,11 +150,14 @@ export function DashboardFundList({
           {viewMode === 'card' ? (
             <div className="grid grid-cols-12 gap-4">
               <AnimatePresence mode="popLayout">
-                {displayFunds.map((fund) => (
+                {displayFunds.map((fund, index) => (
                   <motion.div
                     layout="position"
                     key={fund.code}
-                    className="col-span-12 h-full md:col-span-6"
+                    className={cn(
+                      getCardSpanClass(index, displayFunds.length),
+                      'h-full',
+                    )}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -158,6 +174,7 @@ export function DashboardFundList({
                       setHoldingModal={setHoldingModal}
                       setTopStocksModal={setTopStocksModal}
                       todayStr={todayStr}
+                      featured={index === 0 && displayFunds.length >= 3}
                     />
                   </motion.div>
                 ))}
@@ -169,7 +186,7 @@ export function DashboardFundList({
                 <div
                   className={cn(
                     desktopTableColumns,
-                    'border-b border-border bg-surface-soft py-4 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-muted-strong',
+                    'border-b border-border bg-surface-soft py-4 text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-muted-strong',
                   )}
                 >
                   <div className="text-left">基金名称</div>
@@ -241,6 +258,7 @@ function FundCard({
   setHoldingModal,
   setTopStocksModal,
   todayStr,
+  featured = false,
 }: {
   fund: FundData;
   getHoldingProfit: (
@@ -255,6 +273,7 @@ function FundCard({
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
+  featured?: boolean;
 }) {
   const hasHistoryTrend =
     Array.isArray(fund.historyTrend) && fund.historyTrend.length > 0;
@@ -266,16 +285,21 @@ function FundCard({
     ? intradayMap[fund.code][intradayMap[fund.code].length - 1].time
     : '暂无数据';
 
-  return (
-    <div className={cn(cardShellClass, 'flex h-full flex-col')}>
-      <div className="mb-3 flex items-start justify-between gap-3">
+  const summaryBlock = (
+    <div className="flex min-w-0 flex-col gap-[var(--space-md)]">
+      <div className="flex items-start justify-between gap-[var(--space-sm)]">
         <div className="min-w-0">
-          <div className="truncate text-[15px] font-semibold">{fund.name}</div>
+          <div className="truncate text-base font-semibold tracking-[0.01em]">
+            {fund.name}
+          </div>
           <div className={subtleTextClass}>#{fund.code}</div>
         </div>
         <div className="flex items-start gap-2 text-right">
-          <div className="text-xs text-muted">
-            <strong className="block text-sm font-semibold text-muted-strong">
+          <div className="text-[0.75rem] text-muted">
+            <span className="block text-[0.68rem] uppercase tracking-[0.1em]">
+              更新时间
+            </span>
+            <strong className="block text-[0.9375rem] font-semibold text-muted-strong">
               {(fund.noValuation
                 ? fund.jzrq || '-'
                 : fund.gztime || fund.time || '-'
@@ -293,7 +317,7 @@ function FundCard({
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-[var(--space-md)]">
         <CardStatsRow
           fund={fund}
           getHoldingProfit={getHoldingProfit}
@@ -303,45 +327,91 @@ function FundCard({
           todayStr={todayStr}
         />
       </div>
+    </div>
+  );
 
-      <div className="mt-auto space-y-3">
-        <CardExpandableSection
-          available={hasHistoryTrend}
-          emptyLabel="暂无走势数据"
-          label="近90日净值走势"
-        >
-          <div className="h-[180px]">
-            <FundTrendChart data={fund.historyTrend ?? []} />
-          </div>
-        </CardExpandableSection>
-
-        <CardExpandableSection
-          available={hasIntraday}
-          emptyLabel="暂无分时数据"
-          label="当日分时估值"
-          meta={lastIntradayTime}
-        >
-          <div className="h-[180px] rounded-xl bg-[rgba(255,255,255,0.02)]">
-            <FundIntradayChart data={intradayMap[fund.code] ?? []} />
-          </div>
-        </CardExpandableSection>
-
-        <div className="min-h-4 text-right text-[10px] text-muted">
-          {fund.estPricedCoverage > 0.05 ? (
-            `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
-          ) : (
-            <span className="invisible">基于 100% 持仓估算</span>
-          )}
+  const chartSections = (
+    <>
+      <CardExpandableSection
+        available={hasHistoryTrend}
+        emptyLabel="暂无走势数据"
+        label="近90日净值走势"
+      >
+        <div className="h-[180px]">
+          <FundTrendChart data={fund.historyTrend ?? []} />
         </div>
+      </CardExpandableSection>
 
-        <CardActionRow
-          available={hasTopHoldings}
-          emptyLabel="暂无重仓数据"
-          label="前10重仓股票"
-          meta={hasTopHoldings ? '点击查看详情' : undefined}
-          onClick={() => setTopStocksModal({ open: true, fund })}
-        />
-      </div>
+      <CardExpandableSection
+        available={hasIntraday}
+        emptyLabel="暂无分时数据"
+        label="当日分时估值"
+        meta={lastIntradayTime}
+      >
+        <div className="h-[180px] rounded-[var(--ui-radius-sm)] bg-surface-inset">
+          <FundIntradayChart data={intradayMap[fund.code] ?? []} />
+        </div>
+      </CardExpandableSection>
+    </>
+  );
+
+  const footnoteBlock = (
+    <div className="flex min-h-5 items-center justify-between gap-3 text-[0.72rem] tracking-[0.01em] text-muted">
+      <span>
+        {fund.estPricedCoverage > 0.05
+          ? `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
+          : '估算覆盖不足时回落到原始估值'}
+      </span>
+      {featured && (
+        <span className="hidden rounded-full border border-border bg-surface-soft px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.12em] text-muted-strong md:inline-flex">
+          焦点卡片
+        </span>
+      )}
+    </div>
+  );
+
+  return (
+    <div
+      className={cn(
+        cardShellClass,
+        'flex h-full flex-col',
+        featured &&
+          'xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(300px,0.98fr)] xl:gap-[var(--space-md)]',
+      )}
+    >
+      {featured ? (
+        <>
+          <div className="flex min-w-0 flex-col gap-[var(--space-md)]">
+            {summaryBlock}
+            {footnoteBlock}
+            <CardActionRow
+              available={hasTopHoldings}
+              emptyLabel="暂无重仓数据"
+              label="前10重仓股票"
+              meta={hasTopHoldings ? '点击查看详情' : undefined}
+              onClick={() => setTopStocksModal({ open: true, fund })}
+            />
+          </div>
+          <div className="flex min-w-0 flex-col gap-3">
+            {chartSections}
+          </div>
+        </>
+      ) : (
+        <>
+          {summaryBlock}
+          <div className="mt-auto flex flex-col gap-3">
+            {chartSections}
+            {footnoteBlock}
+            <CardActionRow
+              available={hasTopHoldings}
+              emptyLabel="暂无重仓数据"
+              label="前10重仓股票"
+              meta={hasTopHoldings ? '点击查看详情' : undefined}
+              onClick={() => setTopStocksModal({ open: true, fund })}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -364,12 +434,12 @@ function CardExpandableSection({
       <div
         className={cn(
           cardSectionClass,
-          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-xs text-muted',
+          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-[0.8125rem] font-medium tracking-[0.01em] text-muted',
         )}
       >
         <ChevronIcon width="12" height="12" className="opacity-30" />
         <span>{label}</span>
-        <span className="ml-auto text-[10px]">{emptyLabel}</span>
+        <span className="ml-auto text-[0.72rem]">{emptyLabel}</span>
       </div>
     );
   }
@@ -388,9 +458,15 @@ function CardExpandableSection({
           className="transition duration-200 group-open:rotate-90"
         />
         <span>{label}</span>
-        {meta && <span className="ml-auto text-[10px] text-muted">{meta}</span>}
+        {meta && (
+          <span className="ml-auto text-[0.72rem] tracking-[0.01em] text-muted">
+            {meta}
+          </span>
+        )}
       </summary>
-      <div className="border-t border-border px-3 py-3">{children}</div>
+      <div className="border-t border-border px-[var(--space-sm)] py-[var(--space-sm)]">
+        {children}
+      </div>
     </details>
   );
 }
@@ -413,12 +489,12 @@ function CardActionRow({
       <div
         className={cn(
           cardSectionClass,
-          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-xs text-muted',
+          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-[0.8125rem] font-medium tracking-[0.01em] text-muted',
         )}
       >
         <ChevronIcon width="12" height="12" className="opacity-30" />
         <span>{label}</span>
-        <span className="ml-auto text-[10px]">{emptyLabel}</span>
+        <span className="ml-auto text-[0.72rem]">{emptyLabel}</span>
       </div>
     );
   }
@@ -438,7 +514,11 @@ function CardActionRow({
     >
       <ChevronIcon width="12" height="12" />
       <span>{label}</span>
-      {meta && <span className="ml-auto text-[10px] text-muted">{meta}</span>}
+      {meta && (
+        <span className="ml-auto text-[0.72rem] tracking-[0.01em] text-muted">
+          {meta}
+        </span>
+      )}
     </button>
   );
 }
@@ -471,7 +551,7 @@ function DesktopListRow({
     <div
       className={cn(
         desktopTableColumns,
-        'border-b border-border bg-transparent py-3.5 transition hover:bg-[rgba(255,255,255,0.03)] last:border-b-0',
+        'border-b border-border bg-transparent py-3.5 transition hover:bg-surface-soft last:border-b-0',
       )}
     >
       <div className="min-w-0 flex-1">

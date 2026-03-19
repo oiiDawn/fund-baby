@@ -14,7 +14,7 @@ import {
   titleRowClass,
 } from '@/app/lib/ui';
 
-import { CloseIcon, SettingsIcon } from '@/app/components/icons';
+import { CloseIcon, UpdateIcon } from '@/app/components/icons';
 
 interface AddResultModalProps {
   failures: { code: string; name?: string }[];
@@ -42,7 +42,9 @@ export function AddResultModal({ failures, onClose }: AddResultModalProps) {
       >
         <div className={cn(modalHeaderClass, 'mb-3')}>
           <div className={titleRowClass}>
-            <SettingsIcon width="20" height="20" />
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-warning-border bg-warning-soft text-warning">
+              <UpdateIcon width="18" height="18" />
+            </span>
             <span>部分基金添加失败</span>
           </div>
           <button className={iconButtonGhostClass} onClick={onClose}>

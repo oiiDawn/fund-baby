@@ -121,10 +121,10 @@ export function HoldingEditModal({
 
   const tabClass = (active: boolean) =>
     cn(
-      'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition',
+      'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]',
       active
         ? 'bg-primary text-interactive-contrast'
-        : 'text-muted hover:text-text',
+        : 'text-muted hover:bg-surface-soft hover:text-text',
     );
 
   return (

@@ -13,7 +13,7 @@ import {
   titleRowClass,
 } from '@/app/lib/ui';
 
-import { CloseIcon } from '@/app/components/icons';
+import { CloseIcon, TrendLineIcon } from '@/app/components/icons';
 import type { FundData } from '@/app/types';
 
 interface TopStocksModalProps {
@@ -42,7 +42,9 @@ export function TopStocksModal({ fund, onClose }: TopStocksModalProps) {
       >
         <div className={modalHeaderClass}>
           <div className={titleRowClass}>
-            <span className="text-lg">📈</span>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--ui-primary-border)] bg-primary-soft text-primary">
+              <TrendLineIcon width="18" height="18" />
+            </span>
             <span>前10重仓股票</span>
           </div>
           <button className={iconButtonGhostClass} onClick={onClose}>

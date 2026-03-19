@@ -264,11 +264,11 @@ export function GroupSummary({
   if (!summary.hasHolding) return null;
 
   return (
-    <div className={isSticky ? 'sticky top-24 z-40 max-md:top-28' : ''}>
+    <div className={isSticky ? 'sticky top-5 z-40 max-md:top-4' : ''}>
       <div
         className={cn(
           panelClass,
-          'mb-3 rounded-[22px] bg-[radial-gradient(circle_at_top_right,rgba(103,167,255,0.14),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent_24%),var(--ui-surface-elevated)] px-5 py-4',
+          'ui-panel-accent mb-3 rounded-[22px] px-5 py-4',
         )}
       >
         <button
@@ -294,7 +294,7 @@ export function GroupSummary({
                 {title}
               </div>
               <button
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted transition hover:bg-surface-soft hover:text-text"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted transition hover:bg-surface-soft hover:text-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]"
                 onClick={() => setIsMasked((value) => !value)}
                 aria-label={isMasked ? '显示资产' : '隐藏资产'}
               >
