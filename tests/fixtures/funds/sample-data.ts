@@ -91,7 +91,6 @@ export const buildSampleSnapshot = (
 ): FundSnapshot => ({
   version: 1,
   funds: [sampleFund],
-  collapsedCodes: [],
   refreshMs: 30000,
   holdings: {
     [sampleFund.code]: {
@@ -104,6 +103,3 @@ export const buildSampleSnapshot = (
   exportedAt: '2026-03-18T10:00:00.000Z',
   ...overrides,
 });
-
-
-

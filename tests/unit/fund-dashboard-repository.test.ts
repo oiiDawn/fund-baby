@@ -13,7 +13,6 @@ describe('fund-dashboard repository', () => {
 
   it('loads bootstrap state from persisted dashboard storage', () => {
     const snapshot = buildSampleSnapshot({
-      collapsedCodes: ['004253'],
       viewMode: 'list',
     });
 
@@ -23,10 +22,7 @@ describe('fund-dashboard repository', () => {
       'groups',
       JSON.stringify([{ id: 'legacy', name: '旧分组', codes: ['004253'] }]),
     );
-    window.localStorage.setItem(
-      'collapsedCodes',
-      JSON.stringify(snapshot.collapsedCodes),
-    );
+    window.localStorage.setItem('collapsedCodes', JSON.stringify(['004253']));
     window.localStorage.setItem('refreshMs', String(snapshot.refreshMs));
     window.localStorage.setItem('holdings', JSON.stringify(snapshot.holdings));
     window.localStorage.setItem(
@@ -41,9 +37,7 @@ describe('fund-dashboard repository', () => {
 
     expect(bootstrap.funds).toHaveLength(1);
     expect(bootstrap.refreshMs).toBe(snapshot.refreshMs);
-    expect(Array.from(bootstrap.collapsedCodes)).toEqual(
-      snapshot.collapsedCodes,
-    );
+    expect(window.localStorage.getItem('collapsedCodes')).toBeNull();
     expect(bootstrap.viewMode).toBe('list');
     expect(bootstrap.theme).toBe('light');
     expect(window.localStorage.getItem('favorites')).toBeNull();
@@ -61,10 +55,6 @@ describe('fund-dashboard repository', () => {
     };
 
     window.localStorage.setItem('funds', JSON.stringify(current.funds));
-    window.localStorage.setItem(
-      'collapsedCodes',
-      JSON.stringify(current.collapsedCodes),
-    );
     window.localStorage.setItem('refreshMs', String(current.refreshMs));
     window.localStorage.setItem('holdings', JSON.stringify(current.holdings));
     window.localStorage.setItem(
@@ -85,5 +75,3 @@ describe('fund-dashboard repository', () => {
     expect(result.snapshot).not.toHaveProperty('groups');
   });
 });
-
-

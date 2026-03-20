@@ -41,10 +41,7 @@ import {
   TradeModal,
   type TradeConfirmData,
 } from '@/app/components/dashboard-trade-modals';
-import {
-  dedupeFundsByCode,
-  sortFunds,
-} from '@/app/services/fund-collection';
+import { dedupeFundsByCode, sortFunds } from '@/app/services/fund-collection';
 import {
   loadFundBatch,
   resolveTradingDayStatus,
@@ -95,9 +92,6 @@ export default function FundDashboardPage() {
 
   // 全局刷新状态
   const [refreshing, setRefreshing] = useState(false);
-
-  // 收起/展开状态
-  const [, setCollapsedCodes] = useState<Set<string>>(new Set());
 
   // 排序状态
   const [sortBy, setSortBy] = useState<SortBy>('default');
@@ -438,7 +432,6 @@ export default function FundDashboardPage() {
 
       setRefreshMs(bootstrap.refreshMs);
       setTempSeconds(Math.round(bootstrap.refreshMs / 1000));
-      setCollapsedCodes(bootstrap.collapsedCodes);
       setPendingTrades(bootstrap.pendingTrades);
       setHoldings(bootstrap.holdings);
       setViewMode(bootstrap.viewMode);
@@ -555,15 +548,6 @@ export default function FundDashboardPage() {
     setFunds(next);
     storageHelper.saveFunds(next);
 
-    // 同步删除展开收起状态
-    setCollapsedCodes((prev) => {
-      if (!prev.has(removeCode)) return prev;
-      const nextSet = new Set(prev);
-      nextSet.delete(removeCode);
-      storageHelper.saveCollapsedCodes(nextSet);
-      return nextSet;
-    });
-
     // 同步删除持仓数据
     setHoldings((prev) => {
       if (!prev[removeCode]) return prev;
@@ -665,14 +649,12 @@ export default function FundDashboardPage() {
         );
 
         setFunds(snapshot.funds);
-        setCollapsedCodes(new Set(snapshot.collapsedCodes));
         setRefreshMs(snapshot.refreshMs);
         setTempSeconds(Math.round(snapshot.refreshMs / 1000));
         setHoldings(snapshot.holdings as HoldingsMap);
         setPendingTrades(snapshot.pendingTrades);
 
         storageHelper.saveFunds(snapshot.funds);
-        storageHelper.saveCollapsedCodes(snapshot.collapsedCodes);
         storageHelper.saveRefreshMs(snapshot.refreshMs);
         storageHelper.saveHoldings(snapshot.holdings as HoldingsMap);
         storageHelper.savePendingTrades(snapshot.pendingTrades);
@@ -715,7 +697,7 @@ export default function FundDashboardPage() {
   return (
     <div className="mx-auto flex max-w-[1320px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 xl:gap-8">
       <section
-        className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)] xl:items-start"
+        className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)] xl:items-stretch"
         aria-label="基金工作台控制区"
       >
         <AddFundPanel
@@ -784,11 +766,6 @@ export default function FundDashboardPage() {
         )}
       </AnimatePresence>
 
-      <div className="pb-10 text-center text-xs text-muted">
-        <p className="mb-2">
-          数据源：实时估值与重仓直连东方财富，仅供个人学习及参考使用，不作为任何投资建议
-        </p>
-      </div>
       <AnimatePresence>
         {addResultOpen && (
           <AddResultModal
@@ -949,4 +926,3 @@ export default function FundDashboardPage() {
     </div>
   );
 }
-

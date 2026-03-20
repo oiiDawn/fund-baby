@@ -1,9 +1,4 @@
-import type {
-  FundData,
-  Holding,
-  PendingTrade,
-  ViewMode,
-} from '@/app/types';
+import type { FundData, Holding, PendingTrade, ViewMode } from '@/app/types';
 import {
   collectFundSnapshot,
   mergeFundSnapshots,
@@ -17,15 +12,10 @@ import type { FundSnapshot } from '@/app/types';
 export interface DashboardBootstrapState {
   funds: FundData[];
   refreshMs: number;
-  collapsedCodes: Set<string>;
   pendingTrades: PendingTrade[];
   holdings: Record<string, Holding>;
   viewMode: ViewMode;
   theme: string;
-}
-
-function toUniqueSet(values: string[]): Set<string> {
-  return new Set(Array.isArray(values) ? values.filter(Boolean) : []);
 }
 
 export function createFundDashboardRepository() {
@@ -36,6 +26,7 @@ export function createFundDashboardRepository() {
     loadBootstrapState(): DashboardBootstrapState {
       storage.removeItem('favorites');
       storage.removeItem('groups');
+      storage.removeItem('collapsedCodes');
       const rawFunds = storage.getItem(FUND_STORAGE_KEYS.funds);
       const parsedFunds = rawFunds ? JSON.parse(rawFunds) : [];
       const refreshMs = Number.parseInt(
@@ -49,9 +40,6 @@ export function createFundDashboardRepository() {
         funds: Array.isArray(parsedFunds) ? parsedFunds : [],
         refreshMs:
           Number.isFinite(refreshMs) && refreshMs >= 5000 ? refreshMs : 30000,
-        collapsedCodes: toUniqueSet(
-          storage.getJSON<string[]>(FUND_STORAGE_KEYS.collapsedCodes, []),
-        ),
         pendingTrades: storage.getJSON<PendingTrade[]>(
           FUND_STORAGE_KEYS.pendingTrades,
           [],
@@ -72,9 +60,6 @@ export function createFundDashboardRepository() {
     },
     saveRefreshMs(refreshMs: number) {
       storage.setItem(FUND_STORAGE_KEYS.refreshMs, String(refreshMs));
-    },
-    saveCollapsedCodes(codes: Iterable<string>) {
-      storage.setJSON(FUND_STORAGE_KEYS.collapsedCodes, Array.from(codes));
     },
     savePendingTrades(pendingTrades: PendingTrade[]) {
       storage.setJSON(FUND_STORAGE_KEYS.pendingTrades, pendingTrades);
@@ -100,4 +85,3 @@ export function createFundDashboardRepository() {
     },
   };
 }
-

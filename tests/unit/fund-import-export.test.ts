@@ -22,8 +22,6 @@ describe('fund-import-export services', () => {
               ...snapshot.funds,
               { ...sampleFund, code: '' },
             ]);
-          case 'collapsedCodes':
-            return JSON.stringify([...snapshot.collapsedCodes, 'ghost']);
           case 'refreshMs':
             return '30000';
           case 'holdings':
@@ -44,7 +42,7 @@ describe('fund-import-export services', () => {
     const result = collectFundSnapshot(storage, '2026-03-18T00:00:00.000Z');
 
     expect(result.funds).toHaveLength(1);
-    expect(result.collapsedCodes).toEqual([]);
+    expect(result).not.toHaveProperty('collapsedCodes');
   });
 
   it('merges imported snapshots without duplicating funds or trades', () => {
@@ -78,6 +76,3 @@ describe('fund-import-export services', () => {
     expect(result.snapshot.funds).toHaveLength(2);
   });
 });
-
-
-

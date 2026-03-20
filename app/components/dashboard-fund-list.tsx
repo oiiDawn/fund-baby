@@ -1,22 +1,25 @@
 'use client';
 
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Stat } from '@/app/components/common';
 import FundIntradayChart from '@/app/components/fund-intraday-chart';
 import FundTrendChart from '@/app/components/fund-trend-chart';
-import { ChevronIcon, SettingsIcon, TrashIcon } from '@/app/components/icons';
+import { SettingsIcon, TrashIcon } from '@/app/components/icons';
 import { cn } from '@/app/lib/cn';
 import { nowInTz } from '@/app/lib/date';
 import {
+  activeTabClass,
   emptyStateClass,
   iconButtonClass,
   iconButtonDangerClass,
   panelClass,
   secondaryButtonClass,
   subtleTextClass,
+  tabClass,
   upTextClass,
   downTextClass,
 } from '@/app/lib/ui';
@@ -67,20 +70,18 @@ const cardShellClass = cn(
 const cardSectionClass =
   'rounded-[var(--ui-radius-md)] border border-border bg-surface-soft transition duration-200';
 
-const cardSectionTriggerClass =
-  'flex min-h-[46px] w-full items-center gap-[var(--space-2xs)] px-[var(--space-sm)] py-[var(--space-xs)] text-left text-[0.8125rem] font-medium tracking-[0.01em] text-muted-strong transition duration-200 hover:border-border-strong hover:bg-surface-strong';
+const cardActionButtonClass = cn(
+  secondaryButtonClass,
+  'h-11 w-full justify-between rounded-[var(--ui-radius-md)] px-[var(--space-sm)] text-[0.8125rem] font-medium tracking-[0.01em]',
+);
+
+type FundCardChartTab = 'trend' | 'intraday';
 
 function getCardSpanClass(index: number, total: number): string {
+  void index;
   if (total === 1) return 'col-span-12';
   if (total === 2) return 'col-span-12 md:col-span-6';
-  if (total === 3) {
-    if (index === 0) return 'col-span-12 xl:col-span-7';
-    if (index === 1) return 'col-span-12 md:col-span-6 xl:col-span-5';
-    return 'col-span-12';
-  }
-  if (index === 0) return 'col-span-12 xl:col-span-7';
-  if (index === 1) return 'col-span-12 md:col-span-6 xl:col-span-5';
-  return 'col-span-12 md:col-span-6 xl:col-span-4';
+  return 'col-span-12 md:col-span-6 xl:col-span-6';
 }
 
 export function DashboardFundList({
@@ -125,7 +126,12 @@ export function DashboardFundList({
             />
           </svg>
         </div>
-        <div className="mb-5 text-sm text-muted">尚未添加基金</div>
+        <div className="space-y-1">
+          <div className="text-sm font-medium text-muted-strong">
+            还没有基金
+          </div>
+          <div className="text-sm text-muted">在上方搜索后加入</div>
+        </div>
       </div>
     );
   }
@@ -174,7 +180,6 @@ export function DashboardFundList({
                       setHoldingModal={setHoldingModal}
                       setTopStocksModal={setTopStocksModal}
                       todayStr={todayStr}
-                      featured={index === 0 && displayFunds.length >= 3}
                     />
                   </motion.div>
                 ))}
@@ -258,7 +263,6 @@ function FundCard({
   setHoldingModal,
   setTopStocksModal,
   todayStr,
-  featured = false,
 }: {
   fund: FundData;
   getHoldingProfit: (
@@ -273,8 +277,9 @@ function FundCard({
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
-  featured?: boolean;
 }) {
+  const [activeChartTab, setActiveChartTab] =
+    useState<FundCardChartTab>('trend');
   const hasHistoryTrend =
     Array.isArray(fund.historyTrend) && fund.historyTrend.length > 0;
   const hasIntraday =
@@ -317,208 +322,183 @@ function FundCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-[var(--space-md)]">
-        <CardStatsRow
-          fund={fund}
-          getHoldingProfit={getHoldingProfit}
-          holdings={holdings}
-          setActionModal={setActionModal}
-          setHoldingModal={setHoldingModal}
-          todayStr={todayStr}
-        />
-      </div>
+      <CardStatsRow
+        fund={fund}
+        getHoldingProfit={getHoldingProfit}
+        holdings={holdings}
+        setActionModal={setActionModal}
+        setHoldingModal={setHoldingModal}
+        todayStr={todayStr}
+      />
     </div>
   );
 
-  const chartSections = (
-    <>
-      <CardExpandableSection
-        available={hasHistoryTrend}
-        emptyLabel="暂无走势数据"
-        label="近90日净值走势"
-      >
-        <div className="h-[180px]">
-          <FundTrendChart data={fund.historyTrend ?? []} />
-        </div>
-      </CardExpandableSection>
-
-      <CardExpandableSection
-        available={hasIntraday}
-        emptyLabel="暂无分时数据"
-        label="当日分时估值"
-        meta={lastIntradayTime}
-      >
-        <div className="h-[180px] rounded-[var(--ui-radius-sm)] bg-surface-inset">
-          <FundIntradayChart data={intradayMap[fund.code] ?? []} />
-        </div>
-      </CardExpandableSection>
-    </>
-  );
-
   const footnoteBlock = (
-    <div className="flex min-h-5 items-center justify-between gap-3 text-[0.72rem] tracking-[0.01em] text-muted">
+    <div className="flex min-h-9 items-center text-[0.72rem] tracking-[0.01em] text-muted">
       <span>
         {fund.estPricedCoverage > 0.05
           ? `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
           : '估算覆盖不足时回落到原始估值'}
       </span>
-      {featured && (
-        <span className="hidden rounded-full border border-border bg-surface-soft px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.12em] text-muted-strong md:inline-flex">
-          焦点卡片
-        </span>
-      )}
     </div>
   );
 
   return (
-    <div
-      className={cn(
-        cardShellClass,
-        'flex h-full flex-col',
-        featured &&
-          'xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(300px,0.98fr)] xl:gap-[var(--space-md)]',
-      )}
-    >
-      {featured ? (
-        <>
-          <div className="flex min-w-0 flex-col gap-[var(--space-md)]">
-            {summaryBlock}
-            {footnoteBlock}
-            <CardActionRow
-              available={hasTopHoldings}
-              emptyLabel="暂无重仓数据"
-              label="前10重仓股票"
-              meta={hasTopHoldings ? '点击查看详情' : undefined}
-              onClick={() => setTopStocksModal({ open: true, fund })}
-            />
-          </div>
-          <div className="flex min-w-0 flex-col gap-3">
-            {chartSections}
-          </div>
-        </>
-      ) : (
-        <>
-          {summaryBlock}
-          <div className="mt-auto flex flex-col gap-3">
-            {chartSections}
-            {footnoteBlock}
-            <CardActionRow
-              available={hasTopHoldings}
-              emptyLabel="暂无重仓数据"
-              label="前10重仓股票"
-              meta={hasTopHoldings ? '点击查看详情' : undefined}
-              onClick={() => setTopStocksModal({ open: true, fund })}
-            />
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function CardExpandableSection({
-  available,
-  emptyLabel,
-  label,
-  meta,
-  children,
-}: {
-  available: boolean;
-  emptyLabel: string;
-  label: string;
-  meta?: string;
-  children: ReactNode;
-}) {
-  if (!available) {
-    return (
-      <div
-        className={cn(
-          cardSectionClass,
-          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-[0.8125rem] font-medium tracking-[0.01em] text-muted',
-        )}
-      >
-        <ChevronIcon width="12" height="12" className="opacity-30" />
-        <span>{label}</span>
-        <span className="ml-auto text-[0.72rem]">{emptyLabel}</span>
-      </div>
-    );
-  }
-
-  return (
-    <details
-      className={cn(
-        cardSectionClass,
-        'group [&_summary::-webkit-details-marker]:hidden',
-      )}
-    >
-      <summary className={cn(cardSectionTriggerClass, 'cursor-pointer')}>
-        <ChevronIcon
-          width="12"
-          height="12"
-          className="transition duration-200 group-open:rotate-90"
+    <div className={cn(cardShellClass, 'flex h-full min-h-[460px] flex-col')}>
+      {summaryBlock}
+      <div className="mt-4 flex flex-1 flex-col gap-3">
+        <CardChartPanel
+          activeTab={activeChartTab}
+          hasIntraday={hasIntraday}
+          hasHistoryTrend={hasHistoryTrend}
+          intradayData={intradayMap[fund.code] ?? []}
+          lastIntradayTime={lastIntradayTime}
+          onTabChange={setActiveChartTab}
+          trendData={fund.historyTrend ?? []}
         />
-        <span>{label}</span>
-        {meta && (
-          <span className="ml-auto text-[0.72rem] tracking-[0.01em] text-muted">
-            {meta}
-          </span>
-        )}
-      </summary>
-      <div className="border-t border-border px-[var(--space-sm)] py-[var(--space-sm)]">
-        {children}
+        <div className="mt-auto flex flex-col gap-3">
+          {footnoteBlock}
+          <CardHoldingsButton
+            available={hasTopHoldings}
+            onClick={() => setTopStocksModal({ open: true, fund })}
+          />
+        </div>
       </div>
-    </details>
+    </div>
   );
 }
 
-function CardActionRow({
+function CardChartPanel({
+  activeTab,
+  hasIntraday,
+  hasHistoryTrend,
+  intradayData,
+  lastIntradayTime,
+  onTabChange,
+  trendData,
+}: {
+  activeTab: FundCardChartTab;
+  hasIntraday: boolean;
+  hasHistoryTrend: boolean;
+  intradayData: IntradayPoint[];
+  lastIntradayTime: string;
+  onTabChange: (tab: FundCardChartTab) => void;
+  trendData: FundData['historyTrend'];
+}) {
+  const currentTab =
+    activeTab === 'intraday' && hasIntraday
+      ? 'intraday'
+      : hasHistoryTrend
+        ? 'trend'
+        : hasIntraday
+          ? 'intraday'
+          : 'trend';
+
+  const currentLabel =
+    currentTab === 'trend' ? '近90日净值走势' : '当日分时估值';
+  const currentMeta =
+    currentTab === 'intraday' && hasIntraday
+      ? `更新至 ${lastIntradayTime}`
+      : currentTab === 'trend'
+        ? '近90日'
+        : '暂无数据';
+
+  return (
+    <div className={cn(cardSectionClass, 'flex flex-col overflow-hidden')}>
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-[var(--space-sm)] py-[var(--space-sm)]">
+        <div className="flex flex-1 rounded-xl border border-border bg-transparent p-1">
+          <button
+            type="button"
+            className={cn(
+              tabClass,
+              'h-9 flex-1 rounded-[10px] border-transparent px-3 text-xs',
+              currentTab === 'trend' && activeTabClass,
+              !hasHistoryTrend && 'cursor-not-allowed opacity-40',
+            )}
+            onClick={() => hasHistoryTrend && onTabChange('trend')}
+            disabled={!hasHistoryTrend}
+          >
+            近90日净值
+          </button>
+          <button
+            type="button"
+            className={cn(
+              tabClass,
+              'h-9 flex-1 rounded-[10px] border-transparent px-3 text-xs',
+              currentTab === 'intraday' && activeTabClass,
+              !hasIntraday && 'cursor-not-allowed opacity-40',
+            )}
+            onClick={() => hasIntraday && onTabChange('intraday')}
+            disabled={!hasIntraday}
+          >
+            当日分时
+          </button>
+        </div>
+        <div className="text-right">
+          <div className="text-[0.75rem] font-medium text-muted-strong">
+            {currentLabel}
+          </div>
+          <div className="text-[0.68rem] tracking-[0.01em] text-muted">
+            {currentMeta}
+          </div>
+        </div>
+      </div>
+      <div className="px-[var(--space-sm)] py-[var(--space-sm)]">
+        <div className="flex h-[210px] items-center justify-center rounded-[var(--ui-radius-sm)] bg-surface-inset">
+          {currentTab === 'trend' && hasHistoryTrend ? (
+            <div className="h-full w-full">
+              <FundTrendChart data={trendData ?? []} />
+            </div>
+          ) : null}
+          {currentTab === 'intraday' && hasIntraday ? (
+            <div className="h-full w-full">
+              <FundIntradayChart data={intradayData} />
+            </div>
+          ) : null}
+          {((currentTab === 'trend' && !hasHistoryTrend) ||
+            (currentTab === 'intraday' && !hasIntraday)) && (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+              <div className="text-sm font-medium text-muted-strong">
+                {currentTab === 'trend' ? '暂无走势数据' : '暂无分时数据'}
+              </div>
+              <div className="text-xs text-muted">
+                {currentTab === 'trend'
+                  ? '这只基金还没有可展示的近90日净值曲线'
+                  : '这只基金暂时没有当日分时估值'}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardHoldingsButton({
   available,
-  emptyLabel,
-  label,
-  meta,
   onClick,
 }: {
   available: boolean;
-  emptyLabel: string;
-  label: string;
-  meta?: string;
   onClick: () => void;
 }) {
-  if (!available) {
-    return (
-      <div
-        className={cn(
-          cardSectionClass,
-          'flex min-h-[46px] items-center gap-2 border-dashed px-3.5 py-2.5 text-[0.8125rem] font-medium tracking-[0.01em] text-muted',
-        )}
-      >
-        <ChevronIcon width="12" height="12" className="opacity-30" />
-        <span>{label}</span>
-        <span className="ml-auto text-[0.72rem]">{emptyLabel}</span>
-      </div>
-    );
-  }
-
   return (
     <button
       type="button"
       className={cn(
-        cardSectionClass,
-        cardSectionTriggerClass,
-        'cursor-pointer',
+        cardActionButtonClass,
+        !available && 'cursor-not-allowed opacity-50 hover:translate-y-0',
       )}
       onClick={(event) => {
         event.stopPropagation();
+        if (!available) return;
         onClick();
       }}
+      disabled={!available}
     >
-      <ChevronIcon width="12" height="12" />
-      <span>{label}</span>
-      {meta && (
-        <span className="ml-auto text-[0.72rem] tracking-[0.01em] text-muted">
-          {meta}
-        </span>
-      )}
+      <span>前10重仓股票</span>
+      <span className="text-[0.72rem] tracking-[0.01em] text-muted">
+        {available ? '查看详情' : '暂无重仓数据'}
+      </span>
     </button>
   );
 }
@@ -951,6 +931,10 @@ function CardStatsRow({
   const profit = getHoldingProfit(fund, holding);
   const hasTodayData = fund.jzrq === todayStr;
   const showActual = hasTodayData || fund.noValuation;
+  const totalProfitRatio =
+    profit?.profitTotal != null && holding?.cost && holding?.share
+      ? (profit.profitTotal / (holding.cost * holding.share)) * 100
+      : null;
 
   const valuationStat = (
     <Stat
@@ -985,10 +969,23 @@ function CardStatsRow({
     />
   );
 
-  if (!profit) {
-    return (
-      <>
-        <div className="flex min-w-[96px] flex-col items-center gap-1">
+  return (
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {profit ? (
+        <button
+          className="flex min-w-0 flex-col items-center gap-1 rounded-[var(--ui-radius-sm)] px-2 py-1 text-center transition hover:bg-surface-soft"
+          onClick={() => setActionModal({ open: true, fund })}
+        >
+          <span className="inline-flex items-center gap-1 text-[10px] text-muted md:text-xs">
+            持仓金额{' '}
+            <SettingsIcon width="12" height="12" style={{ opacity: 0.7 }} />
+          </span>
+          <span className="font-mono text-sm font-semibold md:text-base">
+            ¥{profit.amount.toFixed(2)}
+          </span>
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-col items-center gap-1 px-2 py-1 text-center">
           <span className="text-[10px] text-muted md:text-xs">持仓金额</span>
           <button
             className="inline-flex items-center gap-1 text-sm font-medium text-muted"
@@ -997,53 +994,42 @@ function CardStatsRow({
             未设置 <SettingsIcon width="12" height="12" />
           </button>
         </div>
-        {valuationStat}
-      </>
-    );
-  }
-
-  return (
-    <>
-      <button
-        className="flex min-w-[96px] flex-col items-center gap-1"
-        onClick={() => setActionModal({ open: true, fund })}
-      >
-        <span className="inline-flex items-center gap-1 text-[10px] text-muted md:text-xs">
-          持仓金额{' '}
-          <SettingsIcon width="12" height="12" style={{ opacity: 0.7 }} />
-        </span>
-        <span className="font-mono text-sm font-semibold md:text-base">
-          ¥{profit.amount.toFixed(2)}
-        </span>
-      </button>
-
+      )}
       {valuationStat}
-
-      <div className="flex min-w-[96px] flex-col items-center gap-1">
-        <span className="text-[10px] text-muted md:text-xs">当日盈亏</span>
-        <span
-          className={cn(
-            'font-mono text-sm font-semibold md:text-base',
-            profit.profitToday > 0
-              ? upTextClass
-              : profit.profitToday < 0
-                ? downTextClass
-                : '',
-          )}
-        >
-          {profit.profitToday > 0 ? '+' : profit.profitToday < 0 ? '-' : ''}¥
-          {Math.abs(profit.profitToday).toFixed(2)}
-        </span>
-      </div>
-      {profit.profitTotal !== null && (
+      {profit && profit.profitToday !== null ? (
+        <div className="flex min-w-0 flex-col items-center gap-1 px-2 py-1 text-center">
+          <span className="text-[10px] text-muted md:text-xs">当日盈亏</span>
+          <span
+            className={cn(
+              'font-mono text-sm font-semibold md:text-base',
+              profit.profitToday > 0
+                ? upTextClass
+                : profit.profitToday < 0
+                  ? downTextClass
+                  : '',
+            )}
+          >
+            {profit.profitToday > 0 ? '+' : profit.profitToday < 0 ? '-' : ''}¥
+            {Math.abs(profit.profitToday).toFixed(2)}
+          </span>
+        </div>
+      ) : (
+        <Stat label="当日盈亏" value="—" />
+      )}
+      {profit?.profitTotal !== null && profit ? (
         <Stat
           label="持有收益"
           value={`${profit.profitTotal > 0 ? '+' : profit.profitTotal < 0 ? '-' : ''}¥${Math.abs(profit.profitTotal).toFixed(2)}`}
           delta={profit.profitTotal}
-          subValue={`${(holding.cost * holding.share ? (profit.profitTotal / (holding.cost * holding.share)) * 100 : 0) > 0 ? '+' : ''}${(holding.cost * holding.share ? (profit.profitTotal / (holding.cost * holding.share)) * 100 : 0).toFixed(2)}%`}
+          subValue={
+            totalProfitRatio !== null
+              ? `${totalProfitRatio > 0 ? '+' : ''}${totalProfitRatio.toFixed(2)}%`
+              : undefined
+          }
         />
+      ) : (
+        <Stat label="持有收益" value="—" />
       )}
-    </>
+    </div>
   );
 }
-

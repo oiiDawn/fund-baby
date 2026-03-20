@@ -1,12 +1,5 @@
-import type {
-  FundData,
-  PendingTrade,
-  ViewMode,
-} from '@/app/types';
-import type {
-  FundSnapshot,
-  PersistedHolding,
-} from '@/app/types';
+import type { FundData, PendingTrade, ViewMode } from '@/app/types';
+import type { FundSnapshot, PersistedHolding } from '@/app/types';
 import { dedupeFundsByCode } from '@/app/services/fund-collection';
 import {
   FUND_STORAGE_KEYS,
@@ -53,9 +46,6 @@ export const collectFundSnapshot = (
     repository.getJSON<FundData[]>(FUND_STORAGE_KEYS.funds, []),
   );
   const fundCodes = new Set(funds.map((fund) => fund.code));
-  const collapsedCodes = repository
-    .getJSON<string[]>(FUND_STORAGE_KEYS.collapsedCodes, [])
-    .filter((code) => fundCodes.has(code));
   const pendingTrades = repository
     .getJSON<PendingTrade[]>(FUND_STORAGE_KEYS.pendingTrades, [])
     .filter((trade) => trade && fundCodes.has(trade.fundCode));
@@ -69,7 +59,6 @@ export const collectFundSnapshot = (
   return {
     version: SNAPSHOT_VERSION,
     funds,
-    collapsedCodes,
     refreshMs: Number.isFinite(refreshMs) ? refreshMs : 30000,
     holdings: sanitizeHoldings(
       fundCodes,
@@ -99,15 +88,6 @@ export const mergeFundSnapshots = (
   const funds = dedupeFundsByCode([...currentFunds, ...incomingFunds]);
   const fundCodes = new Set(funds.map((fund) => fund.code));
 
-  const collapsedCodes = Array.from(
-    new Set([
-      ...current.collapsedCodes.filter((code) => fundCodes.has(code)),
-      ...(incomingRaw.collapsedCodes || []).filter((code) =>
-        fundCodes.has(code),
-      ),
-    ]),
-  );
-
   const holdings = {
     ...current.holdings,
     ...sanitizeHoldings(fundCodes, incomingRaw.holdings),
@@ -135,7 +115,6 @@ export const mergeFundSnapshots = (
     snapshot: {
       version: SNAPSHOT_VERSION,
       funds,
-      collapsedCodes,
       refreshMs:
         typeof incomingRaw.refreshMs === 'number' &&
         incomingRaw.refreshMs >= 5000
@@ -152,4 +131,3 @@ export const mergeFundSnapshots = (
     appendedCodes,
   };
 };
-
