@@ -47,12 +47,11 @@ export function SuccessModal({ message, onClose }: SuccessModalProps) {
             </div>
           </div>
           <h3 className="mb-2 text-lg font-semibold">{message}</h3>
-          <p className="text-sm text-muted">操作已完成，状态已经同步更新。</p>
           <button
             className={cn(primaryButtonClass, 'mt-6 w-full')}
             onClick={onClose}
           >
-            关闭
+            知道了
           </button>
         </div>
       </motion.div>

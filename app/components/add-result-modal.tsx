@@ -45,14 +45,14 @@ export function AddResultModal({ failures, onClose }: AddResultModalProps) {
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-warning-border bg-warning-soft text-warning">
               <UpdateIcon width="18" height="18" />
             </span>
-            <span>部分基金添加失败</span>
+            <span>部分未添加</span>
           </div>
           <button className={iconButtonGhostClass} onClick={onClose}>
             <CloseIcon width="20" height="20" />
           </button>
         </div>
         <div className="mb-3 text-sm text-muted">
-          未获取到估值数据的基金如下：
+          以下基金暂无估值：
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {failures.map((item, index) => (
@@ -66,7 +66,7 @@ export function AddResultModal({ failures, onClose }: AddResultModalProps) {
         </div>
         <div className="mt-4 flex justify-end">
           <button className={primaryButtonClass} onClick={onClose}>
-            知道了
+            关闭
           </button>
         </div>
       </motion.div>

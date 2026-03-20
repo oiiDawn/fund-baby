@@ -53,11 +53,10 @@ export function DashboardSettingsModal({
         <div className="mb-3 flex items-center gap-2.5 text-base font-semibold">
           <SettingsIcon width="20" height="20" />
           <span>设置</span>
-          <span className="text-sm font-normal text-muted">配置刷新频率</span>
         </div>
 
         <div className="mb-4">
-          <div className={sectionLabelClass}>刷新频率</div>
+          <div className={sectionLabelClass}>刷新</div>
           <div className="mb-3 flex flex-wrap gap-2">
             {[10, 30, 60, 120, 300].map((seconds) => (
               <button
@@ -89,24 +88,24 @@ export function DashboardSettingsModal({
         </div>
 
         <div className="mb-4">
-          <div className={sectionLabelClass}>数据导出</div>
+          <div className={sectionLabelClass}>导出</div>
           <div className="flex gap-2">
             <button
               type="button"
               className={primaryButtonClass}
               onClick={onExportLocalData}
             >
-              导出配置
+              导出数据
             </button>
           </div>
-          <div className="mb-2 mt-6 text-sm text-muted">数据导入</div>
+          <div className="mb-2 mt-6 text-sm text-muted">导入</div>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
               className={primaryButtonClass}
               onClick={() => importFileRef.current?.click?.()}
             >
-              导入配置
+              导入数据
             </button>
           </div>
           <input
@@ -127,7 +126,7 @@ export function DashboardSettingsModal({
             onClick={onSaveSettings}
             disabled={tempSeconds < 10}
           >
-            保存并关闭
+            保存
           </button>
         </div>
       </div>

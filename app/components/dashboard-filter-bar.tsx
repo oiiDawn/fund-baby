@@ -36,16 +36,8 @@ export function DashboardFilterBar({
         'h-full rounded-[24px] px-5 py-5 md:px-6 md:py-6',
       )}
     >
-      <div className="flex h-full flex-col gap-5">
-        <div className="space-y-1.5">
-          <div className="ui-overline text-muted">List Controls</div>
-          <h2 className="text-base font-semibold tracking-[0.01em]">
-            选择浏览方式与排序节奏
-          </h2>
-          <p className="text-sm leading-6 text-muted-strong">
-            先决定看卡片还是列表，再按涨跌幅或持有收益切换主观察维度。
-          </p>
-        </div>
+      <div className="flex h-full flex-col gap-4">
+        <h2 className="text-base font-semibold tracking-[0.01em]">查看</h2>
 
         <div className="flex flex-col gap-4 border-t border-border pt-4">
           <div className="space-y-3">
@@ -57,24 +49,26 @@ export function DashboardFilterBar({
               <button
                 className={cn(
                   tabClass,
-                  'h-10 flex-1 rounded-[10px] border-transparent px-0',
+                  'h-10 flex-1 gap-2 rounded-[10px] border-transparent px-3',
                   viewMode === 'card' && activeTabClass,
                 )}
                 onClick={() => onApplyViewMode('card')}
                 title="卡片视图"
               >
                 <GridIcon width="16" height="16" />
+                <span>卡片</span>
               </button>
               <button
                 className={cn(
                   tabClass,
-                  'h-10 flex-1 rounded-[10px] border-transparent px-0',
+                  'h-10 flex-1 gap-2 rounded-[10px] border-transparent px-3',
                   viewMode === 'list' && activeTabClass,
                 )}
                 onClick={() => onApplyViewMode('list')}
                 title="表格视图"
               >
                 <ListIcon width="16" height="16" />
+                <span>列表</span>
               </button>
             </div>
           </div>
