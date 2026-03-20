@@ -1,7 +1,12 @@
 import './globals.css';
 import AnalyticsGate from './components/analytics-gate';
+import { Toaster } from '@/components/ui/sonner';
 import packageJson from '../package.json';
 import type { Metadata } from 'next';
+import { Geist } from 'next/font/google';
+import { cn } from '@/lib/utils';
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: `养基小宝 V${packageJson.version}`,
@@ -16,7 +21,11 @@ export default function RootLayout({
   const GA_ID = 'G-PD2JWJHVEM';
 
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html
+      lang="zh-CN"
+      suppressHydrationWarning
+      className={cn('font-sans', geist.variable)}
+    >
       <head>
         <meta
           name="viewport"
@@ -29,6 +38,7 @@ export default function RootLayout({
                 const saved = localStorage.getItem('theme');
                 if (saved) {
                   document.documentElement.setAttribute('data-theme', saved);
+                  document.documentElement.classList.toggle('dark', saved !== 'light');
                 }
               } catch (e) {}
             `,
@@ -47,6 +57,7 @@ export default function RootLayout({
       >
         <AnalyticsGate GA_ID={GA_ID} />
         {children}
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

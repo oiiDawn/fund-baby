@@ -59,5 +59,3 @@ describe('fund-trade services', () => {
     );
   });
 });
-
-

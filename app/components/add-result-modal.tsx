@@ -1,20 +1,17 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { AlertTriangleIcon } from 'lucide-react';
 
-import { cn } from '@/app/lib/cn';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  badgeClass,
-  iconButtonGhostClass,
-  listItemClass,
-  modalCardClass,
-  modalHeaderClass,
-  modalOverlayClass,
-  primaryButtonClass,
-  titleRowClass,
-} from '@/app/lib/ui';
-
-import { CloseIcon, UpdateIcon } from '@/app/components/icons';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface AddResultModalProps {
   failures: { code: string; name?: string }[];
@@ -23,53 +20,43 @@ interface AddResultModalProps {
 
 export function AddResultModal({ failures, onClose }: AddResultModalProps) {
   return (
-    <motion.div
-      className={modalOverlayClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="添加结果"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[420px]')}
-        onClick={(event) => event.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[420px] border-border bg-popover text-popover-foreground"
       >
-        <div className={cn(modalHeaderClass, 'mb-3')}>
-          <div className={titleRowClass}>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-warning-border bg-warning-soft text-warning">
-              <UpdateIcon width="18" height="18" />
-            </span>
-            <span>部分未添加</span>
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/12 text-amber-500">
+              <AlertTriangleIcon />
+            </div>
+            <div>
+              <DialogTitle>部分未添加</DialogTitle>
+              <DialogDescription className="mt-1">
+                以下基金暂时没有可用估值数据。
+              </DialogDescription>
+            </div>
           </div>
-          <button className={iconButtonGhostClass} onClick={onClose}>
-            <CloseIcon width="20" height="20" />
-          </button>
-        </div>
-        <div className="mb-3 text-sm text-muted">
-          以下基金暂无估值：
-        </div>
+        </DialogHeader>
+
         <div className="grid gap-2 sm:grid-cols-2">
           {failures.map((item, index) => (
-            <div className={listItemClass} key={index}>
-              <span className="truncate">{item.name || '未知名称'}</span>
-              <div>
-                <span className={badgeClass}>#{item.code}</span>
-              </div>
+            <div
+              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background/60 px-3 py-2.5"
+              key={index}
+            >
+              <span className="truncate text-sm font-medium">
+                {item.name || '未知名称'}
+              </span>
+              <Badge variant="outline">#{item.code}</Badge>
             </div>
           ))}
         </div>
-        <div className="mt-4 flex justify-end">
-          <button className={primaryButtonClass} onClick={onClose}>
-            关闭
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+
+        <DialogFooter className="bg-transparent p-0 pt-2">
+          <Button onClick={onClose}>关闭</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

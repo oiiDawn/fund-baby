@@ -47,5 +47,3 @@ describe('fund-refresh services', () => {
     expect(result.intradayMap[sampleFund.code]).toEqual(sampleIntraday);
   });
 });
-
-

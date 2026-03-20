@@ -2,28 +2,35 @@
 
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { ChartColumnBigIcon, LayoutListIcon, Trash2Icon } from 'lucide-react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Stat } from '@/app/components/common';
 import FundIntradayChart from '@/app/components/fund-intraday-chart';
 import FundTrendChart from '@/app/components/fund-trend-chart';
-import { SettingsIcon, TrashIcon } from '@/app/components/icons';
-import { cn } from '@/app/lib/cn';
-import { nowInTz } from '@/app/lib/date';
-import {
-  activeTabClass,
-  emptyStateClass,
-  iconButtonClass,
-  iconButtonDangerClass,
-  panelClass,
-  secondaryButtonClass,
-  subtleTextClass,
-  tabClass,
-  upTextClass,
-  downTextClass,
-} from '@/app/lib/ui';
 import { GroupSummary } from '@/app/components/group-summary';
+import { cn } from '@/lib/utils';
+import { nowInTz } from '@/app/lib/date';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type {
   FundData,
   Holding,
@@ -59,22 +66,6 @@ interface DashboardFundListProps {
   viewMode: ViewMode;
 }
 
-const desktopTableColumns =
-  'grid grid-cols-[minmax(180px,2fr)_minmax(130px,1.4fr)_minmax(110px,1.2fr)_minmax(110px,1.2fr)_minmax(110px,1.2fr)_100px] items-center gap-4 px-6';
-
-const cardShellClass = cn(
-  panelClass,
-  'ui-panel-accent rounded-[var(--ui-radius-lg)] p-[var(--space-md)]',
-);
-
-const cardSectionClass =
-  'rounded-[var(--ui-radius-md)] border border-border bg-surface-soft transition duration-200';
-
-const cardActionButtonClass = cn(
-  secondaryButtonClass,
-  'h-11 w-full justify-between rounded-[var(--ui-radius-md)] px-[var(--space-sm)] text-[0.8125rem] font-medium tracking-[0.01em]',
-);
-
 type FundCardChartTab = 'trend' | 'intraday';
 
 function getCardSpanClass(index: number, total: number): string {
@@ -95,44 +86,29 @@ export function DashboardFundList({
   requestRemoveFund,
   setActionModal,
   setHoldingModal,
-  setSwipedFundCode,
+  setSwipedFundCode: _setSwipedFundCode,
   setTopStocksModal,
-  swipedFundCode,
+  swipedFundCode: _swipedFundCode,
   todayStr,
   viewMode,
 }: DashboardFundListProps) {
   if (displayFunds.length === 0) {
     return (
-      <div className={cn(emptyStateClass, 'px-5 py-[60px]')}>
-        <div className="mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-[20px] border border-border bg-surface-soft text-muted-strong">
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <path
-              d="M6.5 12.5h21"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-            <path
-              d="M9 8.5h7l2.2 3H25a2 2 0 0 1 2 2v10A2.5 2.5 0 0 1 24.5 26h-15A2.5 2.5 0 0 1 7 23.5v-13A2 2 0 0 1 9 8.5Z"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M12 19h10"
-              stroke="var(--ui-gold)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-muted-strong">
-            还没有基金
+      <Card className="border-border bg-card/90 text-center shadow-panel">
+        <CardContent className="flex flex-col items-center justify-center gap-4 py-14">
+          <div className="flex size-[72px] items-center justify-center rounded-[20px] border border-border bg-background/70 text-muted-foreground">
+            <LayoutListIcon className="size-8" />
           </div>
-          <div className="text-sm text-muted">在上方搜索后加入</div>
-        </div>
-      </div>
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-foreground">
+              还没有基金
+            </div>
+            <div className="text-sm text-muted-foreground">
+              在上方搜索后加入
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -164,9 +140,9 @@ export function DashboardFundList({
                       getCardSpanClass(index, displayFunds.length),
                       'h-full',
                     )}
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
                   >
                     <FundCard
@@ -186,50 +162,25 @@ export function DashboardFundList({
               </AnimatePresence>
             </div>
           ) : (
-            <div className={cn(panelClass, 'overflow-hidden rounded-[22px]')}>
-              {!isMobile && (
-                <div
-                  className={cn(
-                    desktopTableColumns,
-                    'border-b border-border bg-surface-soft py-4 text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-muted-strong',
-                  )}
-                >
-                  <div className="text-left">基金名称</div>
-                  <div className="text-right">涨跌幅 · 净值</div>
-                  <div className="text-right">当日盈亏</div>
-                  <div className="text-right">持有收益</div>
-                  <div className="text-right">持仓金额</div>
-                  <div className="text-center">操作</div>
-                </div>
-              )}
-
-              <AnimatePresence mode="popLayout">
-                {displayFunds.map((fund) => (
-                  <motion.div
-                    layout="position"
-                    key={fund.code}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative overflow-hidden"
-                  >
-                    {isMobile ? (
-                      <MobileListRow
-                        fund={fund}
-                        getHoldingProfit={getHoldingProfit}
-                        holdings={holdings}
-                        isTradingDay={isTradingDay}
-                        refreshing={refreshing}
-                        requestRemoveFund={requestRemoveFund}
-                        setActionModal={setActionModal}
-                        setHoldingModal={setHoldingModal}
-                        setSwipedFundCode={setSwipedFundCode}
-                        swipedFundCode={swipedFundCode}
-                        todayStr={todayStr}
-                      />
-                    ) : (
+            <Card className="overflow-hidden border-border bg-card/95 shadow-panel">
+              {!isMobile ? (
+                <Table>
+                  <TableHeader className="bg-muted/40">
+                    <TableRow>
+                      <TableHead className="pl-5">基金名称</TableHead>
+                      <TableHead className="text-right">
+                        涨跌幅 · 净值
+                      </TableHead>
+                      <TableHead className="text-right">当日盈亏</TableHead>
+                      <TableHead className="text-right">持有收益</TableHead>
+                      <TableHead className="text-right">持仓金额</TableHead>
+                      <TableHead className="pr-5 text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayFunds.map((fund) => (
                       <DesktopListRow
+                        key={fund.code}
                         fund={fund}
                         getHoldingProfit={getHoldingProfit}
                         holdings={holdings}
@@ -240,11 +191,28 @@ export function DashboardFundList({
                         setHoldingModal={setHoldingModal}
                         todayStr={todayStr}
                       />
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <CardContent className="grid gap-3 p-3">
+                  {displayFunds.map((fund) => (
+                    <MobileListRow
+                      key={fund.code}
+                      fund={fund}
+                      getHoldingProfit={getHoldingProfit}
+                      holdings={holdings}
+                      isTradingDay={isTradingDay}
+                      refreshing={refreshing}
+                      requestRemoveFund={requestRemoveFund}
+                      setActionModal={setActionModal}
+                      setHoldingModal={setHoldingModal}
+                      todayStr={todayStr}
+                    />
+                  ))}
+                </CardContent>
+              )}
+            </Card>
           )}
         </motion.div>
       </AnimatePresence>
@@ -290,63 +258,51 @@ function FundCard({
     ? intradayMap[fund.code][intradayMap[fund.code].length - 1].time
     : '暂无数据';
 
-  const summaryBlock = (
-    <div className="flex min-w-0 flex-col gap-[var(--space-md)]">
-      <div className="flex items-start justify-between gap-[var(--space-sm)]">
-        <div className="min-w-0">
-          <div className="truncate text-base font-semibold tracking-[0.01em]">
-            {fund.name}
-          </div>
-          <div className={subtleTextClass}>#{fund.code}</div>
-        </div>
-        <div className="flex items-start gap-2 text-right">
-          <div className="text-[0.75rem] text-muted">
-            <span className="block text-[0.68rem] uppercase tracking-[0.1em]">
-              更新时间
-            </span>
-            <strong className="block text-[0.9375rem] font-semibold text-muted-strong">
+  return (
+    <Card className="ui-panel-accent h-full border-border bg-card/95 shadow-panel">
+      <CardHeader className="gap-3 border-b border-border/70 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="truncate text-[1.02rem]">
+              {fund.name}
+            </CardTitle>
+            <CardDescription className="mt-1 text-sm">
+              #{fund.code} ·{' '}
               {(fund.noValuation
                 ? fund.jzrq || '-'
                 : fund.gztime || fund.time || '-'
               )?.replace(/^\d{4}-/, '')}
-            </strong>
+            </CardDescription>
           </div>
-          <button
-            className={cn(iconButtonClass, iconButtonDangerClass, 'h-7 w-7')}
-            onClick={() => !refreshing && requestRemoveFund(fund)}
-            title="删除"
-            disabled={refreshing}
-          >
-            <TrashIcon width="14" height="14" />
-          </button>
+          <div className="flex items-center gap-2">
+            {fund.jzrq === todayStr ? (
+              <Badge variant="outline" className="rounded-full">
+                已收盘
+              </Badge>
+            ) : null}
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => !refreshing && requestRemoveFund(fund)}
+              title="删除"
+              disabled={refreshing}
+            >
+              <Trash2Icon />
+            </Button>
+          </div>
         </div>
-      </div>
+      </CardHeader>
 
-      <CardStatsRow
-        fund={fund}
-        getHoldingProfit={getHoldingProfit}
-        holdings={holdings}
-        setActionModal={setActionModal}
-        setHoldingModal={setHoldingModal}
-        todayStr={todayStr}
-      />
-    </div>
-  );
+      <CardContent className="flex flex-col gap-4 pt-4">
+        <CardStatsRow
+          fund={fund}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          setActionModal={setActionModal}
+          setHoldingModal={setHoldingModal}
+          todayStr={todayStr}
+        />
 
-  const footnoteBlock = (
-    <div className="flex min-h-9 items-center text-[0.72rem] tracking-[0.01em] text-muted">
-      <span>
-        {fund.estPricedCoverage > 0.05
-          ? `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
-          : '估算覆盖不足时回落到原始估值'}
-      </span>
-    </div>
-  );
-
-  return (
-    <div className={cn(cardShellClass, 'flex h-full min-h-[460px] flex-col')}>
-      {summaryBlock}
-      <div className="mt-4 flex flex-1 flex-col gap-3">
         <CardChartPanel
           activeTab={activeChartTab}
           hasIntraday={hasIntraday}
@@ -356,15 +312,26 @@ function FundCard({
           onTabChange={setActiveChartTab}
           trendData={fund.historyTrend ?? []}
         />
-        <div className="mt-auto flex flex-col gap-3">
-          {footnoteBlock}
-          <CardHoldingsButton
-            available={hasTopHoldings}
-            onClick={() => setTopStocksModal({ open: true, fund })}
-          />
-        </div>
-      </div>
-    </div>
+      </CardContent>
+
+      <CardFooter className="flex flex-col items-start gap-3 border-t border-border/70 bg-transparent p-4 pt-0 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm leading-6 text-muted-foreground">
+          {fund.estPricedCoverage > 0.05
+            ? `基于 ${Math.round(fund.estPricedCoverage * 100)}% 持仓估算`
+            : '估算覆盖不足时回落到原始估值'}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            hasTopHoldings && setTopStocksModal({ open: true, fund })
+          }
+          disabled={!hasTopHoldings}
+        >
+          <ChartColumnBigIcon data-icon="inline-start" />前 10 重仓
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -394,112 +361,70 @@ function CardChartPanel({
           ? 'intraday'
           : 'trend';
 
-  const currentLabel =
-    currentTab === 'trend' ? '近90日净值走势' : '当日分时估值';
-  const currentMeta =
-    currentTab === 'intraday' && hasIntraday
-      ? `更新至 ${lastIntradayTime}`
-      : currentTab === 'trend'
-        ? '近90日'
-        : '暂无数据';
-
   return (
-    <div className={cn(cardSectionClass, 'flex flex-col overflow-hidden')}>
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-[var(--space-sm)] py-[var(--space-sm)]">
-        <div className="flex flex-1 rounded-xl border border-border bg-transparent p-1">
-          <button
-            type="button"
-            className={cn(
-              tabClass,
-              'h-9 flex-1 rounded-[10px] border-transparent px-3 text-xs',
-              currentTab === 'trend' && activeTabClass,
-              !hasHistoryTrend && 'cursor-not-allowed opacity-40',
-            )}
-            onClick={() => hasHistoryTrend && onTabChange('trend')}
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-background/50 p-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-foreground">
+            {currentTab === 'trend' ? '近 90 日净值' : '当日分时估值'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {currentTab === 'intraday'
+              ? `更新至 ${lastIntradayTime}`
+              : '观察中期趋势变化'}
+          </div>
+        </div>
+        <ToggleGroup
+          type="single"
+          value={currentTab}
+          onValueChange={(value) => {
+            if (value === 'trend' || value === 'intraday') onTabChange(value);
+          }}
+          className="grid w-full max-w-[16rem] grid-cols-2 gap-2"
+        >
+          <ToggleGroupItem
+            value="trend"
             disabled={!hasHistoryTrend}
+            className="h-9 rounded-xl text-xs"
           >
-            近90日净值
-          </button>
-          <button
-            type="button"
-            className={cn(
-              tabClass,
-              'h-9 flex-1 rounded-[10px] border-transparent px-3 text-xs',
-              currentTab === 'intraday' && activeTabClass,
-              !hasIntraday && 'cursor-not-allowed opacity-40',
-            )}
-            onClick={() => hasIntraday && onTabChange('intraday')}
+            近 90 日
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="intraday"
             disabled={!hasIntraday}
+            className="h-9 rounded-xl text-xs"
           >
             当日分时
-          </button>
-        </div>
-        <div className="text-right">
-          <div className="text-[0.75rem] font-medium text-muted-strong">
-            {currentLabel}
-          </div>
-          <div className="text-[0.68rem] tracking-[0.01em] text-muted">
-            {currentMeta}
-          </div>
-        </div>
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
-      <div className="px-[var(--space-sm)] py-[var(--space-sm)]">
-        <div className="flex h-[210px] items-center justify-center rounded-[var(--ui-radius-sm)] bg-surface-inset">
-          {currentTab === 'trend' && hasHistoryTrend ? (
-            <div className="h-full w-full">
-              <FundTrendChart data={trendData ?? []} />
+
+      <div className="flex h-[180px] items-center justify-center overflow-hidden rounded-xl bg-background/80 sm:h-[200px]">
+        {currentTab === 'trend' && hasHistoryTrend ? (
+          <div className="h-full w-full">
+            <FundTrendChart data={trendData ?? []} />
+          </div>
+        ) : null}
+        {currentTab === 'intraday' && hasIntraday ? (
+          <div className="h-full w-full">
+            <FundIntradayChart data={intradayData} />
+          </div>
+        ) : null}
+        {((currentTab === 'trend' && !hasHistoryTrend) ||
+          (currentTab === 'intraday' && !hasIntraday)) && (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+            <div className="text-sm font-medium text-foreground">
+              {currentTab === 'trend' ? '暂无走势数据' : '暂无分时数据'}
             </div>
-          ) : null}
-          {currentTab === 'intraday' && hasIntraday ? (
-            <div className="h-full w-full">
-              <FundIntradayChart data={intradayData} />
+            <div className="text-xs leading-6 text-muted-foreground">
+              {currentTab === 'trend'
+                ? '这只基金还没有可展示的近 90 日净值曲线。'
+                : '这只基金暂时没有当日分时估值。'}
             </div>
-          ) : null}
-          {((currentTab === 'trend' && !hasHistoryTrend) ||
-            (currentTab === 'intraday' && !hasIntraday)) && (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
-              <div className="text-sm font-medium text-muted-strong">
-                {currentTab === 'trend' ? '暂无走势数据' : '暂无分时数据'}
-              </div>
-              <div className="text-xs text-muted">
-                {currentTab === 'trend'
-                  ? '这只基金还没有可展示的近90日净值曲线'
-                  : '这只基金暂时没有当日分时估值'}
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
-  );
-}
-
-function CardHoldingsButton({
-  available,
-  onClick,
-}: {
-  available: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        cardActionButtonClass,
-        !available && 'cursor-not-allowed opacity-50 hover:translate-y-0',
-      )}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (!available) return;
-        onClick();
-      }}
-      disabled={!available}
-    >
-      <span>前10重仓股票</span>
-      <span className="text-[0.72rem] tracking-[0.01em] text-muted">
-        {available ? '查看详情' : '暂无重仓数据'}
-      </span>
-    </button>
   );
 }
 
@@ -528,65 +453,68 @@ function DesktopListRow({
   todayStr: string;
 }) {
   return (
-    <div
-      className={cn(
-        desktopTableColumns,
-        'border-b border-border bg-transparent py-3.5 transition hover:bg-surface-soft last:border-b-0',
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1">
-          <span className="truncate text-sm font-semibold">{fund.name}</span>
-          {fund.jzrq === todayStr && (
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-success-soft text-[10px] text-success">
-              ✓
-            </span>
-          )}
+    <TableRow>
+      <TableCell className="min-w-[16rem] py-3.5 pl-5">
+        <div className="flex items-center gap-2">
+          <span className="truncate font-semibold">{fund.name}</span>
+          {fund.jzrq === todayStr ? (
+            <Badge variant="outline">已收盘</Badge>
+          ) : null}
         </div>
-        <span className={subtleTextClass}>
+        <div className="mt-1 text-xs text-muted-foreground">
           #{fund.code} ·{' '}
           {(fund.noValuation
             ? fund.jzrq || '-'
             : fund.gztime || fund.time || '-'
           ).replace(/^\d{4}-/, '')}
-        </span>
-      </div>
-      <ListRowChangeCell
-        fund={fund}
-        isTradingDay={isTradingDay}
-        todayStr={todayStr}
-        className="items-end text-right"
-      />
-      <ListRowTodayProfitCell
-        fund={fund}
-        getHoldingProfit={getHoldingProfit}
-        holdings={holdings}
-        className="text-right"
-      />
-      <ListRowTotalProfitCell
-        fund={fund}
-        getHoldingProfit={getHoldingProfit}
-        holdings={holdings}
-        className="text-right"
-      />
-      <ListRowHoldingAmountCell
-        fund={fund}
-        getHoldingProfit={getHoldingProfit}
-        holdings={holdings}
-        setActionModal={setActionModal}
-        setHoldingModal={setHoldingModal}
-      />
-      <div className="flex justify-center">
-        <button
-          className={cn(iconButtonClass, iconButtonDangerClass)}
+        </div>
+      </TableCell>
+      <TableCell className="py-3.5 text-right">
+        <ListRowChangeCell
+          fund={fund}
+          isTradingDay={isTradingDay}
+          todayStr={todayStr}
+          className="items-end text-right"
+        />
+      </TableCell>
+      <TableCell className="py-3.5 text-right">
+        <ListRowTodayProfitCell
+          fund={fund}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          className="text-right"
+        />
+      </TableCell>
+      <TableCell className="py-3.5 text-right">
+        <ListRowTotalProfitCell
+          fund={fund}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          className="text-right"
+        />
+      </TableCell>
+      <TableCell className="py-3.5 text-right">
+        <ListRowHoldingAmountCell
+          fund={fund}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          setActionModal={setActionModal}
+          setHoldingModal={setHoldingModal}
+          compact
+        />
+      </TableCell>
+      <TableCell className="py-3.5 pr-5 text-right">
+        <Button
+          variant="destructive"
+          size="icon"
           onClick={() => !refreshing && requestRemoveFund(fund)}
           title="删除"
           disabled={refreshing}
         >
-          <TrashIcon width="16" height="16" />
-        </button>
-      </div>
-    </div>
+          <Trash2Icon />
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -599,8 +527,6 @@ function MobileListRow({
   requestRemoveFund,
   setActionModal,
   setHoldingModal,
-  setSwipedFundCode,
-  swipedFundCode,
   todayStr,
 }: {
   fund: FundData;
@@ -614,106 +540,96 @@ function MobileListRow({
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
-  setSwipedFundCode: Dispatch<SetStateAction<string | null>>;
-  swipedFundCode: string | null;
   todayStr: string;
 }) {
-  const holding = holdings[fund.code];
-  const profit = getHoldingProfit(fund, holding);
-
   return (
-    <>
-      <div
-        className="absolute inset-y-0 right-0 flex w-20 cursor-pointer items-center justify-center gap-1 bg-danger text-sm font-semibold text-interactive-contrast"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!refreshing) requestRemoveFund(fund);
-        }}
-      >
-        <TrashIcon width="18" height="18" />
-        <span>删除</span>
-      </div>
-      <motion.div
-        className="m-3 rounded-2xl border border-border bg-card p-3"
-        drag="x"
-        dragConstraints={{ left: -80, right: 0 }}
-        dragElastic={0.1}
-        dragDirectionLock
-        animate={{ x: swipedFundCode === fund.code ? -80 : 0 }}
-        onDragEnd={(_event, { offset }) => {
-          if (offset.x < -40) setSwipedFundCode(fund.code);
-          else setSwipedFundCode(null);
-        }}
-        onClick={(event) => {
-          if (swipedFundCode === fund.code) {
-            event.stopPropagation();
-            setSwipedFundCode(null);
-          }
-        }}
-      >
-        <div className="mb-3 flex items-start justify-between gap-3 border-b border-border pb-3">
+    <Card className="border-border bg-background/65 shadow-none">
+      <CardHeader className="gap-2 pb-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{fund.name}</div>
-            <div className={subtleTextClass}>#{fund.code}</div>
+            <CardTitle className="truncate text-[0.95rem]">
+              {fund.name}
+            </CardTitle>
+            <CardDescription className="mt-1 text-xs">
+              #{fund.code} ·{' '}
+              {(fund.noValuation
+                ? fund.jzrq || '-'
+                : fund.gztime || fund.time || '-'
+              ).replace(/^\d{4}-/, '')}
+            </CardDescription>
           </div>
-          <div className="text-right">
-            {profit ? (
-              <button
-                className={cn(secondaryButtonClass, 'h-8 px-3 text-xs')}
-                onClick={() => setActionModal({ open: true, fund })}
-              >
-                ¥{profit.amount.toFixed(2)}
-              </button>
-            ) : (
-              <button
-                className={cn(secondaryButtonClass, 'h-8 px-3 text-xs')}
-                onClick={() => setHoldingModal({ open: true, fund })}
-              >
-                未设置
-              </button>
-            )}
-          </div>
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => !refreshing && requestRemoveFund(fund)}
+            disabled={refreshing}
+          >
+            <Trash2Icon />
+          </Button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <div className={subtleTextClass}>涨跌幅</div>
+      </CardHeader>
+      <CardContent className="grid gap-3 pt-0">
+        <div className="grid grid-cols-2 gap-2.5">
+          <MetricBlock label="涨跌幅">
             <ListRowChangeCell
               fund={fund}
               isTradingDay={isTradingDay}
               todayStr={todayStr}
               className="items-start text-left"
             />
-          </div>
-          <div>
-            <div className={subtleTextClass}>当日盈亏</div>
+          </MetricBlock>
+          <MetricBlock label="当日盈亏">
             <ListRowTodayProfitCell
               fund={fund}
               getHoldingProfit={getHoldingProfit}
               holdings={holdings}
               className="text-left"
             />
-          </div>
-          <div>
-            <div className={subtleTextClass}>持有收益</div>
+          </MetricBlock>
+          <MetricBlock label="持有收益">
             <ListRowTotalProfitCell
               fund={fund}
               getHoldingProfit={getHoldingProfit}
               holdings={holdings}
               className="text-left"
             />
-          </div>
-          <div>
-            <div className={subtleTextClass}>更新时间</div>
-            <div className="text-sm font-medium text-muted-strong">
+          </MetricBlock>
+          <MetricBlock label="更新时间">
+            <div className="text-sm font-medium text-foreground">
               {(fund.noValuation
                 ? fund.jzrq || '-'
                 : fund.gztime || fund.time || '-'
               ).replace(/^\d{4}-/, '')}
             </div>
-          </div>
+          </MetricBlock>
         </div>
-      </motion.div>
-    </>
+
+        <ListRowHoldingAmountCell
+          fund={fund}
+          getHoldingProfit={getHoldingProfit}
+          holdings={holdings}
+          setActionModal={setActionModal}
+          setHoldingModal={setHoldingModal}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function MetricBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-background/55 px-3 py-2.5">
+      <div className="mb-1 text-[11px] font-medium tracking-[0.06em] text-muted-foreground">
+        {label}
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -743,13 +659,13 @@ function ListRowChangeCell({
       <div className={cn('flex flex-col gap-0.5', className)}>
         <span
           className={cn(
-            'text-sm font-bold',
-            fund.zzl > 0 ? upTextClass : fund.zzl < 0 ? downTextClass : '',
+            'text-sm font-semibold',
+            fund.zzl > 0 ? 'text-up' : fund.zzl < 0 ? 'text-down' : '',
           )}
         >
           {changeValue}
         </span>
-        <span className="text-[10px] font-medium text-muted opacity-80">
+        <span className="text-xs text-muted-foreground">
           {fund.dwjz ?? '—'}
         </span>
       </div>
@@ -771,15 +687,13 @@ function ListRowChangeCell({
     <div className={cn('flex flex-col gap-0.5', className)}>
       <span
         className={cn(
-          'text-sm font-bold',
-          estChange > 0 ? upTextClass : estChange < 0 ? downTextClass : '',
+          'text-sm font-semibold',
+          estChange > 0 ? 'text-up' : estChange < 0 ? 'text-down' : '',
         )}
       >
         {estChangeText}
       </span>
-      <span className="text-[10px] font-medium text-muted opacity-80">
-        {estValue}
-      </span>
+      <span className="text-xs text-muted-foreground">{estValue}</span>
     </div>
   );
 }
@@ -804,16 +718,16 @@ function ListRowTodayProfitCell({
   const hasProfit = profitValue !== null;
 
   return (
-    <div className={cn('text-sm font-bold', className)}>
+    <div className={cn('text-sm font-semibold', className)}>
       <span
         className={cn(
           hasProfit
             ? profitValue > 0
-              ? upTextClass
+              ? 'text-up'
               : profitValue < 0
-                ? downTextClass
+                ? 'text-down'
                 : ''
-            : 'text-muted',
+            : 'text-muted-foreground',
         )}
       >
         {hasProfit
@@ -850,20 +764,20 @@ function ListRowTotalProfitCell({
     <div className={cn('flex flex-col gap-0.5', className)}>
       <span
         className={cn(
-          'text-sm font-bold',
-          total > 0 ? upTextClass : total < 0 ? downTextClass : '',
+          'text-sm font-semibold',
+          total > 0 ? 'text-up' : total < 0 ? 'text-down' : '',
         )}
       >
         {`${total > 0 ? '+' : total < 0 ? '-' : ''}¥${Math.abs(total).toFixed(2)}`}
       </span>
-      {ratio !== null && (
-        <span className="text-[10px] text-muted opacity-80">
+      {ratio !== null ? (
+        <span className="text-xs text-muted-foreground">
           {`${ratio > 0 ? '+' : ''}${ratio.toFixed(2)}%`}
         </span>
-      )}
+      ) : null}
     </div>
   ) : (
-    <span className={cn('text-muted', className)}>—</span>
+    <span className={cn('text-muted-foreground', className)}>—</span>
   );
 }
 
@@ -873,6 +787,7 @@ function ListRowHoldingAmountCell({
   holdings,
   setActionModal,
   setHoldingModal,
+  compact = false,
 }: {
   fund: FundData;
   getHoldingProfit: (
@@ -882,30 +797,48 @@ function ListRowHoldingAmountCell({
   holdings: HoldingsMap;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
+  compact?: boolean;
 }) {
   const holding = holdings[fund.code];
   const profit = getHoldingProfit(fund, holding);
 
-  return (
-    <div className="flex justify-end">
-      {profit ? (
-        <button
-          className={cn(secondaryButtonClass, 'h-9 px-3 text-xs')}
-          onClick={() => setActionModal({ open: true, fund })}
-          title="持仓操作"
-        >
-          ¥{profit.amount.toFixed(2)}
-        </button>
-      ) : (
-        <button
-          className={cn(secondaryButtonClass, 'h-9 px-3 text-xs')}
-          onClick={() => setHoldingModal({ open: true, fund })}
-          title="设置持仓"
-        >
-          未设置
-        </button>
-      )}
-    </div>
+  if (compact) {
+    return profit ? (
+      <span className="font-mono text-sm font-semibold text-foreground">
+        ¥{profit.amount.toFixed(2)}
+      </span>
+    ) : (
+      <button
+        type="button"
+        className="text-sm text-muted-foreground transition hover:text-foreground"
+        onClick={() => setHoldingModal({ open: true, fund })}
+        title="设置持仓"
+      >
+        未设置
+      </button>
+    );
+  }
+
+  return profit ? (
+    <Button
+      variant="outline"
+      size="sm"
+      className="rounded-xl font-mono sm:w-auto"
+      onClick={() => setActionModal({ open: true, fund })}
+      title="持仓操作"
+    >
+      ¥{profit.amount.toFixed(2)}
+    </Button>
+  ) : (
+    <Button
+      variant="outline"
+      size="sm"
+      className="rounded-xl sm:w-auto"
+      onClick={() => setHoldingModal({ open: true, fund })}
+      title="设置持仓"
+    >
+      未设置
+    </Button>
   );
 }
 
@@ -936,100 +869,73 @@ function CardStatsRow({
       ? (profit.profitTotal / (holding.cost * holding.share)) * 100
       : null;
 
-  const valuationStat = (
-    <Stat
-      label={showActual ? '实际涨跌幅' : '估值涨跌幅'}
-      value={
-        showActual
-          ? fund.zzl !== undefined
-            ? `${fund.zzl > 0 ? '+' : ''}${Number(fund.zzl).toFixed(2)}%`
-            : '—'
-          : fund.estPricedCoverage > 0.05
-            ? `${fund.estGszzl > 0 ? '+' : ''}${fund.estGszzl.toFixed(2)}%`
-            : typeof fund.gszzl === 'number'
-              ? `${fund.gszzl > 0 ? '+' : ''}${fund.gszzl.toFixed(2)}%`
-              : (fund.gszzl ?? '—')
-      }
-      delta={
-        showActual
-          ? fund.zzl
-          : fund.estPricedCoverage > 0.05
-            ? fund.estGszzl
-            : Number(fund.gszzl) || 0
-      }
-      subValue={
-        showActual
-          ? String(fund.dwjz)
-          : fund.estPricedCoverage > 0.05
-            ? fund.estGsz.toFixed(4)
-            : fund.gsz != null
-              ? String(fund.gsz)
-              : '—'
-      }
-    />
-  );
-
   return (
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      {profit ? (
-        <button
-          className="flex min-w-0 flex-col items-center gap-1 rounded-[var(--ui-radius-sm)] px-2 py-1 text-center transition hover:bg-surface-soft"
-          onClick={() => setActionModal({ open: true, fund })}
-        >
-          <span className="inline-flex items-center gap-1 text-[10px] text-muted md:text-xs">
-            持仓金额{' '}
-            <SettingsIcon width="12" height="12" style={{ opacity: 0.7 }} />
-          </span>
-          <span className="font-mono text-sm font-semibold md:text-base">
-            ¥{profit.amount.toFixed(2)}
-          </span>
-        </button>
-      ) : (
-        <div className="flex min-w-0 flex-col items-center gap-1 px-2 py-1 text-center">
-          <span className="text-[10px] text-muted md:text-xs">持仓金额</span>
-          <button
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted"
-            onClick={() => setHoldingModal({ open: true, fund })}
-          >
-            未设置 <SettingsIcon width="12" height="12" />
-          </button>
-        </div>
-      )}
-      {valuationStat}
-      {profit && profit.profitToday !== null ? (
-        <div className="flex min-w-0 flex-col items-center gap-1 px-2 py-1 text-center">
-          <span className="text-[10px] text-muted md:text-xs">当日盈亏</span>
-          <span
-            className={cn(
-              'font-mono text-sm font-semibold md:text-base',
-              profit.profitToday > 0
-                ? upTextClass
-                : profit.profitToday < 0
-                  ? downTextClass
-                  : '',
-            )}
-          >
-            {profit.profitToday > 0 ? '+' : profit.profitToday < 0 ? '-' : ''}¥
-            {Math.abs(profit.profitToday).toFixed(2)}
-          </span>
-        </div>
-      ) : (
-        <Stat label="当日盈亏" value="—" />
-      )}
-      {profit?.profitTotal !== null && profit ? (
+    <div className="grid gap-3">
+      <ListRowHoldingAmountCell
+        fund={fund}
+        getHoldingProfit={getHoldingProfit}
+        holdings={holdings}
+        setActionModal={setActionModal}
+        setHoldingModal={setHoldingModal}
+      />
+
+      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
         <Stat
-          label="持有收益"
-          value={`${profit.profitTotal > 0 ? '+' : profit.profitTotal < 0 ? '-' : ''}¥${Math.abs(profit.profitTotal).toFixed(2)}`}
-          delta={profit.profitTotal}
+          label={showActual ? '实际涨跌幅' : '估值涨跌幅'}
+          value={
+            showActual
+              ? fund.zzl !== undefined
+                ? `${fund.zzl > 0 ? '+' : ''}${Number(fund.zzl).toFixed(2)}%`
+                : '—'
+              : fund.estPricedCoverage > 0.05
+                ? `${fund.estGszzl > 0 ? '+' : ''}${fund.estGszzl.toFixed(2)}%`
+                : typeof fund.gszzl === 'number'
+                  ? `${fund.gszzl > 0 ? '+' : ''}${fund.gszzl.toFixed(2)}%`
+                  : (fund.gszzl ?? '—')
+          }
+          delta={
+            showActual
+              ? fund.zzl
+              : fund.estPricedCoverage > 0.05
+                ? fund.estGszzl
+                : Number(fund.gszzl) || 0
+          }
           subValue={
-            totalProfitRatio !== null
-              ? `${totalProfitRatio > 0 ? '+' : ''}${totalProfitRatio.toFixed(2)}%`
-              : undefined
+            showActual
+              ? String(fund.dwjz)
+              : fund.estPricedCoverage > 0.05
+                ? fund.estGsz.toFixed(4)
+                : fund.gsz != null
+                  ? String(fund.gsz)
+                  : '—'
           }
         />
-      ) : (
-        <Stat label="持有收益" value="—" />
-      )}
+
+        {profit && profit.profitToday !== null ? (
+          <Stat
+            label="当日盈亏"
+            value={`${profit.profitToday > 0 ? '+' : profit.profitToday < 0 ? '-' : ''}¥${Math.abs(profit.profitToday).toFixed(2)}`}
+            delta={profit.profitToday}
+          />
+        ) : (
+          <Stat label="当日盈亏" value="—" />
+        )}
+
+        {profit?.profitTotal !== null && profit ? (
+          <Stat
+            label="持有收益"
+            value={`${profit.profitTotal > 0 ? '+' : profit.profitTotal < 0 ? '-' : ''}¥${Math.abs(profit.profitTotal).toFixed(2)}`}
+            delta={profit.profitTotal}
+            subValue={
+              totalProfitRatio !== null
+                ? `${totalProfitRatio > 0 ? '+' : ''}${totalProfitRatio.toFixed(2)}%`
+                : undefined
+            }
+          />
+        ) : (
+          <Stat label="持有收益" value="—" />
+        )}
+      </div>
     </div>
   );
 }

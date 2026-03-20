@@ -181,4 +181,3 @@ export function parseTrendSummary(trend: TrendPoint[]) {
         : null,
   };
 }
-

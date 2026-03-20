@@ -1,20 +1,20 @@
 'use client';
 
-import { motion } from 'framer-motion';
-
-import { cn } from '@/app/lib/cn';
 import {
-  dangerButtonClass,
-  iconButtonGhostClass,
-  modalCardClass,
-  modalHeaderClass,
-  modalOverlayClass,
-  primaryButtonClass,
-  secondaryButtonClass,
-  titleRowClass,
-} from '@/app/lib/ui';
+  ArrowDownIcon,
+  ArrowUpIcon,
+  PencilLineIcon,
+  Trash2Icon,
+} from 'lucide-react';
 
-import { CloseIcon, SettingsIcon } from '@/app/components/icons';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { FundData } from '@/app/types';
 
 interface HoldingActionModalProps {
@@ -29,72 +29,53 @@ export function HoldingActionModal({
   onAction,
 }: HoldingActionModalProps) {
   return (
-    <motion.div
-      className={modalOverlayClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="持仓操作"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[320px]')}
-        onClick={(event) => event.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[360px] border-border bg-popover text-popover-foreground"
       >
-        <div className={modalHeaderClass}>
-          <div className={titleRowClass}>
-            <SettingsIcon width="20" height="20" />
-            <span>持仓操作</span>
-          </div>
-          <button className={iconButtonGhostClass} onClick={onClose}>
-            <CloseIcon width="20" height="20" />
-          </button>
-        </div>
-
-        <div className="mb-5 text-center">
-          <div className="mb-1 text-base font-semibold">{fund?.name}</div>
-          <div className="text-xs text-muted">#{fund?.code}</div>
-        </div>
+        <DialogHeader>
+          <DialogTitle>持仓操作</DialogTitle>
+          <DialogDescription>
+            {fund?.name} · #{fund?.code}
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="grid grid-cols-2 gap-3">
-          <button
-            className={cn(
-              primaryButtonClass,
-              'border-[color:var(--ui-primary-border)] bg-primary-soft text-primary hover:bg-primary-soft',
-            )}
+          <Button
+            variant="outline"
+            className="h-11"
             onClick={() => onAction('buy')}
           >
+            <ArrowUpIcon data-icon="inline-start" />
             加仓
-          </button>
-          <button
-            className={cn(
-              dangerButtonClass,
-              'border-[color:var(--ui-danger-border)] bg-danger-soft text-danger hover:bg-danger-soft',
-            )}
+          </Button>
+          <Button
+            variant="destructive"
+            className="h-11"
             onClick={() => onAction('sell')}
           >
+            <ArrowDownIcon data-icon="inline-start" />
             减仓
-          </button>
-          <button
-            className={cn(secondaryButtonClass, 'col-span-2')}
+          </Button>
+          <Button
+            variant="outline"
+            className="col-span-2 h-11"
             onClick={() => onAction('edit')}
           >
+            <PencilLineIcon data-icon="inline-start" />
             编辑持仓
-          </button>
-          <button
-            className={cn(dangerButtonClass, 'col-span-2 mt-2')}
+          </Button>
+          <Button
+            variant="destructive"
+            className="col-span-2 h-11"
             onClick={() => onAction('clear')}
           >
+            <Trash2Icon data-icon="inline-start" />
             清空持仓
-          </button>
+          </Button>
         </div>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }
-

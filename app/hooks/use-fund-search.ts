@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react';
 
 import type { FundData, FundSearchResult } from '@/app/types';
 
@@ -21,42 +27,45 @@ export function useFundSearch({
   const [error, setError] = useState('');
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+  const performSearch = useCallback(
+    async (value: string) => {
+      if (!value.trim()) {
+        setSearchResults([]);
+        return;
       }
-    };
-  }, []);
 
-  async function performSearch(value: string) {
-    if (!value.trim()) {
-      setSearchResults([]);
-      return;
-    }
+      setIsSearching(true);
+      try {
+        const fundsOnly = await searchFunds(value);
+        setSearchResults(fundsOnly);
+      } catch (searchError) {
+        console.error('搜索失败', searchError);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [searchFunds],
+  );
 
-    setIsSearching(true);
-    try {
-      const fundsOnly = await searchFunds(value);
-      setSearchResults(fundsOnly);
-    } catch (searchError) {
-      console.error('搜索失败', searchError);
-    } finally {
-      setIsSearching(false);
-    }
-  }
-
-  function handleSearchInput(event: ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    setSearchTerm(value);
-
+  useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     searchTimeoutRef.current = setTimeout(() => {
-      void performSearch(value);
-    }, 300);
+      void performSearch(searchTerm);
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [performSearch, searchTerm]);
+
+  function handleSearchInput(event: ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    setSearchTerm(value);
   }
 
   function toggleSelectFund(fund: FundSearchResult) {
@@ -102,4 +111,3 @@ export function useFundSearch({
     toggleSelectFund,
   };
 }
-

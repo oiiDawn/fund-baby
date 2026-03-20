@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import {
   fetchFundData,
   fetchIntradayData,
@@ -16,15 +17,12 @@ import type {
   SortBy,
   SortOrder,
   TradeType,
-  ToastType,
   ViewMode,
   FundData,
   Holding,
   HoldingsMap,
 } from '@/app/types';
-import { cn } from '@/app/lib/cn';
 import { formatDate, nowInTz } from '@/app/lib/date';
-import { panelClass } from '@/app/lib/ui';
 import { AddFundPanel } from '@/app/components/add-fund-panel';
 import { DashboardFilterBar } from '@/app/components/dashboard-filter-bar';
 import { DashboardFundList } from '@/app/components/dashboard-fund-list';
@@ -72,6 +70,11 @@ interface SaveFilePickerWindow extends Window {
       accept: Record<string, string[]>;
     }>;
   }) => Promise<SaveFilePickerHandle>;
+}
+
+function applyDocumentTheme(theme: string) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.classList.toggle('dark', theme !== 'light');
 }
 
 export default function FundDashboardPage() {
@@ -155,14 +158,14 @@ export default function FundDashboardPage() {
   useEffect(() => {
     const savedTheme = storageHelper.loadBootstrapState().theme;
     setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    applyDocumentTheme(savedTheme);
   }, [storageHelper]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     storageHelper.saveTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
+    applyDocumentTheme(next);
   };
 
   const [isTradingDay, setIsTradingDay] = useState(true);
@@ -362,20 +365,11 @@ export default function FundDashboardPage() {
     open: boolean;
     message: string;
   }>({ open: false, message: '' });
-  // 轻提示 (Toast)
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: ToastType;
-  }>({ show: false, message: '', type: 'info' });
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string, type: ToastType = 'info') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ show: true, message, type });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast((prev) => ({ ...prev, show: false }));
-    }, 3000);
+  const showToast = (
+    message: string,
+    type: 'success' | 'info' | 'error' = 'info',
+  ) => {
+    toast[type](message, { duration: 3000 });
   };
 
   useEffect(() => {
@@ -695,9 +689,9 @@ export default function FundDashboardPage() {
   });
 
   return (
-    <div className="mx-auto flex max-w-[1320px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 xl:gap-8">
+    <div className="mx-auto flex max-w-[1360px] flex-col gap-5 px-4 py-5 md:px-6 md:py-6 xl:gap-6 xl:px-8">
       <section
-        className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)] xl:items-stretch"
+        className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.85fr)] xl:items-stretch"
         aria-label="基金工作台控制区"
       >
         <AddFundPanel
@@ -861,68 +855,6 @@ export default function FundDashboardPage() {
           onSetTempSeconds={setTempSeconds}
         />
       )}
-
-      {/* 全局轻提示 Toast */}
-      <AnimatePresence>
-        {toast.show && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className={cn(
-              panelClass,
-              'fixed left-1/2 top-6 z-[9999] flex max-w-[90vw] items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium whitespace-nowrap shadow-soft',
-              toast.type === 'error' &&
-                'border-transparent bg-danger text-interactive-contrast',
-              toast.type === 'success' &&
-                'border-transparent bg-success text-interactive-contrast',
-              toast.type === 'info' && 'bg-surface-floating text-text',
-            )}
-          >
-            {toast.type === 'error' && (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M12 8v4M12 16h.01"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            )}
-            {toast.type === 'success' && (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M20 6L9 17l-5-5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

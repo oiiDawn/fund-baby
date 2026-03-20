@@ -62,5 +62,3 @@ describe('fund-collection services', () => {
     ]);
   });
 });
-
-

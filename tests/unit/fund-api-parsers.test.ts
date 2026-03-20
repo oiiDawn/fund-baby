@@ -78,5 +78,3 @@ describe('fund api parsers', () => {
     ]);
   });
 });
-
-

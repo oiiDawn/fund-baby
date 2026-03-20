@@ -1,21 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 
-import { CloseIcon, SettingsIcon } from '@/app/components/icons';
-import { cn } from '@/app/lib/cn';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  badgeClass,
-  iconButtonGhostClass,
-  inputClass,
-  modalCardClass,
-  modalHeaderClass,
-  modalOverlayClass,
-  primaryButtonClass,
-  secondaryButtonClass,
-  titleRowClass,
-} from '@/app/lib/ui';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { FundData, Holding } from '@/app/types';
 
 interface HoldingEditModalProps {
@@ -119,152 +117,104 @@ export function HoldingEditModal({
         (!profit || !isNaN(Number(profit))) &&
         dwjz > 0;
 
-  const tabClass = (active: boolean) =>
-    cn(
-      'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--ui-focus-ring)]',
-      active
-        ? 'bg-primary text-interactive-contrast'
-        : 'text-muted hover:bg-surface-soft hover:text-text',
-    );
-
   return (
-    <motion.div
-      className={modalOverlayClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="编辑持仓"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[400px]')}
-        onClick={(event) => event.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[420px] border-border bg-popover text-popover-foreground"
       >
-        <div className={modalHeaderClass}>
-          <div className={titleRowClass}>
-            <SettingsIcon width="20" height="20" />
-            <span>设置持仓</span>
-          </div>
-          <button className={iconButtonGhostClass} onClick={onClose}>
-            <CloseIcon width="20" height="20" />
-          </button>
+        <DialogHeader>
+          <DialogTitle>设置持仓</DialogTitle>
+          <DialogDescription>
+            {fund?.name} · #{fund?.code}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex items-center justify-between rounded-xl border border-border bg-background/60 px-4 py-3">
+          <span className="text-sm text-muted-foreground">最新净值</span>
+          <Badge>{dwjz || '—'}</Badge>
         </div>
 
-        <div className="mb-4">
-          <div className="mb-1 text-base font-semibold">{fund?.name}</div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-xs text-muted">#{fund?.code}</div>
-            <div className={cn(badgeClass, 'text-xs')}>
-              最新净值：
-              <span className="font-semibold text-primary">{dwjz}</span>
-            </div>
-          </div>
-        </div>
+        <ToggleGroup
+          type="single"
+          value={mode}
+          onValueChange={(value) => {
+            if (value === 'amount' || value === 'share')
+              handleModeChange(value);
+          }}
+          className="grid w-full grid-cols-2 gap-2"
+        >
+          <ToggleGroupItem value="amount" className="h-10 rounded-xl">
+            按金额
+          </ToggleGroupItem>
+          <ToggleGroupItem value="share" className="h-10 rounded-xl">
+            按份额
+          </ToggleGroupItem>
+        </ToggleGroup>
 
-        <div className="mb-5 rounded-xl bg-surface-soft p-1">
-          <div className="flex gap-0">
-            <button
-              type="button"
-              className={tabClass(mode === 'amount')}
-              onClick={() => handleModeChange('amount')}
-            >
-              按金额
-            </button>
-            <button
-              type="button"
-              className={tabClass(mode === 'share')}
-              onClick={() => handleModeChange('share')}
-            >
-              按份额
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
+        <form className="grid gap-4" onSubmit={handleSubmit}>
           {mode === 'amount' ? (
             <>
-              <div className="mb-4">
-                <label className="mb-2 block text-sm text-muted">
-                  持有金额 <span className="text-danger">*</span>
-                </label>
-                <input
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">持有金额</span>
+                <Input
                   type="number"
                   step="any"
-                  className={cn(inputClass, !amount && 'border-danger')}
+                  className="h-10 rounded-xl border-border bg-background/70"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                   placeholder="请输入持有总金额"
                 />
-              </div>
-              <div className="mb-6">
-                <label className="mb-2 block text-sm text-muted">
-                  持有收益
-                </label>
-                <input
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">持有收益</span>
+                <Input
                   type="number"
                   step="any"
-                  className={inputClass}
+                  className="h-10 rounded-xl border-border bg-background/70"
                   value={profit}
                   onChange={(event) => setProfit(event.target.value)}
-                  placeholder="请输入持有总收益 (可为负)"
+                  placeholder="请输入持有总收益"
                 />
-              </div>
+              </label>
             </>
           ) : (
             <>
-              <div className="mb-4">
-                <label className="mb-2 block text-sm text-muted">
-                  持有份额 <span className="text-danger">*</span>
-                </label>
-                <input
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">持有份额</span>
+                <Input
                   type="number"
                   step="any"
-                  className={cn(inputClass, !share && 'border-danger')}
+                  className="h-10 rounded-xl border-border bg-background/70"
                   value={share}
                   onChange={(event) => setShare(event.target.value)}
                   placeholder="请输入持有份额"
                 />
-              </div>
-              <div className="mb-6">
-                <label className="mb-2 block text-sm text-muted">
-                  持仓成本价 <span className="text-danger">*</span>
-                </label>
-                <input
+              </label>
+              <label className="grid gap-2 text-sm">
+                <span className="text-muted-foreground">持仓成本价</span>
+                <Input
                   type="number"
                   step="any"
-                  className={cn(inputClass, !cost && 'border-danger')}
+                  className="h-10 rounded-xl border-border bg-background/70"
                   value={cost}
                   onChange={(event) => setCost(event.target.value)}
                   placeholder="请输入持仓成本价"
                 />
-              </div>
+              </label>
             </>
           )}
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              className={cn(secondaryButtonClass, 'flex-1')}
-              onClick={onClose}
-            >
+          <DialogFooter className="bg-transparent p-0 pt-2">
+            <Button variant="outline" onClick={onClose} type="button">
               取消
-            </button>
-            <button
-              type="submit"
-              className={cn(primaryButtonClass, 'flex-1')}
-              disabled={!isValid}
-            >
+            </Button>
+            <Button type="submit" disabled={!isValid}>
               保存
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }
-

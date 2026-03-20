@@ -1,8 +1,4 @@
-import type {
-  FundHolding,
-  IntradayPoint,
-  TencentQuoteData,
-} from '@/app/types';
+import type { FundHolding, IntradayPoint, TencentQuoteData } from '@/app/types';
 import {
   parseShanghaiIndexDate,
   parseTencentFundQuote,
@@ -171,4 +167,3 @@ export async function fetchIntradayDataFromTencent(
     return null;
   }
 }
-

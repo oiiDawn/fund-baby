@@ -1,19 +1,18 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { ChartColumnBigIcon } from 'lucide-react';
 
-import { cn } from '@/app/lib/cn';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  badgeClass,
-  iconButtonGhostClass,
-  modalCardClass,
-  modalHeaderClass,
-  modalOverlayClass,
-  primaryButtonClass,
-  titleRowClass,
-} from '@/app/lib/ui';
-
-import { CloseIcon, TrendLineIcon } from '@/app/components/icons';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 import type { FundData } from '@/app/types';
 
 interface TopStocksModalProps {
@@ -23,85 +22,70 @@ interface TopStocksModalProps {
 
 export function TopStocksModal({ fund, onClose }: TopStocksModalProps) {
   return (
-    <motion.div
-      className={modalOverlayClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="前10重仓股票"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={cn(modalCardClass, 'max-w-[520px] p-6')}
-        onClick={(event) => event.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[560px] border-border bg-popover text-popover-foreground"
       >
-        <div className={modalHeaderClass}>
-          <div className={titleRowClass}>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--ui-primary-border)] bg-primary-soft text-primary">
-              <TrendLineIcon width="18" height="18" />
-            </span>
-            <span>前10重仓股票</span>
-          </div>
-          <button className={iconButtonGhostClass} onClick={onClose}>
-            <CloseIcon width="20" height="20" />
-          </button>
-        </div>
-
-        <div className="mb-4">
-          <div className="mb-1 text-base font-semibold">{fund?.name}</div>
-          <div className="text-xs text-muted">#{fund?.code}</div>
-        </div>
-
-        <div className="grid gap-2.5 text-[13px]">
-          {Array.isArray(fund?.holdings) && fund.holdings.length > 0 ? (
-            fund.holdings.map((holding, index) => (
-              <div
-                className="flex min-h-[52px] items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5"
-                key={index}
-              >
-                <span className="truncate font-medium">{holding.name}</span>
-                <div className="flex items-center gap-2">
-                  {typeof holding.change === 'number' && (
-                    <span
-                      className={cn(
-                        badgeClass,
-                        holding.change > 0
-                          ? 'text-up'
-                          : holding.change < 0
-                            ? 'text-down'
-                            : '',
-                      )}
-                    >
-                      {holding.change > 0 ? '+' : ''}
-                      {holding.change.toFixed(2)}%
-                    </span>
-                  )}
-                  <span className="text-xs text-muted">{holding.weight}</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="py-5 text-center text-sm text-muted">
-              暂无重仓数据
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <ChartColumnBigIcon />
             </div>
-          )}
-        </div>
+            <div>
+              <DialogTitle>前 10 重仓股票</DialogTitle>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {fund?.name} · #{fund?.code}
+              </div>
+            </div>
+          </div>
+        </DialogHeader>
 
-        <div className="mt-5 flex">
-          <button
-            className={cn(primaryButtonClass, 'w-full')}
-            onClick={onClose}
-          >
+        <ScrollArea className="max-h-[360px]">
+          <div className="grid gap-2.5 pr-4 text-[13px]">
+            {Array.isArray(fund?.holdings) && fund.holdings.length > 0 ? (
+              fund.holdings.map((holding, index) => (
+                <div
+                  className="flex min-h-[52px] items-center justify-between gap-3 rounded-xl border border-border bg-background/60 px-3.5 py-2.5"
+                  key={index}
+                >
+                  <span className="truncate font-medium">{holding.name}</span>
+                  <div className="flex items-center gap-2">
+                    {typeof holding.change === 'number' ? (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          holding.change > 0
+                            ? 'text-up'
+                            : holding.change < 0
+                              ? 'text-down'
+                              : '',
+                        )}
+                      >
+                        {holding.change > 0 ? '+' : ''}
+                        {holding.change.toFixed(2)}%
+                      </Badge>
+                    ) : null}
+                    <span className="text-xs text-muted-foreground">
+                      {holding.weight}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-5 text-center text-sm text-muted-foreground">
+                暂无重仓数据
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="bg-transparent p-0 pt-2">
+          <Button className="w-full" onClick={onClose}>
             关闭
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
-

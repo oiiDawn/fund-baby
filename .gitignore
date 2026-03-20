@@ -83,7 +83,6 @@ fabric.properties
 .npm-cache/
 .pnpm-store/
 .sisyphus/
-.claude/
 .codex/
 .agents/
 .vercel/

@@ -145,4 +145,3 @@ export const processPendingTrades = async ({
     processedCount: processedIds.length,
   };
 };
-

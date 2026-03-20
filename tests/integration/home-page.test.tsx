@@ -53,7 +53,7 @@ describe('HomePage integration', () => {
     render(<HomePage />);
 
     expect(
-      screen.getByPlaceholderText('搜索基金名称或代码...'),
+      screen.getByRole('textbox', { name: '搜索基金名称或代码' }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('打开设置')).toBeInTheDocument();
     expect(screen.queryByText(/^自选/)).not.toBeInTheDocument();
@@ -71,16 +71,14 @@ describe('HomePage integration', () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    const input = screen.getByPlaceholderText('搜索基金名称或代码...');
-    await user.type(input, '测试');
+    const input = screen.getByRole('textbox', { name: '搜索基金名称或代码' });
+    await user.type(input, '测');
 
     await waitFor(
-      () => expect(fundApiMocks.searchFunds).toHaveBeenCalledWith('测试'),
+      () => expect(fundApiMocks.searchFunds).toHaveBeenCalledWith('测'),
       {
         timeout: 1500,
       },
     );
   });
 });
-
-

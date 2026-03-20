@@ -193,4 +193,3 @@ export async function fetchEastMoneyFundTrend(code: string): Promise<{
     return { historyTrend: [], yesterdayChange: null };
   }
 }
-

@@ -21,7 +21,7 @@ test('searches and adds a second fund', async ({ page }) => {
   await page.getByPlaceholder('搜索基金名称或代码...').fill('测试');
   await expect(page.getByText('测试消费基金')).toBeVisible();
   await page.getByText('测试消费基金').click();
-  await page.getByRole('button', { name: '加入监控', exact: true }).click();
+  await page.getByRole('button', { name: '加入', exact: true }).click();
 
   await expect(page.getByText('测试消费基金').last()).toBeVisible();
 });

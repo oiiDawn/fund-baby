@@ -1,19 +1,19 @@
 'use client';
 
 import type { RefObject } from 'react';
+import { DownloadIcon, Settings2Icon, UploadIcon } from 'lucide-react';
 
-import { cn } from '@/app/lib/cn';
+import { Button } from '@/components/ui/button';
 import {
-  activeChipClass,
-  chipClass,
-  inputClass,
-  modalCardClass,
-  modalOverlayClass,
-  primaryButtonClass,
-  sectionLabelClass,
-} from '@/app/lib/ui';
-
-import { SettingsIcon } from '@/app/components/icons';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface DashboardSettingsModalProps {
   importFileRef: RefObject<HTMLInputElement | null>;
@@ -39,97 +39,102 @@ export function DashboardSettingsModal({
   onSetTempSeconds,
 }: DashboardSettingsModalProps) {
   return (
-    <div
-      className={modalOverlayClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="设置"
-      onClick={onClose}
-    >
-      <div
-        className={cn(modalCardClass, 'max-w-[420px]')}
-        onClick={(event) => event.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[460px] border-border bg-popover text-popover-foreground"
       >
-        <div className="mb-3 flex items-center gap-2.5 text-base font-semibold">
-          <SettingsIcon width="20" height="20" />
-          <span>设置</span>
-        </div>
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <Settings2Icon />
+            </div>
+            <div>
+              <DialogTitle>设置</DialogTitle>
+              <DialogDescription className="mt-1">
+                调整刷新频率并管理本地数据。
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
 
-        <div className="mb-4">
-          <div className={sectionLabelClass}>刷新</div>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {[10, 30, 60, 120, 300].map((seconds) => (
-              <button
-                key={seconds}
+        <div className="grid gap-5">
+          <section className="grid gap-3">
+            <div className="text-sm font-medium">刷新频率</div>
+            <ToggleGroup
+              type="single"
+              value={String(tempSeconds)}
+              onValueChange={(value) => {
+                if (value) onSetTempSeconds(Number(value));
+              }}
+              className="flex w-full flex-wrap gap-2"
+            >
+              {[10, 30, 60, 120, 300].map((seconds) => (
+                <ToggleGroupItem
+                  key={seconds}
+                  value={String(seconds)}
+                  className="rounded-full"
+                >
+                  {seconds} 秒
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <Input
+              className="h-10 rounded-xl border-border bg-background/70"
+              type="number"
+              min="10"
+              step="5"
+              value={tempSeconds}
+              onChange={(event) => onSetTempSeconds(Number(event.target.value))}
+              placeholder="自定义秒数"
+            />
+            {tempSeconds < 10 ? (
+              <div className="text-sm text-destructive">最小 10 秒</div>
+            ) : null}
+          </section>
+
+          <section className="grid gap-3">
+            <div className="text-sm font-medium">数据管理</div>
+            <div className="flex flex-wrap gap-2">
+              <Button
                 type="button"
-                className={cn(
-                  chipClass,
-                  tempSeconds === seconds && activeChipClass,
-                )}
-                onClick={() => onSetTempSeconds(seconds)}
-                aria-pressed={tempSeconds === seconds}
+                variant="outline"
+                onClick={onExportLocalData}
               >
-                {seconds} 秒
-              </button>
-            ))}
-          </div>
-          <input
-            className={inputClass}
-            type="number"
-            min="10"
-            step="5"
-            value={tempSeconds}
-            onChange={(event) => onSetTempSeconds(Number(event.target.value))}
-            placeholder="自定义秒数"
-          />
-          {tempSeconds < 10 && (
-            <div className="mt-2 text-sm text-danger">最小 10 秒</div>
-          )}
+                <DownloadIcon data-icon="inline-start" />
+                导出数据
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => importFileRef.current?.click?.()}
+              >
+                <UploadIcon data-icon="inline-start" />
+                导入数据
+              </Button>
+            </div>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
+              onChange={onHandleImportFileChange}
+            />
+            {importMsg ? (
+              <div className="text-sm text-muted-foreground">{importMsg}</div>
+            ) : null}
+          </section>
         </div>
 
-        <div className="mb-4">
-          <div className={sectionLabelClass}>导出</div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={primaryButtonClass}
-              onClick={onExportLocalData}
-            >
-              导出数据
-            </button>
-          </div>
-          <div className="mb-2 mt-6 text-sm text-muted">导入</div>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className={primaryButtonClass}
-              onClick={() => importFileRef.current?.click?.()}
-            >
-              导入数据
-            </button>
-          </div>
-          <input
-            ref={importFileRef}
-            type="file"
-            accept="application/json"
-            style={{ display: 'none' }}
-            onChange={onHandleImportFileChange}
-          />
-          {importMsg && (
-            <div className="mt-2 text-sm text-muted">{importMsg}</div>
-          )}
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            className={primaryButtonClass}
-            onClick={onSaveSettings}
-            disabled={tempSeconds < 10}
-          >
+        <DialogFooter className="bg-transparent p-0 pt-2">
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
+          <Button onClick={onSaveSettings} disabled={tempSeconds < 10}>
             保存
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

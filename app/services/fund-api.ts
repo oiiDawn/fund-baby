@@ -1,9 +1,5 @@
 import { nowInTz, toTz } from '@/app/lib/date';
-import type {
-  FundData,
-  JsonpGzData,
-  TencentQuoteData,
-} from '@/app/types';
+import type { FundData, JsonpGzData, TencentQuoteData } from '@/app/types';
 import { loadBrowserScript } from '@/app/api/providers/browser-script';
 import {
   fetchEastMoneyFundHoldings,
@@ -129,4 +125,3 @@ export const fetchFundData = async (code: string): Promise<FundData> => {
     yesterdayChange: trend.yesterdayChange,
   };
 };
-
