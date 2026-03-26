@@ -31,6 +31,44 @@ const sortOptions: Array<{ id: SortBy; label: string }> = [
   { id: 'holding', label: '持有收益' },
 ];
 
+export function resolveSortSelection(
+  currentSortBy: SortBy,
+  currentSortOrder: SortOrder,
+  nextSortBy: SortBy | '',
+): { sortBy: SortBy; sortOrder: SortOrder } {
+  const canReverseCurrentSort =
+    currentSortBy === 'yield' ||
+    currentSortBy === 'holding' ||
+    currentSortBy === 'name';
+
+  if (!nextSortBy) {
+    if (!canReverseCurrentSort) {
+      return { sortBy: currentSortBy, sortOrder: currentSortOrder };
+    }
+
+    return {
+      sortBy: currentSortBy,
+      sortOrder: currentSortOrder === 'asc' ? 'desc' : 'asc',
+    };
+  }
+
+  if (nextSortBy === currentSortBy) {
+    if (!canReverseCurrentSort) {
+      return { sortBy: currentSortBy, sortOrder: currentSortOrder };
+    }
+
+    return {
+      sortBy: currentSortBy,
+      sortOrder: currentSortOrder === 'asc' ? 'desc' : 'asc',
+    };
+  }
+
+  return {
+    sortBy: nextSortBy,
+    sortOrder: nextSortBy === 'default' ? currentSortOrder : 'desc',
+  };
+}
+
 export function DashboardFilterBar({
   sortBy,
   sortOrder,
@@ -82,13 +120,14 @@ export function DashboardFilterBar({
             type="single"
             value={sortBy}
             onValueChange={(next) => {
-              if (!next) return;
-              if (next === sortBy) {
-                onSetSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-                return;
-              }
-              onSetSortBy(next as SortBy);
-              onSetSortOrder('desc');
+              const nextSortState = resolveSortSelection(
+                sortBy,
+                sortOrder,
+                next as SortBy | '',
+              );
+
+              onSetSortBy(nextSortState.sortBy);
+              onSetSortOrder(nextSortState.sortOrder);
             }}
             className="grid w-full grid-cols-3 gap-2"
           >

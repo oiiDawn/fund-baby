@@ -10,7 +10,6 @@ import {
 } from 'react';
 import { EyeIcon, EyeOffIcon, PinIcon, PinOffIcon } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -124,7 +123,7 @@ function SummaryMetric({
   return (
     <div
       className={cn(
-        'flex min-w-[9rem] flex-1 flex-col gap-1 rounded-2xl border border-border/70 bg-background/50 px-3.5 py-3',
+        'flex min-w-36 flex-1 flex-col gap-1 rounded-2xl border border-border/70 bg-background/50 px-3.5 py-3',
         onValueClick && 'cursor-pointer',
       )}
       onClick={onValueClick}
@@ -227,12 +226,9 @@ export function GroupSummary({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold tracking-[0.1em] text-muted-foreground">
+                <span className="text-xs font-semibold tracking-widest text-muted-foreground">
                   {title}
                 </span>
-                <Badge variant="outline" className="rounded-full px-2.5 py-1">
-                  已统计 {funds.length} 只
-                </Badge>
               </div>
               <div className="mt-2 flex items-end gap-1 font-mono font-bold tracking-[0.03em]">
                 <span className="mb-1 text-base">¥</span>
