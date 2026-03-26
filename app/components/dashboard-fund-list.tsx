@@ -804,9 +804,14 @@ function ListRowHoldingAmountCell({
 
   if (compact) {
     return profit ? (
-      <span className="font-mono text-sm font-semibold text-foreground">
+      <button
+        type="button"
+        className="font-mono text-sm font-semibold text-foreground transition hover:text-primary"
+        onClick={() => setActionModal({ open: true, fund })}
+        title="持仓操作"
+      >
         ¥{profit.amount.toFixed(2)}
-      </span>
+      </button>
     ) : (
       <button
         type="button"
@@ -939,3 +944,4 @@ function CardStatsRow({
     </div>
   );
 }
+
