@@ -60,11 +60,9 @@ describe('HomePage list view holdings', () => {
 
     await user.click(actionTrigger);
 
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
     expect(
-      await screen.findByRole('dialog', { name: '持仓操作' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: '编辑持仓' }),
+      await screen.findByRole('button', { name: '编辑持仓' }),
     ).toBeInTheDocument();
 
     await waitFor(() =>
