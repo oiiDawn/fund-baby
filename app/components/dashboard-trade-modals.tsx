@@ -1,5 +1,6 @@
 'use client';
 
+export { DcaPlanModal } from '@/app/components/dca-plan-modal';
 export type {
   BuyTradeConfirmData,
   SellTradeConfirmData,

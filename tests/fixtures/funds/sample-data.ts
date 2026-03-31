@@ -1,4 +1,5 @@
 import type {
+  DcaPlan,
   FundData,
   FundSearchResult,
   Holding,
@@ -53,6 +54,7 @@ export const samplePendingBuyTrade: PendingTrade = {
   feeRate: 0.12,
   date: '2026-03-17',
   isAfter3pm: false,
+  sourceType: 'manual',
 };
 
 export const samplePendingSellTrade: PendingTrade = {
@@ -63,6 +65,22 @@ export const samplePendingSellTrade: PendingTrade = {
   share: 20,
   date: '2026-03-17',
   isAfter3pm: false,
+  sourceType: 'manual',
+};
+
+export const sampleDcaPlan: DcaPlan = {
+  id: 'dca-plan-1',
+  fundCode: sampleFund.code,
+  fundName: sampleFund.name,
+  amount: 500,
+  feeRate: 0.12,
+  frequency: 'weekly',
+  timeSlot: 'before_3pm',
+  startDate: '2026-03-10',
+  nextRunDate: '2026-03-17',
+  active: true,
+  createdAt: '2026-03-10T08:00:00.000Z',
+  updatedAt: '2026-03-10T08:00:00.000Z',
 };
 
 export const sampleSearchResults: FundSearchResult[] = [
@@ -89,7 +107,7 @@ export const sampleIntraday: IntradayPoint[] = [
 export const buildSampleSnapshot = (
   overrides: Partial<FundSnapshot> = {},
 ): FundSnapshot => ({
-  version: 1,
+  version: 2,
   funds: [sampleFund],
   refreshMs: 30000,
   holdings: {
@@ -99,6 +117,7 @@ export const buildSampleSnapshot = (
     },
   },
   pendingTrades: [samplePendingBuyTrade],
+  dcaPlans: [sampleDcaPlan],
   viewMode: 'card',
   exportedAt: '2026-03-18T10:00:00.000Z',
   ...overrides,

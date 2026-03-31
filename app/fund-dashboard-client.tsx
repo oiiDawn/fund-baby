@@ -11,6 +11,7 @@ import {
   searchFunds,
 } from '@/app/services/fund-api';
 import type {
+  DcaPlan,
   HoldingProfit,
   IntradayPoint,
   PendingTrade,
@@ -33,6 +34,7 @@ import {
 } from '@/app/components/dashboard-management-modals';
 import { DashboardSettingsModal } from '@/app/components/dashboard-settings-modal';
 import {
+  DcaPlanModal,
   HoldingActionModal,
   HoldingEditModal,
   TopStocksModal,
@@ -44,6 +46,11 @@ import {
   loadFundBatch,
   resolveTradingDayStatus,
 } from '@/app/services/fund-refresh';
+import {
+  createDcaPlan,
+  materializeDueDcaTrades,
+  type DcaPlanDraft,
+} from '@/app/services/fund-dca';
 import {
   getHoldingProfitForFund,
   processPendingTrades,
@@ -125,14 +132,20 @@ export default function FundDashboardPage() {
     fund: FundData | null;
     type: TradeType;
   }>({ open: false, fund: null, type: 'buy' });
+  const [dcaModal, setDcaModal] = useState<{
+    open: boolean;
+    fund: FundData | null;
+  }>({ open: false, fund: null });
   const [clearConfirm, setClearConfirm] = useState<{ fund: FundData } | null>(
     null,
   );
   const [holdings, setHoldings] = useState<HoldingsMap>({});
   const [pendingTrades, setPendingTrades] = useState<PendingTrade[]>([]);
+  const [dcaPlans, setDcaPlans] = useState<DcaPlan[]>([]);
 
   const holdingsRef = useRef<HoldingsMap>(holdings);
   const pendingTradesRef = useRef<PendingTrade[]>(pendingTrades);
+  const dcaPlansRef = useRef<DcaPlan[]>(dcaPlans);
   const {
     error,
     isSearching,
@@ -153,7 +166,20 @@ export default function FundDashboardPage() {
   useEffect(() => {
     holdingsRef.current = holdings;
     pendingTradesRef.current = pendingTrades;
-  }, [holdings, pendingTrades]);
+    dcaPlansRef.current = dcaPlans;
+  }, [dcaPlans, holdings, pendingTrades]);
+
+  const persistPendingTrades = (nextPendingTrades: PendingTrade[]) => {
+    pendingTradesRef.current = nextPendingTrades;
+    setPendingTrades(nextPendingTrades);
+    storageHelper.savePendingTrades(nextPendingTrades);
+  };
+
+  const persistDcaPlans = (nextDcaPlans: DcaPlan[]) => {
+    dcaPlansRef.current = nextDcaPlans;
+    setDcaPlans(nextDcaPlans);
+    storageHelper.saveDcaPlans(nextDcaPlans);
+  };
 
   useEffect(() => {
     const savedTheme = storageHelper.loadBootstrapState().theme;
@@ -277,6 +303,8 @@ export default function FundDashboardPage() {
       setHoldingModal({ open: true, fund });
     } else if (type === 'clear') {
       setClearConfirm({ fund });
+    } else if (type === 'dca') {
+      setDcaModal({ open: true, fund });
     } else if (type === 'buy' || type === 'sell') {
       setTradeModal({ open: true, fund, type });
     }
@@ -290,17 +318,33 @@ export default function FundDashboardPage() {
   };
 
   const processPendingQueue = async () => {
+    const dcaResult = materializeDueDcaTrades({
+      dcaPlans: dcaPlansRef.current,
+      pendingTrades: pendingTradesRef.current,
+    });
+
+    if (dcaResult.changed) {
+      persistDcaPlans(dcaResult.dcaPlans);
+      persistPendingTrades(dcaResult.pendingTrades);
+      if (dcaResult.generatedCount > 0) {
+        showToast(
+          `已生成 ${dcaResult.generatedCount} 笔定投待处理交易`,
+          'success',
+        );
+      }
+    }
+
     const result = await processPendingTrades({
       holdings: holdingsRef.current,
-      pendingTrades: pendingTradesRef.current,
+      pendingTrades: dcaResult.pendingTrades,
       resolveNetValue: fetchSmartFundNetValue,
     });
 
     if (result.processedCount > 0) {
+      holdingsRef.current = result.holdings;
       setHoldings(result.holdings);
       storageHelper.saveHoldings(result.holdings);
-      setPendingTrades(result.pendingTrades);
-      storageHelper.savePendingTrades(result.pendingTrades);
+      persistPendingTrades(result.pendingTrades);
       showToast(`已处理 ${result.processedCount} 笔待定交易`, 'success');
     }
   };
@@ -308,7 +352,7 @@ export default function FundDashboardPage() {
   const handleTrade = (fund: FundData, data: TradeConfirmData) => {
     // 如果没有价格（API失败），加入待处理队列
     if (!data.price || data.price === 0) {
-      const pending = {
+      const pending: PendingTrade = {
         id: crypto.randomUUID(),
         fundCode: fund.code,
         fundName: fund.name,
@@ -322,11 +366,11 @@ export default function FundDashboardPage() {
         date: data.date,
         isAfter3pm: data.isAfter3pm,
         timestamp: Date.now(),
+        sourceType: 'manual',
       };
 
       const next = [...pendingTrades, pending];
-      setPendingTrades(next);
-      storageHelper.savePendingTrades(next);
+      persistPendingTrades(next);
 
       setTradeModal({ open: false, fund: null, type: 'buy' });
       showToast('净值暂未更新，已加入待处理队列', 'info');
@@ -365,6 +409,64 @@ export default function FundDashboardPage() {
     open: boolean;
     message: string;
   }>({ open: false, message: '' });
+
+  const handleSaveDcaPlan = (draft: DcaPlanDraft & { id?: string }) => {
+    const now = nowInTz();
+    const existingPlan = draft.id
+      ? dcaPlans.find((plan) => plan.id === draft.id)
+      : undefined;
+
+    const nextPlan = existingPlan
+      ? {
+          ...existingPlan,
+          fundName: draft.fundName,
+          amount: draft.amount,
+          feeRate: draft.feeRate,
+          frequency: draft.frequency,
+          timeSlot: draft.timeSlot,
+          startDate: draft.startDate,
+          nextRunDate:
+            existingPlan.frequency === draft.frequency &&
+            existingPlan.timeSlot === draft.timeSlot &&
+            existingPlan.startDate === draft.startDate
+              ? existingPlan.nextRunDate
+              : draft.startDate > existingPlan.nextRunDate
+                ? draft.startDate
+                : existingPlan.nextRunDate,
+          active: draft.active,
+          updatedAt: now.toISOString(),
+        }
+      : createDcaPlan(draft, now);
+
+    const nextDcaPlans = existingPlan
+      ? dcaPlans.map((plan) => (plan.id === existingPlan.id ? nextPlan : plan))
+      : [...dcaPlans, nextPlan];
+
+    persistDcaPlans(nextDcaPlans);
+    setDcaModal({ open: false, fund: null });
+    showToast(existingPlan ? '定投计划已更新' : '定投计划已创建', 'success');
+    void processPendingQueue();
+  };
+
+  const handleDeleteDcaPlan = (planId: string) => {
+    persistDcaPlans(dcaPlans.filter((plan) => plan.id !== planId));
+    persistPendingTrades(
+      pendingTrades.filter((trade) => trade.sourcePlanId !== planId),
+    );
+    showToast('定投计划已删除', 'success');
+  };
+
+  const handleToggleDcaPlanActive = (planId: string, active: boolean) => {
+    persistDcaPlans(
+      dcaPlans.map((plan) =>
+        plan.id === planId
+          ? { ...plan, active, updatedAt: nowInTz().toISOString() }
+          : plan,
+      ),
+    );
+    showToast(active ? '定投计划已恢复' : '定投计划已暂停', 'success');
+    if (active) void processPendingQueue();
+  };
   const showToast = (
     message: string,
     type: 'success' | 'info' | 'error' = 'info',
@@ -399,6 +501,21 @@ export default function FundDashboardPage() {
     try {
       const bootstrap = storageHelper.loadBootstrapState();
       const rawFunds = storageHelper.getItem('funds');
+      const dcaBootstrap = materializeDueDcaTrades({
+        dcaPlans: bootstrap.dcaPlans,
+        pendingTrades: bootstrap.pendingTrades,
+      });
+      const restoredPendingTrades = dcaBootstrap.pendingTrades;
+      const restoredDcaPlans = dcaBootstrap.dcaPlans;
+
+      if (dcaBootstrap.changed) {
+        storageHelper.savePendingTrades(restoredPendingTrades);
+        storageHelper.saveDcaPlans(restoredDcaPlans);
+      }
+
+      holdingsRef.current = bootstrap.holdings;
+      pendingTradesRef.current = restoredPendingTrades;
+      dcaPlansRef.current = restoredDcaPlans;
 
       if (rawFunds === null) {
         // 首次访问，添加默认基金 004253 (信达澳银新能源产业股票)
@@ -426,7 +543,8 @@ export default function FundDashboardPage() {
 
       setRefreshMs(bootstrap.refreshMs);
       setTempSeconds(Math.round(bootstrap.refreshMs / 1000));
-      setPendingTrades(bootstrap.pendingTrades);
+      setPendingTrades(restoredPendingTrades);
+      setDcaPlans(restoredDcaPlans);
       setHoldings(bootstrap.holdings);
       setViewMode(bootstrap.viewMode);
     } catch {}
@@ -552,11 +670,16 @@ export default function FundDashboardPage() {
     });
 
     // 同步删除待处理交易
-    setPendingTrades((prev) => {
-      const next = prev.filter((trade) => trade?.fundCode !== removeCode);
-      storageHelper.savePendingTrades(next);
-      return next;
-    });
+    persistPendingTrades(
+      pendingTradesRef.current.filter(
+        (trade) => trade?.fundCode !== removeCode,
+      ),
+    );
+
+    // 同步删除定投计划
+    persistDcaPlans(
+      dcaPlansRef.current.filter((plan) => plan.fundCode !== removeCode),
+    );
   };
 
   const manualRefresh = async () => {
@@ -642,16 +765,21 @@ export default function FundDashboardPage() {
           nowInTz().toISOString(),
         );
 
+        holdingsRef.current = snapshot.holdings as HoldingsMap;
+        pendingTradesRef.current = snapshot.pendingTrades;
+        dcaPlansRef.current = snapshot.dcaPlans;
         setFunds(snapshot.funds);
         setRefreshMs(snapshot.refreshMs);
         setTempSeconds(Math.round(snapshot.refreshMs / 1000));
         setHoldings(snapshot.holdings as HoldingsMap);
         setPendingTrades(snapshot.pendingTrades);
+        setDcaPlans(snapshot.dcaPlans);
 
         storageHelper.saveFunds(snapshot.funds);
         storageHelper.saveRefreshMs(snapshot.refreshMs);
         storageHelper.saveHoldings(snapshot.holdings as HoldingsMap);
         storageHelper.savePendingTrades(snapshot.pendingTrades);
+        storageHelper.saveDcaPlans(snapshot.dcaPlans);
         applyViewMode(snapshot.viewMode);
 
         if (appendedCodes.length) {
@@ -679,6 +807,7 @@ export default function FundDashboardPage() {
     actionModal.open ||
     topStocksModal.open ||
     tradeModal.open ||
+    dcaModal.open ||
     !!clearConfirm ||
     !!fundDeleteConfirm;
 
@@ -728,6 +857,7 @@ export default function FundDashboardPage() {
 
       <section className="flex flex-col gap-4" aria-label="基金监控列表">
         <DashboardFundList
+          dcaPlans={dcaPlans}
           displayFunds={displayFunds}
           getHoldingProfit={getHoldingProfit}
           holdings={holdings}
@@ -773,6 +903,7 @@ export default function FundDashboardPage() {
         {actionModal.open && (
           <HoldingActionModal
             fund={actionModal.fund}
+            holding={holdings[actionModal.fund?.code]}
             onClose={() => setActionModal({ open: false, fund: null })}
             onAction={(type) => handleAction(type, actionModal.fund)}
           />
@@ -800,13 +931,26 @@ export default function FundDashboardPage() {
             onConfirm={(data) => handleTrade(tradeModal.fund, data)}
             pendingTrades={pendingTrades}
             onDeletePending={(id) => {
-              setPendingTrades((prev) => {
-                const next = prev.filter((t) => t.id !== id);
-                storageHelper.savePendingTrades(next);
-                return next;
-              });
+              persistPendingTrades(
+                pendingTrades.filter((trade) => trade.id !== id),
+              );
               showToast('已撤销待处理交易', 'success');
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {dcaModal.open && (
+          <DcaPlanModal
+            fund={dcaModal.fund}
+            plans={dcaPlans.filter(
+              (plan) => plan.fundCode === dcaModal.fund?.code,
+            )}
+            onClose={() => setDcaModal({ open: false, fund: null })}
+            onDelete={handleDeleteDcaPlan}
+            onSave={handleSaveDcaPlan}
+            onToggleActive={handleToggleDcaPlanActive}
           />
         )}
       </AnimatePresence>

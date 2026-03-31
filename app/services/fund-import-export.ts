@@ -1,13 +1,14 @@
-import type { FundData, PendingTrade, ViewMode } from '@/app/types';
+import type { DcaPlan, FundData, PendingTrade, ViewMode } from '@/app/types';
 import type { FundSnapshot, PersistedHolding } from '@/app/types';
 import { dedupeFundsByCode } from '@/app/services/fund-collection';
+import { sanitizeDcaPlans } from '@/app/services/fund-dca';
 import {
   FUND_STORAGE_KEYS,
   type StorageLike,
   createFundStorage,
 } from '@/app/storage/fund-storage';
 
-const SNAPSHOT_VERSION = 1 as const;
+const SNAPSHOT_VERSION = 2 as const;
 
 const normalizeNullableNumber = (value: unknown) => {
   if (value === null || value === undefined || value === '') return null;
@@ -37,6 +38,31 @@ const sanitizeHoldings = (
   );
 };
 
+const mergeDcaPlans = (
+  currentPlans: DcaPlan[],
+  incomingPlans: DcaPlan[],
+): DcaPlan[] => {
+  const planMap = new Map<string, DcaPlan>();
+
+  currentPlans.forEach((plan) => {
+    planMap.set(plan.id, plan);
+  });
+
+  incomingPlans.forEach((plan) => {
+    const existing = planMap.get(plan.id);
+    if (!existing) {
+      planMap.set(plan.id, plan);
+      return;
+    }
+
+    const existingUpdated = Date.parse(existing.updatedAt || '') || 0;
+    const incomingUpdated = Date.parse(plan.updatedAt || '') || 0;
+    planMap.set(plan.id, incomingUpdated >= existingUpdated ? plan : existing);
+  });
+
+  return Array.from(planMap.values());
+};
+
 export const collectFundSnapshot = (
   storage: StorageLike,
   exportedAt: string,
@@ -49,6 +75,10 @@ export const collectFundSnapshot = (
   const pendingTrades = repository
     .getJSON<PendingTrade[]>(FUND_STORAGE_KEYS.pendingTrades, [])
     .filter((trade) => trade && fundCodes.has(trade.fundCode));
+  const dcaPlans = sanitizeDcaPlans(
+    fundCodes,
+    repository.getJSON<DcaPlan[]>(FUND_STORAGE_KEYS.dcaPlans, []),
+  );
   const refreshMs = Number.parseInt(
     repository.getItem(FUND_STORAGE_KEYS.refreshMs) || '30000',
     10,
@@ -68,6 +98,7 @@ export const collectFundSnapshot = (
       ),
     ),
     pendingTrades,
+    dcaPlans,
     viewMode,
     exportedAt,
   };
@@ -111,6 +142,9 @@ export const mergeFundSnapshots = (
       pendingTradeMap.set(keyOfTrade(trade), trade);
   });
 
+  const currentPlans = sanitizeDcaPlans(fundCodes, current.dcaPlans);
+  const incomingPlans = sanitizeDcaPlans(fundCodes, incomingRaw.dcaPlans);
+
   return {
     snapshot: {
       version: SNAPSHOT_VERSION,
@@ -122,6 +156,7 @@ export const mergeFundSnapshots = (
           : current.refreshMs,
       holdings,
       pendingTrades: Array.from(pendingTradeMap.values()),
+      dcaPlans: mergeDcaPlans(currentPlans, incomingPlans),
       viewMode:
         incomingRaw.viewMode === 'list' || incomingRaw.viewMode === 'card'
           ? incomingRaw.viewMode

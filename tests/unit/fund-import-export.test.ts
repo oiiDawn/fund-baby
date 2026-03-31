@@ -7,6 +7,7 @@ import {
 } from '@/app/services/fund-import-export';
 import {
   buildSampleSnapshot,
+  sampleDcaPlan,
   sampleFund,
   secondaryFund,
 } from '@/tests/fixtures/funds/sample-data';
@@ -28,6 +29,8 @@ describe('fund-import-export services', () => {
             return JSON.stringify(snapshot.holdings);
           case 'pendingTrades':
             return JSON.stringify(snapshot.pendingTrades);
+          case 'dcaPlans':
+            return JSON.stringify(snapshot.dcaPlans);
           case 'viewMode':
             return 'card';
           default:
@@ -42,6 +45,7 @@ describe('fund-import-export services', () => {
     const result = collectFundSnapshot(storage, '2026-03-18T00:00:00.000Z');
 
     expect(result.funds).toHaveLength(1);
+    expect(result.dcaPlans).toHaveLength(1);
     expect(result).not.toHaveProperty('collapsedCodes');
   });
 
@@ -56,6 +60,24 @@ describe('fund-import-export services', () => {
     expect(result.appendedCodes).toEqual([secondaryFund.code]);
     expect(result.snapshot.funds).toHaveLength(2);
     expect(result.snapshot.pendingTrades).toHaveLength(1);
+  });
+
+  it('keeps the newer dca plan record when merging imports', () => {
+    const current = buildSampleSnapshot();
+    const imported = buildSampleSnapshot({
+      dcaPlans: [
+        {
+          ...sampleDcaPlan,
+          amount: 800,
+          updatedAt: '2026-03-20T10:00:00.000Z',
+        },
+      ],
+    });
+
+    const result = mergeFundSnapshots(current, imported);
+
+    expect(result.snapshot.dcaPlans).toHaveLength(1);
+    expect(result.snapshot.dcaPlans[0].amount).toBe(800);
   });
 
   it('ignores legacy favorites and groups when merging old payloads', () => {

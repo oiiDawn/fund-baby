@@ -3,6 +3,7 @@ export const FUND_STORAGE_KEYS = {
   refreshMs: 'refreshMs',
   holdings: 'holdings',
   pendingTrades: 'pendingTrades',
+  dcaPlans: 'dcaPlans',
   viewMode: 'viewMode',
   theme: 'theme',
 } as const;

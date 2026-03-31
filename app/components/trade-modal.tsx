@@ -266,9 +266,14 @@ export function TradeModal({
                   className="rounded-xl border border-border bg-background/60 p-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">
-                      {trade.type === 'buy' ? '买入' : '卖出'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {trade.type === 'buy' ? '买入' : '卖出'}
+                      </span>
+                      {trade.sourceType === 'dca' ? (
+                        <Badge variant="outline">定投</Badge>
+                      ) : null}
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {trade.date}
                     </span>
@@ -276,6 +281,11 @@ export function TradeModal({
                   <div className="mt-1 text-xs text-muted-foreground">
                     {trade.share ? `${trade.share} 份` : `¥${trade.amount}`}
                   </div>
+                  {trade.sourceType === 'dca' ? (
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      由定投计划自动生成
+                    </div>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"

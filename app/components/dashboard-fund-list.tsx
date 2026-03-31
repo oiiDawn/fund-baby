@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type {
+  DcaPlan,
   FundData,
   Holding,
   HoldingProfit,
@@ -46,6 +47,7 @@ interface ModalState {
 }
 
 interface DashboardFundListProps {
+  dcaPlans: DcaPlan[];
   displayFunds: FundData[];
   getHoldingProfit: (
     fund: FundData,
@@ -68,6 +70,49 @@ interface DashboardFundListProps {
 
 type FundCardChartTab = 'trend' | 'intraday';
 
+interface FundDcaSummary {
+  totalCount: number;
+  activeCount: number;
+  nextRunDate: string | null;
+}
+
+function getFundDcaSummary(
+  dcaPlans: DcaPlan[],
+  fundCode: string,
+): FundDcaSummary | null {
+  const plans = dcaPlans.filter((plan) => plan.fundCode === fundCode);
+  if (plans.length === 0) return null;
+
+  const activePlans = plans
+    .filter((plan) => plan.active)
+    .sort((left, right) => left.nextRunDate.localeCompare(right.nextRunDate));
+
+  return {
+    totalCount: plans.length,
+    activeCount: activePlans.length,
+    nextRunDate: activePlans[0]?.nextRunDate ?? null,
+  };
+}
+
+function DcaSummaryBadges({ summary }: { summary: FundDcaSummary | null }) {
+  if (!summary) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <Badge variant="outline" className="rounded-full">
+        {summary.activeCount > 0
+          ? `定投 ${summary.activeCount}/${summary.totalCount}`
+          : '定投已暂停'}
+      </Badge>
+      {summary.nextRunDate ? (
+        <Badge variant="outline" className="rounded-full">
+          下次 {summary.nextRunDate.replace(/^\d{4}-/, '')}
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
 function getCardSpanClass(index: number, total: number): string {
   void index;
   if (total === 1) return 'col-span-12';
@@ -76,6 +121,7 @@ function getCardSpanClass(index: number, total: number): string {
 }
 
 export function DashboardFundList({
+  dcaPlans,
   displayFunds,
   getHoldingProfit,
   holdings,
@@ -146,6 +192,7 @@ export function DashboardFundList({
                     transition={{ duration: 0.2 }}
                   >
                     <FundCard
+                      dcaPlans={dcaPlans}
                       fund={fund}
                       getHoldingProfit={getHoldingProfit}
                       holdings={holdings}
@@ -181,6 +228,7 @@ export function DashboardFundList({
                     {displayFunds.map((fund) => (
                       <DesktopListRow
                         key={fund.code}
+                        dcaPlans={dcaPlans}
                         fund={fund}
                         getHoldingProfit={getHoldingProfit}
                         holdings={holdings}
@@ -199,6 +247,7 @@ export function DashboardFundList({
                   {displayFunds.map((fund) => (
                     <MobileListRow
                       key={fund.code}
+                      dcaPlans={dcaPlans}
                       fund={fund}
                       getHoldingProfit={getHoldingProfit}
                       holdings={holdings}
@@ -221,6 +270,7 @@ export function DashboardFundList({
 }
 
 function FundCard({
+  dcaPlans,
   fund,
   getHoldingProfit,
   holdings,
@@ -232,6 +282,7 @@ function FundCard({
   setTopStocksModal,
   todayStr,
 }: {
+  dcaPlans: DcaPlan[];
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -257,6 +308,7 @@ function FundCard({
   const lastIntradayTime = hasIntraday
     ? intradayMap[fund.code][intradayMap[fund.code].length - 1].time
     : '暂无数据';
+  const dcaSummary = getFundDcaSummary(dcaPlans, fund.code);
 
   return (
     <Card className="ui-panel-accent h-full border-border bg-card/95 shadow-panel">
@@ -273,6 +325,7 @@ function FundCard({
                 : fund.gztime || fund.time || '-'
               )?.replace(/^\d{4}-/, '')}
             </CardDescription>
+            <DcaSummaryBadges summary={dcaSummary} />
           </div>
           <div className="flex items-center gap-2">
             {fund.jzrq === todayStr ? (
@@ -429,6 +482,7 @@ function CardChartPanel({
 }
 
 function DesktopListRow({
+  dcaPlans,
   fund,
   getHoldingProfit,
   holdings,
@@ -439,6 +493,7 @@ function DesktopListRow({
   setHoldingModal,
   todayStr,
 }: {
+  dcaPlans: DcaPlan[];
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -452,6 +507,8 @@ function DesktopListRow({
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
+  const dcaSummary = getFundDcaSummary(dcaPlans, fund.code);
+
   return (
     <TableRow>
       <TableCell className="min-w-[16rem] py-3.5 pl-5">
@@ -468,6 +525,7 @@ function DesktopListRow({
             : fund.gztime || fund.time || '-'
           ).replace(/^\d{4}-/, '')}
         </div>
+        <DcaSummaryBadges summary={dcaSummary} />
       </TableCell>
       <TableCell className="py-3.5 text-right">
         <ListRowChangeCell
@@ -519,6 +577,7 @@ function DesktopListRow({
 }
 
 function MobileListRow({
+  dcaPlans,
   fund,
   getHoldingProfit,
   holdings,
@@ -529,6 +588,7 @@ function MobileListRow({
   setHoldingModal,
   todayStr,
 }: {
+  dcaPlans: DcaPlan[];
   fund: FundData;
   getHoldingProfit: (
     fund: FundData,
@@ -542,6 +602,8 @@ function MobileListRow({
   setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
+  const dcaSummary = getFundDcaSummary(dcaPlans, fund.code);
+
   return (
     <Card className="border-border bg-background/65 shadow-none">
       <CardHeader className="gap-2 pb-3">
@@ -557,6 +619,7 @@ function MobileListRow({
                 : fund.gztime || fund.time || '-'
               ).replace(/^\d{4}-/, '')}
             </CardDescription>
+            <DcaSummaryBadges summary={dcaSummary} />
           </div>
           <Button
             variant="destructive"
@@ -786,7 +849,7 @@ function ListRowHoldingAmountCell({
   getHoldingProfit,
   holdings,
   setActionModal,
-  setHoldingModal,
+  setHoldingModal: _setHoldingModal,
   compact = false,
 }: {
   fund: FundData;
@@ -816,8 +879,8 @@ function ListRowHoldingAmountCell({
       <button
         type="button"
         className="text-sm text-muted-foreground transition hover:text-foreground"
-        onClick={() => setHoldingModal({ open: true, fund })}
-        title="设置持仓"
+        onClick={() => setActionModal({ open: true, fund })}
+        title="持仓操作"
       >
         未设置
       </button>
@@ -839,8 +902,8 @@ function ListRowHoldingAmountCell({
       variant="outline"
       size="sm"
       className="rounded-xl sm:w-auto"
-      onClick={() => setHoldingModal({ open: true, fund })}
-      title="设置持仓"
+      onClick={() => setActionModal({ open: true, fund })}
+      title="持仓操作"
     >
       未设置
     </Button>
@@ -944,4 +1007,3 @@ function CardStatsRow({
     </div>
   );
 }
-

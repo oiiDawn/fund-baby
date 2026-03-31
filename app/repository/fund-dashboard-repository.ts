@@ -1,4 +1,10 @@
-import type { FundData, Holding, PendingTrade, ViewMode } from '@/app/types';
+import type {
+  DcaPlan,
+  FundData,
+  Holding,
+  PendingTrade,
+  ViewMode,
+} from '@/app/types';
 import {
   collectFundSnapshot,
   mergeFundSnapshots,
@@ -13,6 +19,7 @@ export interface DashboardBootstrapState {
   funds: FundData[];
   refreshMs: number;
   pendingTrades: PendingTrade[];
+  dcaPlans: DcaPlan[];
   holdings: Record<string, Holding>;
   viewMode: ViewMode;
   theme: string;
@@ -44,6 +51,7 @@ export function createFundDashboardRepository() {
           FUND_STORAGE_KEYS.pendingTrades,
           [],
         ),
+        dcaPlans: storage.getJSON<DcaPlan[]>(FUND_STORAGE_KEYS.dcaPlans, []),
         holdings: storage.getJSON<Record<string, Holding>>(
           FUND_STORAGE_KEYS.holdings,
           {},
@@ -63,6 +71,9 @@ export function createFundDashboardRepository() {
     },
     savePendingTrades(pendingTrades: PendingTrade[]) {
       storage.setJSON(FUND_STORAGE_KEYS.pendingTrades, pendingTrades);
+    },
+    saveDcaPlans(dcaPlans: DcaPlan[]) {
+      storage.setJSON(FUND_STORAGE_KEYS.dcaPlans, dcaPlans);
     },
     saveHoldings(holdings: Record<string, Holding>) {
       storage.setJSON(FUND_STORAGE_KEYS.holdings, holdings);

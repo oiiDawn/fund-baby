@@ -5,7 +5,12 @@
       "Bash(git -C /e/fund-baby remote -v)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git:*)",
+      "Bash(wc:*)",
+      "Bash(rtk wc:*)",
+      "Bash(rtk git:*)",
+      "Bash(rtk gh:*)"
     ]
   }
 }

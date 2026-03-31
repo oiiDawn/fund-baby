@@ -132,11 +132,12 @@ export interface PersistedHolding {
 }
 
 export interface FundSnapshot {
-  version: 1;
+  version: 1 | 2;
   funds: FundData[];
   refreshMs: number;
   holdings: Record<string, PersistedHolding>;
   pendingTrades: PendingTrade[];
+  dcaPlans: DcaPlan[];
   viewMode: ViewMode;
   exportedAt: string;
 }
@@ -152,6 +153,7 @@ export interface FundDashboardState {
   funds: FundData[];
   holdings: Record<string, Holding>;
   pendingTrades: PendingTrade[];
+  dcaPlans: DcaPlan[];
   viewMode: ViewMode;
   sortBy: SortBy;
   sortOrder: SortOrder;

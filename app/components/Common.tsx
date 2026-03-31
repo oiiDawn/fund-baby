@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/input-group';
 import {
   Popover,
-  PopoverAnchor,
   PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { formatDate, nowInTz, toTz } from '@/app/lib/date';
@@ -23,14 +23,19 @@ import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 interface DatePickerProps {
   value: string;
   onChange: (date: string) => void;
+  disableFuture?: boolean;
 }
 
-export function DatePicker({ value, onChange }: DatePickerProps) {
+export function DatePicker({
+  value,
+  onChange,
+  disableFuture = true,
+}: DatePickerProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverAnchor asChild>
+      <PopoverTrigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -43,13 +48,17 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
             className="text-muted-foreground"
           />
         </Button>
-      </PopoverAnchor>
+      </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           mode="single"
           locale={zhCN}
           selected={value ? toTz(value).toDate() : undefined}
-          disabled={(date) => date > nowInTz().endOf('day').toDate()}
+          disabled={
+            disableFuture
+              ? (date) => date > nowInTz().endOf('day').toDate()
+              : undefined
+          }
           onSelect={(date) => {
             if (!date) return;
             onChange(formatDate(date.toISOString()));

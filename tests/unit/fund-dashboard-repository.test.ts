@@ -29,6 +29,7 @@ describe('fund-dashboard repository', () => {
       'pendingTrades',
       JSON.stringify(snapshot.pendingTrades),
     );
+    window.localStorage.setItem('dcaPlans', JSON.stringify(snapshot.dcaPlans));
     window.localStorage.setItem('viewMode', snapshot.viewMode);
     window.localStorage.setItem('theme', 'light');
 
@@ -37,6 +38,7 @@ describe('fund-dashboard repository', () => {
 
     expect(bootstrap.funds).toHaveLength(1);
     expect(bootstrap.refreshMs).toBe(snapshot.refreshMs);
+    expect(bootstrap.dcaPlans).toHaveLength(1);
     expect(window.localStorage.getItem('collapsedCodes')).toBeNull();
     expect(bootstrap.viewMode).toBe('list');
     expect(bootstrap.theme).toBe('light');
@@ -61,6 +63,7 @@ describe('fund-dashboard repository', () => {
       'pendingTrades',
       JSON.stringify(current.pendingTrades),
     );
+    window.localStorage.setItem('dcaPlans', JSON.stringify(current.dcaPlans));
     window.localStorage.setItem('viewMode', current.viewMode);
 
     const repository = createFundDashboardRepository();
@@ -71,6 +74,7 @@ describe('fund-dashboard repository', () => {
 
     expect(result.appendedCodes).toEqual([secondaryFund.code]);
     expect(result.snapshot.funds).toHaveLength(2);
+    expect(result.snapshot.dcaPlans).toHaveLength(1);
     expect(result.snapshot).not.toHaveProperty('favorites');
     expect(result.snapshot).not.toHaveProperty('groups');
   });
