@@ -63,7 +63,9 @@ describe('HomePage list view holdings', () => {
     expect(
       screen.getByRole('dialog', { name: '持仓操作' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '编辑持仓' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '编辑持仓' }),
+    ).toBeInTheDocument();
 
     await waitFor(() =>
       expect(fundApiMocks.fetchFundData).toHaveBeenCalledWith(sampleFund.code),
