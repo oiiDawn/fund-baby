@@ -12,6 +12,7 @@ import FundTrendChart from '@/app/components/fund-trend-chart';
 import { GroupSummary } from '@/app/components/group-summary';
 import { cn } from '@/lib/utils';
 import { nowInTz } from '@/app/lib/date';
+import { getFundValuationSnapshot } from '@/app/services/fund-trade';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -735,16 +736,10 @@ function ListRowChangeCell({
     );
   }
 
-  const estValue =
-    fund.estPricedCoverage > 0.05 ? fund.estGsz.toFixed(4) : (fund.gsz ?? '—');
-  const estChange =
-    fund.estPricedCoverage > 0.05 ? fund.estGszzl : Number(fund.gszzl) || 0;
-  const estChangeText =
-    fund.estPricedCoverage > 0.05
-      ? `${fund.estGszzl > 0 ? '+' : ''}${fund.estGszzl.toFixed(2)}%`
-      : typeof fund.gszzl === 'number'
-        ? `${fund.gszzl > 0 ? '+' : ''}${fund.gszzl.toFixed(2)}%`
-        : (fund.gszzl ?? '—');
+  const valuation = getFundValuationSnapshot(fund);
+  const estValue = valuation.navText;
+  const estChange = valuation.change;
+  const estChangeText = valuation.changeText;
 
   return (
     <div className={cn('flex flex-col gap-0.5', className)}>
@@ -936,6 +931,7 @@ function CardStatsRow({
     profit?.profitTotal != null && holding?.cost && holding?.share
       ? (profit.profitTotal / (holding.cost * holding.share)) * 100
       : null;
+  const valuation = getFundValuationSnapshot(fund);
 
   return (
     <div className="grid gap-3">
@@ -955,28 +951,10 @@ function CardStatsRow({
               ? fund.zzl !== undefined
                 ? `${fund.zzl > 0 ? '+' : ''}${Number(fund.zzl).toFixed(2)}%`
                 : '—'
-              : fund.estPricedCoverage > 0.05
-                ? `${fund.estGszzl > 0 ? '+' : ''}${fund.estGszzl.toFixed(2)}%`
-                : typeof fund.gszzl === 'number'
-                  ? `${fund.gszzl > 0 ? '+' : ''}${fund.gszzl.toFixed(2)}%`
-                  : (fund.gszzl ?? '—')
+              : valuation.changeText
           }
-          delta={
-            showActual
-              ? fund.zzl
-              : fund.estPricedCoverage > 0.05
-                ? fund.estGszzl
-                : Number(fund.gszzl) || 0
-          }
-          subValue={
-            showActual
-              ? String(fund.dwjz)
-              : fund.estPricedCoverage > 0.05
-                ? fund.estGsz.toFixed(4)
-                : fund.gsz != null
-                  ? String(fund.gsz)
-                  : '—'
-          }
+          delta={showActual ? fund.zzl : valuation.change}
+          subValue={showActual ? String(fund.dwjz) : valuation.navText}
         />
 
         {profit && profit.profitToday !== null ? (

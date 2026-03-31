@@ -9,6 +9,60 @@ import type {
 } from '@/app/types';
 import type { TradeSettlementResult } from '@/app/types';
 
+const ESTIMATE_COVERAGE_THRESHOLD = 0.05;
+
+const toFiniteNumber = (value: unknown): number | null => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const toPositiveNumber = (value: unknown): number | null => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+export interface FundValuationSnapshot {
+  nav: number | null;
+  navText: string;
+  change: number;
+  changeText: string;
+  usingEstimate: boolean;
+}
+
+export const getFundValuationSnapshot = (
+  fund: FundData,
+): FundValuationSnapshot => {
+  const hasCoverage =
+    Number(fund.estPricedCoverage) > ESTIMATE_COVERAGE_THRESHOLD;
+  const estimatedNav = hasCoverage ? toPositiveNumber(fund.estGsz) : null;
+  const latestNav = toPositiveNumber(fund.gsz) ?? toPositiveNumber(fund.dwjz);
+  const nav = estimatedNav ?? latestNav;
+
+  const estimatedChange = hasCoverage ? toFiniteNumber(fund.estGszzl) : null;
+  const latestChange = toFiniteNumber(fund.gszzl);
+  const change = estimatedChange ?? latestChange ?? 0;
+
+  let changeText = '—';
+  if (estimatedChange !== null || latestChange !== null) {
+    const value = estimatedChange ?? latestChange ?? 0;
+    changeText = `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  } else if (
+    fund.gszzl !== null &&
+    fund.gszzl !== undefined &&
+    String(fund.gszzl).trim() !== ''
+  ) {
+    changeText = String(fund.gszzl);
+  }
+
+  return {
+    nav,
+    navText: nav !== null ? nav.toFixed(4) : '—',
+    change,
+    changeText,
+    usingEstimate: estimatedNav !== null,
+  };
+};
+
 interface GetHoldingProfitOptions {
   fund: FundData;
   holding?: Holding;
@@ -51,32 +105,26 @@ export const getHoldingProfitForFund = ({
   let profitToday: number | null = null;
 
   if (!useValuation) {
-    currentNav = Number(fund.dwjz);
-    if (!currentNav) return null;
+    const settledNav = toPositiveNumber(fund.dwjz);
+    if (settledNav === null) return null;
+    currentNav = settledNav;
 
     if (canCalcTodayProfit) {
       const amount = holding.share * currentNav;
-      const rate =
-        fund.zzl !== undefined ? Number(fund.zzl) : Number(fund.gszzl) || 0;
-      profitToday = amount - amount / (1 + rate / 100);
+      const settledChange =
+        fund.zzl !== undefined && fund.zzl !== null
+          ? Number(fund.zzl)
+          : Number(fund.gszzl) || 0;
+      profitToday = amount - amount / (1 + settledChange / 100);
     }
   } else {
-    currentNav =
-      fund.estPricedCoverage && fund.estPricedCoverage > 0.05
-        ? Number(fund.estGsz)
-        : typeof fund.gsz === 'number'
-          ? fund.gsz
-          : Number(fund.dwjz);
-
-    if (!currentNav) return null;
+    const valuation = getFundValuationSnapshot(fund);
+    if (valuation.nav === null) return null;
+    currentNav = valuation.nav;
 
     if (canCalcTodayProfit) {
       const amount = holding.share * currentNav;
-      const change =
-        fund.estPricedCoverage && fund.estPricedCoverage > 0.05
-          ? Number(fund.estGszzl) || 0
-          : Number(fund.gszzl) || 0;
-      profitToday = amount - amount / (1 + change / 100);
+      profitToday = amount - amount / (1 + valuation.change / 100);
     }
   }
 

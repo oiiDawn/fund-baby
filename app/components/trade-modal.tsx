@@ -7,6 +7,7 @@ import { DatePicker, NumericInput } from '@/app/components/common';
 import { ConfirmModal } from '@/app/components/confirm-modal';
 import { formatDate, nowInTz, toTz } from '@/app/lib/date';
 import { fetchSmartFundNetValue } from '@/app/services/fund-api';
+import { getFundValuationSnapshot } from '@/app/services/fund-trade';
 import type {
   FeeMode,
   FundData,
@@ -102,19 +103,8 @@ export function TradeModal({
   }, [currentPendingTrades, showPendingList]);
 
   useEffect(() => {
-    const estimatePrice = (() => {
-      if (
-        fund?.estPricedCoverage &&
-        fund.estPricedCoverage > 0.05 &&
-        fund?.estGsz
-      ) {
-        return fund.estGsz;
-      }
-      if (typeof fund?.gsz === 'number') return fund.gsz;
-      return Number(fund?.dwjz) || 0;
-    })();
-
-    setPrice(estimatePrice);
+    const valuation = fund ? getFundValuationSnapshot(fund) : null;
+    setPrice(valuation?.nav ?? 0);
   }, [fund]);
 
   useEffect(() => {

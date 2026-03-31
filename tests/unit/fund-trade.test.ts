@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  getFundValuationSnapshot,
   getHoldingProfitForFund,
   getPendingTradeQueryDate,
   processPendingTrades,
@@ -13,6 +14,27 @@ import {
 } from '@/tests/fixtures/funds/sample-data';
 
 describe('fund-trade services', () => {
+  it('prefers estimated valuation only when coverage and value are valid', () => {
+    const fromEstimate = getFundValuationSnapshot(sampleFund);
+    expect(fromEstimate.nav).toBeCloseTo(1.26, 4);
+    expect(fromEstimate.change).toBeCloseTo(1.6, 4);
+    expect(fromEstimate.usingEstimate).toBe(true);
+
+    const fallbackFund = {
+      ...sampleFund,
+      estPricedCoverage: 0.12,
+      estGsz: undefined,
+      estGszzl: undefined,
+      gsz: 1.23,
+      gszzl: '0.78',
+    };
+    const fallback = getFundValuationSnapshot(fallbackFund);
+    expect(fallback.nav).toBeCloseTo(1.23, 4);
+    expect(fallback.change).toBeCloseTo(0.78, 4);
+    expect(fallback.changeText).toBe('+0.78%');
+    expect(fallback.usingEstimate).toBe(false);
+  });
+
   it('uses valuation during trading hours when today NAV is unavailable', () => {
     const result = getHoldingProfitForFund({
       fund: sampleFund,
