@@ -116,6 +116,7 @@ export type ViewMode = 'card' | 'list';
 export type SortBy = 'default' | 'name' | 'yield' | 'holding';
 export type SortOrder = 'asc' | 'desc';
 export type TradeType = 'buy' | 'sell';
+export type HoldingActionType = TradeType | 'dca' | 'edit' | 'clear';
 export type FeeMode = 'rate' | 'amount';
 export type ToastType = 'info' | 'success' | 'error';
 

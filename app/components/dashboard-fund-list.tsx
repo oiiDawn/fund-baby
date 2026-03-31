@@ -60,10 +60,7 @@ interface DashboardFundListProps {
   refreshing: boolean;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
-  setSwipedFundCode: Dispatch<SetStateAction<string | null>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
-  swipedFundCode: string | null;
   todayStr: string;
   viewMode: ViewMode;
 }
@@ -131,10 +128,7 @@ export function DashboardFundList({
   refreshing,
   requestRemoveFund,
   setActionModal,
-  setHoldingModal,
-  setSwipedFundCode: _setSwipedFundCode,
   setTopStocksModal,
-  swipedFundCode: _swipedFundCode,
   todayStr,
   viewMode,
 }: DashboardFundListProps) {
@@ -200,7 +194,6 @@ export function DashboardFundList({
                       refreshing={refreshing}
                       requestRemoveFund={requestRemoveFund}
                       setActionModal={setActionModal}
-                      setHoldingModal={setHoldingModal}
                       setTopStocksModal={setTopStocksModal}
                       todayStr={todayStr}
                     />
@@ -236,7 +229,6 @@ export function DashboardFundList({
                         refreshing={refreshing}
                         requestRemoveFund={requestRemoveFund}
                         setActionModal={setActionModal}
-                        setHoldingModal={setHoldingModal}
                         todayStr={todayStr}
                       />
                     ))}
@@ -255,7 +247,6 @@ export function DashboardFundList({
                       refreshing={refreshing}
                       requestRemoveFund={requestRemoveFund}
                       setActionModal={setActionModal}
-                      setHoldingModal={setHoldingModal}
                       todayStr={todayStr}
                     />
                   ))}
@@ -278,7 +269,6 @@ function FundCard({
   refreshing,
   requestRemoveFund,
   setActionModal,
-  setHoldingModal,
   setTopStocksModal,
   todayStr,
 }: {
@@ -293,7 +283,6 @@ function FundCard({
   refreshing: boolean;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   setTopStocksModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
@@ -352,7 +341,6 @@ function FundCard({
           getHoldingProfit={getHoldingProfit}
           holdings={holdings}
           setActionModal={setActionModal}
-          setHoldingModal={setHoldingModal}
           todayStr={todayStr}
         />
 
@@ -490,7 +478,6 @@ function DesktopListRow({
   refreshing,
   requestRemoveFund,
   setActionModal,
-  setHoldingModal,
   todayStr,
 }: {
   dcaPlans: DcaPlan[];
@@ -504,7 +491,6 @@ function DesktopListRow({
   refreshing: boolean;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
   const dcaSummary = getFundDcaSummary(dcaPlans, fund.code);
@@ -557,7 +543,6 @@ function DesktopListRow({
           getHoldingProfit={getHoldingProfit}
           holdings={holdings}
           setActionModal={setActionModal}
-          setHoldingModal={setHoldingModal}
           compact
         />
       </TableCell>
@@ -585,7 +570,6 @@ function MobileListRow({
   refreshing,
   requestRemoveFund,
   setActionModal,
-  setHoldingModal,
   todayStr,
 }: {
   dcaPlans: DcaPlan[];
@@ -599,7 +583,6 @@ function MobileListRow({
   refreshing: boolean;
   requestRemoveFund: (fund: FundData) => void;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
   const dcaSummary = getFundDcaSummary(dcaPlans, fund.code);
@@ -672,7 +655,6 @@ function MobileListRow({
           getHoldingProfit={getHoldingProfit}
           holdings={holdings}
           setActionModal={setActionModal}
-          setHoldingModal={setHoldingModal}
         />
       </CardContent>
     </Card>
@@ -849,7 +831,6 @@ function ListRowHoldingAmountCell({
   getHoldingProfit,
   holdings,
   setActionModal,
-  setHoldingModal: _setHoldingModal,
   compact = false,
 }: {
   fund: FundData;
@@ -859,7 +840,6 @@ function ListRowHoldingAmountCell({
   ) => HoldingProfit | null;
   holdings: HoldingsMap;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   compact?: boolean;
 }) {
   const holding = holdings[fund.code];
@@ -915,7 +895,6 @@ function CardStatsRow({
   getHoldingProfit,
   holdings,
   setActionModal,
-  setHoldingModal,
   todayStr,
 }: {
   fund: FundData;
@@ -925,7 +904,6 @@ function CardStatsRow({
   ) => HoldingProfit | null;
   holdings: HoldingsMap;
   setActionModal: Dispatch<SetStateAction<ModalState>>;
-  setHoldingModal: Dispatch<SetStateAction<ModalState>>;
   todayStr: string;
 }) {
   const holding = holdings[fund.code];
@@ -944,7 +922,6 @@ function CardStatsRow({
         getHoldingProfit={getHoldingProfit}
         holdings={holdings}
         setActionModal={setActionModal}
-        setHoldingModal={setHoldingModal}
       />
 
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
