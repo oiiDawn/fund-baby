@@ -84,4 +84,18 @@ describe('fund-collection services', () => {
       withNegative.code,
     ]);
   });
+
+  it('sorts by fund name ascending when requested', () => {
+    const result = sortFunds(
+      [sampleFund, secondaryFund],
+      'name',
+      'asc',
+      () => null,
+    );
+
+    expect(result.map((fund) => fund.code)).toEqual([
+      secondaryFund.code,
+      sampleFund.code,
+    ]);
+  });
 });
