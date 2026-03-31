@@ -61,7 +61,11 @@ describe('HomePage list view holdings', () => {
     await user.click(actionTrigger);
 
     expect(
-      await screen.findByRole('button', { name: '编辑持仓' }, { timeout: 3000 }),
+      await screen.findByRole(
+        'button',
+        { name: '编辑持仓' },
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument();
 
     await waitFor(() =>
