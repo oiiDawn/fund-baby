@@ -12,6 +12,7 @@ import {
 } from '@/app/services/fund-api';
 import type {
   DcaPlan,
+  HoldingActionType,
   HoldingProfit,
   IntradayPoint,
   PendingTrade,
@@ -212,34 +213,6 @@ export default function FundDashboardPage() {
     }
   }, []);
 
-  // 存储当前被划开的基金代码
-  const [swipedFundCode, setSwipedFundCode] = useState<string | null>(null);
-
-  // 点击页面其他区域时收起删除按钮
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      // 检查点击事件是否来自删除按钮
-      // 如果点击的是 .swipe-action-bg 或其子元素，不执行收起逻辑
-      if (e.target.closest('.swipe-action-bg')) {
-        return;
-      }
-
-      if (swipedFundCode) {
-        setSwipedFundCode(null);
-      }
-    };
-
-    if (swipedFundCode) {
-      document.addEventListener('click', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [swipedFundCode]);
-
   // 检查交易日状态
   const checkTradingDay = useCallback(async () => {
     const now = nowInTz();
@@ -297,7 +270,7 @@ export default function FundDashboardPage() {
     setHoldingModal({ open: false, fund: null });
   };
 
-  const handleAction = (type: string, fund: FundData) => {
+  const handleAction = (type: HoldingActionType, fund: FundData) => {
     setActionModal({ open: false, fund: null });
     if (type === 'edit') {
       setHoldingModal({ open: true, fund });
@@ -867,10 +840,7 @@ export default function FundDashboardPage() {
           refreshing={refreshing}
           requestRemoveFund={requestRemoveFund}
           setActionModal={setActionModal}
-          setHoldingModal={setHoldingModal}
-          setSwipedFundCode={setSwipedFundCode}
           setTopStocksModal={setTopStocksModal}
-          swipedFundCode={swipedFundCode}
           todayStr={todayStr}
           viewMode={viewMode}
         />

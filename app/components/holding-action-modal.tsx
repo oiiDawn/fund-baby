@@ -16,13 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { FundData, Holding } from '@/app/types';
+import type { FundData, Holding, HoldingActionType } from '@/app/types';
 
 interface HoldingActionModalProps {
   fund: FundData | null;
   holding: Holding | undefined;
   onClose: () => void;
-  onAction: (type: string) => void;
+  onAction: (type: HoldingActionType) => void;
 }
 
 export function HoldingActionModal({
