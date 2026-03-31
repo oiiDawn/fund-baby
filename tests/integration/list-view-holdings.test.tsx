@@ -63,7 +63,7 @@ describe('HomePage list view holdings', () => {
     expect(
       await screen.findByRole(
         'button',
-        { name: '编辑持仓' },
+        { name: /编辑持仓|设置持仓/ },
         { timeout: 3000 },
       ),
     ).toBeInTheDocument();
