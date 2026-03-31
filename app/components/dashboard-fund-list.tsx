@@ -6,7 +6,7 @@ import { ChartColumnBigIcon, LayoutListIcon, Trash2Icon } from 'lucide-react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { Stat } from '@/app/components/common';
+import { Stat } from '@/app/components/Common';
 import FundIntradayChart from '@/app/components/fund-intraday-chart';
 import FundTrendChart from '@/app/components/fund-trend-chart';
 import { GroupSummary } from '@/app/components/group-summary';

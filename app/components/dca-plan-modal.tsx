@@ -10,7 +10,7 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 
-import { DatePicker, NumericInput } from '@/app/components/common';
+import { DatePicker, NumericInput } from '@/app/components/Common';
 import { formatDate } from '@/app/lib/date';
 import {
   getDcaFrequencyLabel,
