@@ -48,6 +48,43 @@ describe('fund-collection services', () => {
     expect(result[0].code).toBe(sampleFund.code);
   });
 
+  it('sorts by valuation change fallback for yield ordering', () => {
+    const withEstimate = {
+      ...sampleFund,
+      code: '100001',
+      estPricedCoverage: 0.2,
+      estGszzl: 1.5,
+      gszzl: 0.1,
+    };
+    const withLatest = {
+      ...sampleFund,
+      code: '100002',
+      estPricedCoverage: 0.2,
+      estGszzl: undefined,
+      gszzl: '0.9',
+    };
+    const withNegative = {
+      ...sampleFund,
+      code: '100003',
+      estPricedCoverage: 0,
+      estGszzl: undefined,
+      gszzl: -0.6,
+    };
+
+    const result = sortFunds(
+      [withNegative, withLatest, withEstimate],
+      'yield',
+      'desc',
+      () => null,
+    );
+
+    expect(result.map((fund) => fund.code)).toEqual([
+      withEstimate.code,
+      withLatest.code,
+      withNegative.code,
+    ]);
+  });
+
   it('sorts by fund name ascending when requested', () => {
     const result = sortFunds(
       [sampleFund, secondaryFund],

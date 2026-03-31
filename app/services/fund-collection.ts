@@ -1,3 +1,4 @@
+import { getFundValuationSnapshot } from '@/app/services/fund-trade';
 import type { FundData, HoldingProfit, SortBy, SortOrder } from '@/app/types';
 
 export const dedupeFundsByCode = <T extends { code?: string | null }>(
@@ -39,14 +40,8 @@ export const sortFunds = (
 ) =>
   [...funds].sort((left, right) => {
     if (sortBy === 'yield') {
-      const leftValue =
-        typeof left.estGszzl === 'number'
-          ? left.estGszzl
-          : Number(left.gszzl) || 0;
-      const rightValue =
-        typeof right.estGszzl === 'number'
-          ? right.estGszzl
-          : Number(right.gszzl) || 0;
+      const leftValue = getFundValuationSnapshot(left).change;
+      const rightValue = getFundValuationSnapshot(right).change;
       return sortOrder === 'asc'
         ? leftValue - rightValue
         : rightValue - leftValue;
