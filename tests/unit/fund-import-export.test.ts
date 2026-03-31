@@ -24,7 +24,7 @@ describe('fund-import-export services', () => {
               { ...sampleFund, code: '' },
             ]);
           case 'refreshMs':
-            return '30000';
+            return '3000';
           case 'holdings':
             return JSON.stringify(snapshot.holdings);
           case 'pendingTrades':
@@ -45,6 +45,7 @@ describe('fund-import-export services', () => {
     const result = collectFundSnapshot(storage, '2026-03-18T00:00:00.000Z');
 
     expect(result.funds).toHaveLength(1);
+    expect(result.refreshMs).toBe(30000);
     expect(result.dcaPlans).toHaveLength(1);
     expect(result).not.toHaveProperty('collapsedCodes');
   });
@@ -78,6 +79,30 @@ describe('fund-import-export services', () => {
 
     expect(result.snapshot.dcaPlans).toHaveLength(1);
     expect(result.snapshot.dcaPlans[0].amount).toBe(800);
+  });
+
+  it('filters malformed incoming arrays and invalid refresh/view values', () => {
+    const current = buildSampleSnapshot({
+      refreshMs: 45000,
+      viewMode: 'list',
+    });
+
+    const imported = {
+      ...buildSampleSnapshot({ funds: [sampleFund, secondaryFund] }),
+      refreshMs: 2000,
+      viewMode: 'table',
+      pendingTrades: { bad: true },
+      dcaPlans: { bad: true },
+      holdings: ['bad'],
+    } as unknown as Partial<FundSnapshot>;
+
+    const result = mergeFundSnapshots(current, imported);
+
+    expect(result.snapshot.refreshMs).toBe(45000);
+    expect(result.snapshot.viewMode).toBe('list');
+    expect(result.snapshot.pendingTrades).toEqual(current.pendingTrades);
+    expect(result.snapshot.dcaPlans).toEqual(current.dcaPlans);
+    expect(result.snapshot.holdings).toEqual(current.holdings);
   });
 
   it('ignores legacy favorites and groups when merging old payloads', () => {
