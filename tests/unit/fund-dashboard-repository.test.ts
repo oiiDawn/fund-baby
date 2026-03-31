@@ -46,6 +46,25 @@ describe('fund-dashboard repository', () => {
     expect(window.localStorage.getItem('groups')).toBeNull();
   });
 
+  it('falls back safely when persisted payloads are malformed', () => {
+    window.localStorage.setItem('funds', '{bad-json');
+    window.localStorage.setItem('refreshMs', '1000');
+    window.localStorage.setItem('pendingTrades', JSON.stringify({ bad: true }));
+    window.localStorage.setItem('dcaPlans', JSON.stringify({ bad: true }));
+    window.localStorage.setItem('holdings', JSON.stringify(['bad-shape']));
+    window.localStorage.setItem('viewMode', 'table');
+
+    const repository = createFundDashboardRepository();
+    const bootstrap = repository.loadBootstrapState();
+
+    expect(bootstrap.funds).toEqual([]);
+    expect(bootstrap.refreshMs).toBe(30000);
+    expect(bootstrap.pendingTrades).toEqual([]);
+    expect(bootstrap.dcaPlans).toEqual([]);
+    expect(bootstrap.holdings).toEqual({});
+    expect(bootstrap.viewMode).toBe('card');
+  });
+
   it('merges imported snapshots through the repository facade', () => {
     const current = buildSampleSnapshot();
     const imported = {

@@ -34,29 +34,37 @@ export function createFundDashboardRepository() {
       storage.removeItem('favorites');
       storage.removeItem('groups');
       storage.removeItem('collapsedCodes');
-      const rawFunds = storage.getItem(FUND_STORAGE_KEYS.funds);
-      const parsedFunds = rawFunds ? JSON.parse(rawFunds) : [];
+      const parsedFunds = storage.getJSON<FundData[]>(
+        FUND_STORAGE_KEYS.funds,
+        [],
+      );
       const refreshMs = Number.parseInt(
         storage.getItem(FUND_STORAGE_KEYS.refreshMs) || '30000',
         10,
       );
-      const viewMode = storage.getItem(FUND_STORAGE_KEYS.viewMode);
+      const rawViewMode = storage.getItem(FUND_STORAGE_KEYS.viewMode);
+      const viewMode: ViewMode = rawViewMode === 'list' ? 'list' : 'card';
       const theme = storage.getItem(FUND_STORAGE_KEYS.theme) || 'dark';
+      const pendingTrades = storage.getJSON<unknown>(
+        FUND_STORAGE_KEYS.pendingTrades,
+        [],
+      );
+      const dcaPlans = storage.getJSON<unknown>(FUND_STORAGE_KEYS.dcaPlans, []);
+      const holdings = storage.getJSON<unknown>(FUND_STORAGE_KEYS.holdings, {});
 
       return {
         funds: Array.isArray(parsedFunds) ? parsedFunds : [],
         refreshMs:
           Number.isFinite(refreshMs) && refreshMs >= 5000 ? refreshMs : 30000,
-        pendingTrades: storage.getJSON<PendingTrade[]>(
-          FUND_STORAGE_KEYS.pendingTrades,
-          [],
-        ),
-        dcaPlans: storage.getJSON<DcaPlan[]>(FUND_STORAGE_KEYS.dcaPlans, []),
-        holdings: storage.getJSON<Record<string, Holding>>(
-          FUND_STORAGE_KEYS.holdings,
-          {},
-        ),
-        viewMode: viewMode === 'list' ? 'list' : 'card',
+        pendingTrades: Array.isArray(pendingTrades)
+          ? (pendingTrades as PendingTrade[])
+          : [],
+        dcaPlans: Array.isArray(dcaPlans) ? (dcaPlans as DcaPlan[]) : [],
+        holdings:
+          holdings && typeof holdings === 'object' && !Array.isArray(holdings)
+            ? (holdings as Record<string, Holding>)
+            : {},
+        viewMode,
         theme,
       };
     },

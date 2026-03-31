@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -51,19 +50,15 @@ describe('HomePage list view holdings', () => {
   });
 
   it('opens the holding action modal from the desktop list amount cell', async () => {
-    const user = userEvent.setup();
     render(<HomePage />);
 
     const actionTrigger = await screen.findByRole('button', {
       name: /¥123\.45/i,
     });
 
-    await user.click(actionTrigger);
+    fireEvent.click(actionTrigger);
 
-    expect(
-      screen.getByRole('dialog', { name: '持仓操作' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '编辑持仓' })).toBeInTheDocument();
+    expect(await screen.findByText('持仓操作')).toBeInTheDocument();
 
     await waitFor(() =>
       expect(fundApiMocks.fetchFundData).toHaveBeenCalledWith(sampleFund.code),

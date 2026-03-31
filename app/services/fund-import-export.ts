@@ -89,7 +89,8 @@ export const collectFundSnapshot = (
   return {
     version: SNAPSHOT_VERSION,
     funds,
-    refreshMs: Number.isFinite(refreshMs) ? refreshMs : 30000,
+    refreshMs:
+      Number.isFinite(refreshMs) && refreshMs >= 5000 ? refreshMs : 30000,
     holdings: sanitizeHoldings(
       fundCodes,
       repository.getJSON<Record<string, PersistedHolding>>(
